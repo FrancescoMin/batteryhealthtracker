@@ -39,7 +39,6 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BatteryTrackerScreen(viewModel: BatteryViewModel) {
-
     val history by viewModel.allBatteryData.collectAsState(initial = emptyList())
     val nextScheduleTime by viewModel.nextWorkScheduleTime.collectAsState(initial = null)
 
@@ -74,22 +73,55 @@ fun BatteryTrackerScreen(viewModel: BatteryViewModel) {
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = "Current Health: ${realTimeStats.first}%")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Current Cycle Count: ${if (realTimeStats.second >= 0) realTimeStats.second else "N/A"}")
+            val isPermissionMissing = realTimeStats.first == -1 && realTimeStats.second == -1
 
-                    Spacer(modifier = Modifier.height(16.dp))
+            if (isPermissionMissing) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Permission Required",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "To read battery stats, please connect your device to PC and run the following ADB command:\n\n" +
+                                   "adb shell pm grant com.fivestars.batterytracker android.permission.BATTERY_STATS\n\n" +
+                                   "Then click 'Refresh' below.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { realTimeStats = viewModel.getCurrentBatteryStats(context) },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text("Refresh", color = MaterialTheme.colorScheme.onError)
+                        }
+                    }
+                }
+            } else {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(text = "Current Health: ${if (realTimeStats.first > 0) "${realTimeStats.first}%" else "Unsupported"}")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = "Current Cycle Count: ${if (realTimeStats.second >= 0) realTimeStats.second else "Unsupported"}")
 
-                    Button(
-                        onClick = {
-                            viewModel.saveCurrentBatteryData(context)
-                            realTimeStats = viewModel.getCurrentBatteryStats(context) // Refresh
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(text = "Save Current Status")
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = {
+                                viewModel.saveCurrentBatteryData(context)
+                                realTimeStats = viewModel.getCurrentBatteryStats(context) // Refresh
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(text = "Save Current Status")
+                        }
                     }
                 }
             }
@@ -142,7 +174,7 @@ fun HistoryItem(data: BatteryData) {
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(text = "Date: ${formatTimestamp(data.timestamp)}")
-            Text(text = "Cycles: ${if (data.cycleCount >= 0) data.cycleCount else "N/A"} | Health: ${data.healthStatus}%")
+            Text(text = "Cycles: ${if (data.cycleCount >= 0) data.cycleCount else "Unsupported"} | Health: ${if (data.healthStatus > 0) "${data.healthStatus}%" else "Unsupported"}")
         }
     }
 }
