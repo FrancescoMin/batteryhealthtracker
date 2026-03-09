@@ -8,10 +8,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.text.SimpleDateFormat
@@ -40,8 +39,14 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BatteryTrackerScreen(viewModel: BatteryViewModel) {
-    val latestData by viewModel.latestBatteryData.collectAsState(initial = null)
+
     val history by viewModel.allBatteryData.collectAsState(initial = emptyList())
+    val nextScheduleTime by viewModel.nextWorkScheduleTime.collectAsState(initial = null)
+
+    val context = LocalContext.current
+
+    // Auto-refresh real-time stats state
+    var realTimeStats by remember { mutableStateOf(viewModel.getCurrentBatteryStats(context)) }
 
     Scaffold(
         topBar = {
@@ -60,8 +65,10 @@ fun BatteryTrackerScreen(viewModel: BatteryViewModel) {
                 .padding(padding)
                 .padding(16.dp)
         ) {
+
+            // Real-Time View
             Text(
-                text = "Current Status",
+                text = "Real-Time Status",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 8.dp)
@@ -69,20 +76,42 @@ fun BatteryTrackerScreen(viewModel: BatteryViewModel) {
 
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    if (latestData != null) {
-                        Text(text = "Health: ${latestData!!.healthStatus}%")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = "Cycle Count: ${if (latestData!!.cycleCount >= 0) latestData!!.cycleCount else "N/A"}")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = "Last Updated: ${formatTimestamp(latestData!!.timestamp)}")
-                    } else {
-                        Text(text = "No data yet. Waiting for first scheduled job.")
+                    Text(text = "Current Health: ${realTimeStats.first}%")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "Current Cycle Count: ${if (realTimeStats.second >= 0) realTimeStats.second else "N/A"}")
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            viewModel.saveCurrentBatteryData(context)
+                            realTimeStats = viewModel.getCurrentBatteryStats(context) // Refresh
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = "Save Current Status")
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Next Scheduled Time View
+            if (nextScheduleTime != null) {
+                Text(
+                    text = "Next Scheduled Check: ${formatTimestamp(nextScheduleTime!!)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+            } else {
+                Text(
+                    text = "No scheduled background task running.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+            }
+
+            // History View
             Text(
                 text = "History",
                 style = MaterialTheme.typography.titleLarge,
