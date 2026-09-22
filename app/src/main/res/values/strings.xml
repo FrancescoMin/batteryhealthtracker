@@ -1,0 +1,234 @@
+<resources>
+    <string name="app_name">Battery Tracker</string>
+
+    <!-- General -->
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="restore">Restore</string>
+    <string name="clear">Clear</string>
+    <string name="not_available">N/A</string>
+
+    <!-- Navigation & Top Bar -->
+    <string name="title_dashboard">Battery Tracker</string>
+    <string name="title_trash">Trash</string>
+    <string name="title_settings">Settings</string>
+    <string name="back">Back</string>
+    <string name="action_trash">Trash</string>
+    <string name="action_export_csv">Export CSV</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_select_all">Select all</string>
+    <string name="action_deselect_all">Deselect all</string>
+    <string name="action_cancel_selection">Cancel selection</string>
+    <string name="selection_count_single">1 selected</string>
+    <string name="selection_count_multi">%d selected</string>
+    <string name="save_reading_fab">Save Snapshot</string>
+    <string name="snapshot_saved_snackbar">Snapshot saved to database!</string>
+    <string name="csv_export_success">History successfully exported to CSV!</string>
+    <string name="csv_export_error">Error exporting CSV file.</string>
+
+    <!-- Shizuku Banner -->
+    <string name="shizuku_connected_title">Shizuku Connected</string>
+    <string name="shizuku_connected_desc">Direct reading of Oppo/ColorOS BMS chip active.</string>
+    <string name="shizuku_req_title">Shizuku Permission Required</string>
+    <string name="shizuku_req_desc">Shizuku is running. Authorize the app to read actual battery health and exact cycles.</string>
+    <string name="shizuku_auth_btn">Authorize Now</string>
+    <string name="shizuku_fallback_title">Standard Mode (BatteryManager)</string>
+    <string name="shizuku_fallback_desc">Launch Shizuku via Wireless Debugging to enable Oppo hardware precision reading.</string>
+
+    <!-- Dashboard Cards -->
+    <string name="dashboard_section_title">Current Battery Status</string>
+    <string name="card_health_title">Battery Health</string>
+    <string name="card_health_sub">Calculated SOH</string>
+    <string name="card_cycles_title">Charge Cycles</string>
+    <string name="card_cycles_sub">Completed</string>
+    <string name="card_capacity_title">Remaining Capacity</string>
+    <string name="card_capacity_sub_design">of %d mAh</string>
+    <string name="card_capacity_sub_fcc">Max capacity (FCC)</string>
+    <string name="card_level_title">Current Level</string>
+    <string name="card_level_sub">Charge present</string>
+    <string name="data_source_prefix">Data source: </string>
+
+    <!-- Next Schedule -->
+    <string name="schedule_next">Next automatic snapshot: %s</string>
+    <string name="schedule_periodic_24h">WorkManager automatic snapshot active every 24 hours.</string>
+
+    <!-- Hardware Diagnostics -->
+    <string name="diag_hardware_title">Hardware Diagnostics</string>
+    <string name="diag_badge_oppo_auth">Oppo Auth</string>
+    <string name="diag_badge_1_cell">1 Cell</string>
+    <string name="diag_badge_2_cells">2 Cells</string>
+    <string name="diag_standby">Standby</string>
+    <string name="diag_discharging">Discharging</string>
+    <string name="diag_standard_charging">Standard Charging</string>
+    <string name="diag_tile_circuit_volt">CIRCUIT VOLTAGE</string>
+    <string name="diag_tile_circuit_volt_sub_dual">Δ %d mV (Balanced)</string>
+    <string name="diag_tile_circuit_volt_sub_single">Instant voltage</string>
+    <string name="diag_tile_qmax">QMAX CAPACITY</string>
+    <string name="diag_tile_qmax_sub">Low-load capacity</string>
+    <string name="diag_tile_rm">CHEMICAL REMAINING (RM)</string>
+    <string name="diag_tile_rm_sub">Present milliampere-hours</string>
+    <string name="diag_tile_cutoff">UV CUT-OFF THRESHOLD</string>
+    <string name="diag_tile_cutoff_sub">Protection shutdown</string>
+    <string name="diag_production_info">Production: %1$s  •  1st Use: %2$s</string>
+    <string name="diag_age_info">Effective component age: %s</string>
+    <string name="diag_age_years_months">%1$d years and %2$d months</string>
+    <string name="diag_age_months">%d months</string>
+    <string name="diag_raw_silicon_carbon_title">Raw Silicon-Carbon</string>
+    <string name="diag_raw_silicon_carbon_sub_active">Uncompensated Health and FCC</string>
+    <string name="diag_raw_silicon_carbon_sub_locked">Term coeff protected by kernel</string>
+    <string name="diag_root_required">Root permission required</string>
+
+    <!-- Health Trend & Projection -->
+    <string name="trend_card_title">Health Trend &amp; Projection</string>
+    <string name="trend_projection_text">Estimated lifespan: ~%1$d cycles remaining before reaching 80%% (estimated total: ~%2$d cycles, current: %3$s).</string>
+    <string name="trend_empty_prompt">Save at least 2 snapshots in history to view the health degradation curve.</string>
+
+    <!-- History List -->
+    <string name="history_title">Measurement History (%d)</string>
+    <string name="history_tap_to_select">Tap an item to select</string>
+    <string name="history_hold_to_select">Press and hold to select</string>
+    <string name="history_empty_title">No snapshots saved</string>
+    <string name="history_empty_desc">Press \'Save Snapshot\' to save your first measurement.</string>
+    <string name="history_item_cycles">Cycles: %s</string>
+    <string name="history_item_capacity">Capacity: %s</string>
+    <string name="history_item_source">Source: %s</string>
+
+    <!-- Deletion Dialogs -->
+    <string name="dialog_delete_single_title">Delete snapshot</string>
+    <string name="dialog_delete_multi_title">Delete %d snapshots</string>
+    <string name="dialog_delete_single_msg">Are you sure you want to move this snapshot to Trash?</string>
+    <string name="dialog_delete_multi_msg">Are you sure you want to move %d snapshots to Trash?</string>
+    <string name="snackbar_deleted_single">Snapshot moved to Trash</string>
+    <string name="snackbar_deleted_multi">%d snapshots moved to Trash</string>
+
+    <!-- Trash Screen -->
+    <string name="trash_empty_btn">Empty Trash</string>
+    <string name="trash_empty_dialog_title">Empty Trash</string>
+    <string name="trash_empty_dialog_msg">Are you sure you want to permanently delete all snapshots in the trash? This action cannot be undone.</string>
+    <string name="trash_empty_dialog_confirm">Empty</string>
+    <string name="trash_empty_state_title">Trash is empty</string>
+    <string name="trash_empty_state_desc">Snapshots deleted from history will appear here.</string>
+    <string name="trash_badge_in_trash">In Trash</string>
+    <string name="trash_action_delete_perm">Delete</string>
+    <string name="trash_action_restore">Restore</string>
+    <string name="trash_snackbar_cleared">Trash emptied.</string>
+    <string name="trash_snackbar_restored">Snapshot restored to history!</string>
+    <string name="trash_snackbar_deleted_perm">Snapshot permanently deleted.</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_section_battery_config">Battery Configuration</string>
+    <string name="settings_rated_capacity_title">Battery Rated Capacity</string>
+    <string name="settings_mode_auto">Mode: Automatic Detection (BMS/Sysfs)</string>
+    <string name="settings_mode_custom">Mode: Custom Value / Preset</string>
+    <string name="settings_section_language">App Language</string>
+    <string name="settings_language_title">Language</string>
+    <string name="settings_section_hardware_info">Hardware &amp; Ecosystem Info</string>
+    <string name="settings_detected_device">Detected device</string>
+    <string name="settings_bms_driver">BMS Sysfs Driver</string>
+    <string name="settings_shizuku_status">Shizuku Status</string>
+    <string name="settings_shizuku_connected">Connected (System Privileges Active)</string>
+    <string name="settings_shizuku_waiting">Available (Awaiting Authorization)</string>
+    <string name="settings_shizuku_not_running">Inactive (Running BatteryManager fallback)</string>
+    <string name="settings_app_version">App Version</string>
+    <string name="lang_system_default">System Default</string>
+    <string name="lang_it">Italiano (Italian)</string>
+    <string name="lang_en">English</string>
+    <string name="lang_es">Español (Spanish)</string>
+
+    <!-- Capacity Dialog -->
+    <string name="dialog_capacity_title">Rated Design Capacity</string>
+    <string name="dialog_capacity_subtitle">Enter rated mAh (IEC 61960) or select your device model:</string>
+    <string name="dialog_capacity_manual_label">Capacity in mAh (e.g. 5840)</string>
+    <string name="dialog_capacity_search_hint">Search model or codename...</string>
+    <string name="dialog_capacity_popular_presets">Popular Presets (Alphabetical):</string>
+    <string name="brand_all">All</string>
+    <string name="brand_oppo">Oppo</string>
+    <string name="brand_oneplus">OnePlus</string>
+    <string name="brand_realme">Realme</string>
+    <string name="btn_auto_detect">Auto Detect</string>
+
+    <!-- Notifications -->
+    <string name="notif_overheat_title">⚠️ High Battery Temperature: %s</string>
+    <string name="notif_overheat_text">Temperature exceeded safe threshold (42°C). Remove the phone case or temporarily disconnect SuperVOOC charging to preserve battery life.</string>
+    <string name="notif_sampling_manual_title">Manual Snapshot Completed</string>
+    <string name="notif_sampling_auto_title">Automatic Snapshot (24h)</string>
+    <string name="notif_sampling_full_title" formatted="false">100% Charge Completed • Snapshot Taken</string>
+    <string name="notif_sampling_manual_reason">Manual reading initiated via app button</string>
+    <string name="notif_sampling_auto_reason">Scheduled automatic periodic reading (every 24h)</string>
+    <string name="notif_sampling_full_reason" formatted="false">Automatic snapshot taken upon unplugging with battery at 100%</string>
+
+    <!-- RM Info Dialog -->
+    <string name="dialog_rm_info_title">Chemical Remaining (RM)</string>
+    <string name="dialog_rm_info_desc" formatted="false">Why are there two different capacity values?\n\n• Chemical Remaining (RM): This is the exact amount of charge (in mAh) currently stored in the battery at this very moment. It changes dynamically as you use or charge the phone.\n\n• Remaining Capacity (FCC, shown in the top card): This is the Full Charge Capacity — the maximum total charge the battery can hold today when charged to 100% (e.g. 5530 mAh out of 5840 mAh original design). It decreases very slowly over months and years due to natural chemical aging.\n\nFormula:\nCurrent Level % = (RM / FCC) × 100</string>
+    <string name="dialog_rm_info_close">Got it</string>
+
+    <!-- Additional Diagnostic Info Dialogs -->
+    <string name="dialog_voltage_info_title">Circuit Voltage (mV)</string>
+    <string name="dialog_voltage_info_desc" formatted="false">Represents the instantaneous electrical voltage of the battery cell(s) in millivolts (mV).\n\n• Typical values: Ranges between ~3300 mV (nearly empty battery) and ~4450 mV (100% full charge).\n\n• Dual-Cell Architecture (e.g. Find X / dual series SuperVOOC): Displays separate voltages for Cell 0 and Cell 1 along with cell balance differential (Δ mV). A delta close to 0 mV indicates optimal balance.\n\n• Single-Cell Architecture (e.g. Reno 14): Displays the direct voltage of the single installed cell.</string>
+    <string name="dialog_qmax_info_title">Qmax Capacity (mAh)</string>
+    <string name="dialog_qmax_info_desc">This is the cell\'s intrinsic maximum chemical capacity under zero-load conditions (without internal resistance or voltage drop).\n\n• Why is it higher than rated capacity? Under normal operation, a battery loses energy due to internal resistance (IR) and load voltage drops. Qmax represents the absolute theoretical capacity extractable at near-zero current.\n\n• What is it used for? The Oppo BMS fuel gauge uses Qmax as the primary reference anchor to periodically recalibrate battery health (SOH) and full charge capacity (FCC).</string>
+    <string name="dialog_cutoff_info_title">UV Cut-off Threshold (mV)</string>
+    <string name="dialog_cutoff_info_desc" formatted="false">Indicates the safety undervoltage shutdown threshold configured in the Oppo BMS chip (typically ~3300 mV).\n\n• Purpose: If a lithium-ion/polymer cell drops below 2.5V - 3.0V, it suffers irreversible chemical damage (copper collector dissolution and internal short circuits).\n\n• Emergency shutdown: When cell voltage reaches this critical threshold, the protection circuit forces an immediate device shutdown to protect the cell, displaying 0% on screen.</string>
+
+    <!-- Points 1, 2, 3 Advanced Precision Diagnostics -->
+    <string name="diag_tile_esr">Internal Resistance (ESR)</string>
+    <string name="diag_tile_esr_sub">Cell chemical impedance</string>
+    <string name="diag_tile_cell_bal">Cell Balance</string>
+    <string name="diag_tile_cell_bal_sub_single">Single-cell architecture (1S)</string>
+    <string name="diag_tile_cell_bal_sub_dual">Dual-cell (Δ %d mV)</string>
+    <string name="refresh_hint_banner">Tap 🔄 at top (or here) to refresh with a new reading</string>
+    <string name="dialog_esr_info_title">Internal Resistance / ESR (mΩ)</string>
+    <string name="dialog_esr_info_desc" formatted="false">Measures the physical opposition to current flow inside the battery cell (Equivalent Series Resistance).\n\n• Physical Formula:\nESR (mΩ) = (|V_ocv - V_now| / |I_now|) × 1000\n\n• Reference Values (at rest / discharging):\n- New / healthy cell: 50 – 250 mΩ\n- Degraded / aged cell: &gt; 450 – 600 mΩ\n\n• During Charging (Elevated values are normal):\nDuring charging it is completely normal to see elevated values (&gt; 600–1200 mΩ). The charger applies a forced overpotential and chemical polarization to drive current into the cell. To evaluate true ohmic resistance, refer to readings when unplugged (under steady discharge).\n\n• Fluctuations &amp; Reliability:\nA single momentary spike on battery is normal during rapid CPU transients. True health should be assessed by observing the average and stability over time.</string>
+    <string name="dialog_cell_bal_info_title">Cell Balance Analysis</string>
+    <string name="dialog_cell_bal_info_desc" formatted="false">Monitors the voltage uniformity between individual cells in series-connected battery systems.\n\n• Single-Cell Architecture (e.g. Reno 14):\nThe device uses a single high-capacity cell (1S). Cell divergence is physically impossible, ensuring 100% uniform degradation and zero imbalance risk.\n\n• Dual-Cell Architecture (e.g. Find X / 2S SuperVOOC):\nUses two cells in series to allow ultra-fast charging (up to 10V). The BMS actively monitors the voltage difference (Δ mV) between Cell 0 and Cell 1:\n- Δ &lt; 15 mV: Optimal Balance\n- Δ 15 - 40 mV: Normal Drift\n- Δ &gt; 40 mV: Imbalanced (Cell Divergence detected)\nSevere imbalance reduces usable total capacity to the level of the weakest cell.</string>
+    <string name="bms_sync_title">BMS Calibration &amp; Drift Status</string>
+    <string name="bms_sync_status_synced">Synchronized (High Precision)</string>
+    <string name="bms_sync_status_good">Good (~%d cycles since 100%%)</string>
+    <string name="bms_sync_status_recal_rec">Recalibration Suggested (%d cycles without 100%%)</string>
+    <string name="bms_sync_action_guide">Calibration Guide</string>
+    <string name="dialog_bms_sync_title">BMS Coulomb Counter &amp; Drift</string>
+    <string name="dialog_bms_sync_desc" formatted="false">How does the BMS track battery percentage and capacity?\n\n• The Coulomb Counter:\nThe battery management system (BMS) continuously integrates the electrical current flowing in and out of the battery over time (amperes × hours = mAh).\n\n• Drift Accumulation:\nOver dozens of partial charge cycles (e.g. 20% - 80%), tiny measurement errors accumulate, leading to \'BMS drift\'. The fuel gauge loses its chemical zero and saturation anchor points.\n\n• How to Recalibrate (BMS Sync Procedure):\n1. Discharge the phone normally until ~5% - 10%.\n2. Charge continuously to 100% without interruptions.\n3. Keep the phone plugged in at 100% for an additional 30-45 minutes (saturation phase) so the BMS can lock the OCV voltage curve and reset the coulomb counter to zero drift.</string>
+    <string name="dialog_capacity_fluctuation_title">Why Does Capacity (mAh) Fluctuate?</string>
+    <string name="dialog_capacity_fluctuation_desc" formatted="false">Capacity (mAh) or health % can slightly increase between readings. Here is why:\n\n• BMS Recalibration (Not Regeneration):\nLithium cells cannot physically regenerate. After a full 100% charge and rest, the BMS updates OCV points, correcting prior drift underestimations.\n\n• Temperature &amp; Ion Mobility:\nAt 25°C–30°C ions move faster than in the cold (10°C–18°C). A warm cell has lower internal resistance and delivers slightly more usable mAh.\n\n• Discharge Load:\nLight phone usage extracts more energy before reaching cutoff voltage than heavy loads.\n\nSmall fluctuations (±20–60 mAh) are completely normal: they reflect temperature and sensor recalibrations, not battery self-repair.</string>
+    <string name="dialog_projection_info_title" formatted="false">Cycles to 80% Estimate</string>
+    <string name="dialog_projection_info_desc" formatted="false">How is the battery life estimate calculated?\n\n• Real-time BMS Data:\nThe estimate is based on the total cycles and current health recorded directly by the phone\'s BMS chip (not on entries saved in history or trash).\n\n• Mathematical Formula:\n1. Wear rate: computes the average number of cycles completed per 1% of health lost since new.\n2. Remaining cycles: multiplies this rate by the remaining health percentage before reaching 80% (standard industry battery replacement threshold).\n\nThe estimate reflects real chemical wear since the device was first powered on.</string>
+
+    <!-- Points 4, 5, 6 Precision Diagnostics -->
+    <string name="diag_tile_saturation">True Full Charge</string>
+    <string name="diag_tile_saturation_sub_saturated" formatted="false">100% Saturated (True Full)</string>
+    <string name="diag_tile_saturation_sub_tapering">CV Phase (Tapering in progress)</string>
+    <string name="diag_tile_saturation_sub_charging">Charging (Chip SOC %d%%)</string>
+    <string name="diag_tile_saturation_sub_discharging">Discharging (Chip SOC %d%%)</string>
+    <string name="diag_tile_saturation_sub_standby">Standby</string>
+    <string name="dialog_saturation_info_title" formatted="false">True Saturation vs 100% Display</string>
+    <string name="dialog_saturation_info_desc" formatted="false">What does \"True Saturation\" mean and why does it differ from Android\'s 100%?\n\n• The Display 100%:\nSmartphone manufacturers (including Oppo) program Android to display \"100%\" as soon as constant current (CC) mode finishes (~4.40V). At this exact moment, the battery is chemically only 88%–92% full.\n\n• Saturation Phase (CV Tapering):\nTo reach true chemical saturation, the battery enters the Constant Voltage (CV) phase, absorbing decreasing current (from 1500 mA down to &lt;80 mA) for an extra 20–40 minutes.\n\n• Direct Fuel Gauge Chip Reading (chip_soc):\nThis app queries the physical fuel gauge register. When \"Saturated\" is indicated, the electrochemical cell is at genuine 100% capacity (the optimal moment for peak battery life and BMS recalibration).\n\nFormula:\nTrue Full = Status FULL || (chip_soc ≥ 100 &amp;&amp; |I_now| ≤ 80mA)</string>
+
+    <string name="diag_tile_temp_comp">Capacity at 25°C</string>
+    <string name="diag_tile_temp_comp_sub">IEC 61960 Standard</string>
+    <string name="dialog_temp_comp_info_title">Thermal Compensation (IEC 61960)</string>
+    <string name="dialog_temp_comp_info_desc" formatted="false">Why is 25°C normalized capacity critical for precision?\n\n• Lithium Thermal Sensitivity:\nUsable chemical capacity in lithium-ion and silicon-carbon cells varies directly with ambient temperature. At low temperatures (e.g. 15°C) electrolyte ion mobility drops, reducing measurable capacity; at 30°C–35°C available capacity increases.\n\n• IEC 61960 International Standard:\nTo evaluate real battery health over time without seasonal weather distortions (summer vs winter), capacity is normalized to the reference temperature of 25°C using the standard thermal coefficient (α ≈ 0.6%/°C):\nC_25°C = C_fcc / [1 + 0.006 × (T_batt - 25°C)]\n\nThis value represents pure molecular cell degradation, free from ambient temperature bias.</string>
+
+    <string name="diag_safety_title">BMS Hardware Integrity</string>
+    <string name="diag_safety_all_ok">All circuits OK (0 Fault Flags)</string>
+    <string name="diag_safety_fault_detected">Hardware Alert (%s)</string>
+    <string name="diag_safety_badge_safe">SAFE</string>
+    <string name="diag_safety_badge_warning">ALERT</string>
+    <string name="dialog_safety_info_title">BMS Hardware Protection Circuits</string>
+    <string name="dialog_safety_info_desc">The Oppo charging management chip (BMS) continuously monitors physical hardware safety registers in real-time:\n\n• Short-Circuit Protection (short_c_hw_status):\nVerifies power path integrity between charger, switching circuit, and cell. Detects micro-shorts or insulation anomalies.\n\n• Hardware Thermal Shutdown (OTP - short_ic_otp_status):\nOver-Temperature Protection. Hardware-level power cutoff if charging module silicon exceeds critical thermal limits.\n\n• Sub-board Sensors (subboard_temp_err):\nVerifies health and readings of thermal sensors on the bottom USB-C charging board.\n\nAn \"All circuits OK\" status confirms the charging circuitry and battery have never suffered electrical or thermal trauma.</string>
+
+    <!-- App Theme -->
+    <string name="settings_section_theme">App Theme</string>
+    <string name="settings_theme_title">Display Theme</string>
+    <string name="theme_system">System Default</string>
+    <string name="theme_system_desc">Follows Android system settings</string>
+    <string name="theme_light">Light Theme</string>
+    <string name="theme_light_desc">Classic bright interface</string>
+    <string name="theme_dark">Dark Theme</string>
+    <string name="theme_dark_desc">Dark shades, reduces eye strain</string>
+    <string name="theme_amoled">AMOLED Pure Black</string>
+    <string name="theme_amoled_desc">Turn off OLED pixels (#000000) for maximum battery saving</string>
+</resources>
