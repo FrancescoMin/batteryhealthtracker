@@ -168,7 +168,7 @@ flowchart LR
    - Start Shizuku via **Wireless Debugging** (no computer required after initial setup) or via **Root** (if rooted).
 
 ### App Setup
-1. Download the latest `app-debug.apk` (or release APK) from the [Releases](https://github.com/your-username/batteryhealthtracker/releases) section.
+1. Download the latest `app-debug.apk` (or release APK) from the [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases) section.
 2. Install the APK on your device.
 3. Open **Battery Health Tracker**.
 4. When prompted, tap **"Authorize Shizuku"** and allow permission in the Shizuku prompt.
@@ -186,7 +186,7 @@ flowchart LR
 ### Steps
 1. Clone this repository:
    ```bash
-   git clone https://github.com/your-username/batteryhealthtracker.git
+   git clone https://github.com/FrancescoMin/batteryhealthtracker.git
    cd batteryhealthtracker
    ```
 2. Build the debug APK using Gradle wrapper:
