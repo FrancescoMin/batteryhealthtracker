@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Battery Tracker</string>
+    <string name="app_name">Battery Health Tracker</string>
 
     <!-- General -->
     <string name="yes">Yes</string>
@@ -12,7 +12,7 @@
     <string name="not_available">N/A</string>
 
     <!-- Navigation & Top Bar -->
-    <string name="title_dashboard">Battery Tracker</string>
+    <string name="title_dashboard">Battery Health Tracker</string>
     <string name="title_trash">Trash</string>
     <string name="title_settings">Settings</string>
     <string name="back">Back</string>

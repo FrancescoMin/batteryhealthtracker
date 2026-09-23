@@ -367,7 +367,13 @@ fun BatteryTrackerDashboardScreen(
                                 contentDescription = null,
                                 modifier = Modifier.padding(end = 8.dp)
                             )
-                            Text(stringResource(R.string.title_dashboard), fontWeight = FontWeight.Bold)
+                            Text(
+                                text = stringResource(R.string.title_dashboard),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 2,
+                                lineHeight = 19.sp
+                            )
                         }
                     },
                     actions = {

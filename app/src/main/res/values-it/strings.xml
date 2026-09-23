@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Battery Tracker</string>
+    <string name="app_name">Battery Health Tracker</string>
 
     <!-- General -->
     <string name="yes">Sì</string>
@@ -12,7 +12,7 @@
     <string name="not_available">N/D</string>
 
     <!-- Navigation & Top Bar -->
-    <string name="title_dashboard">Battery Tracker</string>
+    <string name="title_dashboard">Battery Health Tracker</string>
     <string name="title_trash">Cestino</string>
     <string name="title_settings">Impostazioni</string>
     <string name="back">Indietro</string>
