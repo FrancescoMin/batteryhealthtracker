@@ -90,6 +90,14 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 - **Cycle Life Projection:** Estimates remaining charge cycles before reaching 80% capacity based on the user's historical degradation rate.
 - **Safe History Management:** Multi-selection deletion, persistent Trash bin, full restoration, and JSON/CSV export.
 
+### 🔔 Smart Snapshot Notifications & Thermal Safety Alerts
+- **Sampling Confirmation Notifications:** Provides instant on-device notification cards whenever a measurement is captured:
+  - **Manual Snapshots:** Direct feedback confirming newly saved records via the in-app *"Save Snapshot"* action.
+  - **Automatic Periodic Sampling:** Background logging executed every 24 hours via Android `WorkManager`.
+  - **100% Full-Charge Disconnect:** Automatic sampling triggered immediately when the charger is unplugged after reaching full saturation.
+  - Each notification neatly summarizes updated SOH %, cumulative charge cycles, residual capacity (mAh), and the active telemetry data source.
+- **Hardware Overheat Protection Alert:** High-priority warning triggered if the battery cell temperature exceeds the critical safety threshold (> 42°C) during high-speed SuperVOOC charging or heavy sustained workloads, advising the user to cool the device down and safeguarding battery chemistry against accelerated degradation.
+
 ### 🚀 120 Hz Native Fluidity & Battery-Saving Design
 - **Ultra-Fluid UI:** Fully optimized for high-refresh-rate displays (120 Hz) with zero-allocation composables, stable keys, and strict 8.33 ms frame budget compliance.
 - **Color-Matched System Bars:** Status bar and navigation bar seamlessly blend with the application header banner for a professional, unified aesthetic.
@@ -140,7 +148,8 @@ flowchart LR
     C -->|Normalizes Telemetry| D[BatteryViewModel]
     D -->|StateFlow| E[Jetpack Compose UI]
     D -->|Persistent History| F[Room SQLite Database]
-    D -->|Periodic Sampling| G[WorkManager Background Task]
+    D -->|Periodic & 100% Triggers| G[WorkManager & Charge Receiver]
+    D -->|Sampling & Safety Alerts| H[NotificationHelper]
 ```
 
 1. **Permission Layer:** When granted access through **Shizuku**, the application accesses system-level shell commands to read standard and vendor-specific sysfs nodes that are normally blocked by SELinux from third-party app access.
@@ -155,7 +164,7 @@ flowchart LR
    - Adapts to vendor sign conventions (discharging vs charging current).
    - Computes State of Health: $\text{SOH} = \frac{C_{\text{fcc}}}{C_{\text{rated}}} \times 100\%$.
    - Applies temperature normalization following IEC 61960 standards.
-4. **Reactive UI:** Built entirely in **Jetpack Compose (Material 3)**, reactive flows dynamically render real-time changes without unnecessary recompositions.
+4. **Reactive UI & Event Notifications:** Built entirely in **Jetpack Compose (Material 3)**, reactive flows dynamically render real-time changes, while `NotificationHelper` broadcasts instant local summaries for manual and automated sampling events.
 
 ---
 
@@ -168,11 +177,13 @@ flowchart LR
    - Start Shizuku via **Wireless Debugging** (no computer required after initial setup) or via **Root** (if rooted).
 
 ### App Setup
-1. Download the latest `app-debug.apk` (or release APK) from the [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases) section.
+1. Download the latest `BatteryHealthTracker-v1.0.apk` from the [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases) section.
 2. Install the APK on your device.
 3. Open **Battery Health Tracker**.
-4. When prompted, tap **"Authorize Shizuku"** and allow permission in the Shizuku prompt.
-5. All hardware telemetry and accurate battery health metrics will immediately populate!
+4. When prompted on Android 13+, allow the **Notification Permission** (`POST_NOTIFICATIONS`):
+   - **Why it is requested:** Enables status receipts for manual snapshots and automated background logging (24-hour periodic cycles and 100% charger disconnects), as well as real-time overheat alerts (> 42°C).
+5. Tap **"Authorize Shizuku"** and allow permission in the Shizuku prompt.
+6. All hardware telemetry, health metrics, and BMS registers will immediately populate!
 
 ---
 
@@ -204,12 +215,13 @@ flowchart LR
 
 ---
 
-## 🔒 Privacy & Security
+## 🔒 Privacy, Security & Permissions
 
-- **100% Offline:** The app does not request `android.permission.INTERNET`. Zero network calls, zero data leaves your device.
+- **100% Offline:** The app does not request or declare `android.permission.INTERNET`. Zero network calls, zero outbound packets, zero data leaves your device.
+- **Transparent Notifications (`POST_NOTIFICATIONS`):** Used strictly for local on-device sampling receipts (manual captures, 24h background sampling, and 100% unplug events) and critical battery overheat alarms (> 42°C). Never used for marketing or background telemetry.
 - **Zero Trackers / Telemetry:** No Google Analytics, Firebase, Crashlytics, or third-party advertising SDKs.
-- **Open Source:** Full source code is open and auditable.
 - **Local Storage Only:** Historical measurements are stored in a local on-device SQLite database via Android Room.
+- **Open Source:** Full source code is open, auditable, and distributed under the Apache-2.0 License.
 
 ---
 
