@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="app/src/main/res/drawable/ic_launcher.xml" width="96" height="96" alt="Battery Health Tracker Logo" />
+  <img src="docs/logo.png" width="96" height="96" alt="Battery Health Tracker Logo" />
 </p>
 
 <h1 align="center">Battery Health Tracker (Oplus Edition)</h1>
