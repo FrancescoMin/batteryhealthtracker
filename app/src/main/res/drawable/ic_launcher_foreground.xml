@@ -1,0 +1,63 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Battery Terminal Cap -->
+    <path
+        android:pathData="M48,27 h12 a1.5,1.5 0 0,1 1.5,1.5 v2.5 h-15 v-2.5 a1.5,1.5 0 0,1 1.5,-1.5 z"
+        android:fillColor="#F3E8FF" />
+
+    <!-- Battery Body Outline -->
+    <path
+        android:pathData="M43,31 h22 a6,6 0 0,1 6,6 v38 a6,6 0 0,1 -6,6 h-22 a6,6 0 0,1 -6,-6 v-38 a6,6 0 0,1 6,-6 z"
+        android:strokeColor="#F3E8FF"
+        android:strokeWidth="2.4"
+        android:fillColor="#00000000" />
+
+    <!-- Battery Chemical Fill Level (Bottom) -->
+    <path
+        android:pathData="M39.5,63 h29 v12 a4.5,4.5 0 0,1 -4.5,4.5 h-20 a4.5,4.5 0 0,1 -4.5,-4.5 z"
+        android:fillAlpha="0.35">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="54"
+                android:startY="63"
+                android:endX="54"
+                android:endY="79.5"
+                android:type="linear">
+                <item android:color="#06B6D4" android:offset="0.0" />
+                <item android:color="#10B981" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- ECG Health Pulse Line -->
+    <path
+        android:pathData="M39,63 L45,63 L47,60 L49,66 L51,63 L57,63 L59,58 L61,67 L63,63 L69,63"
+        android:strokeColor="#A78BFA"
+        android:strokeWidth="1.2"
+        android:strokeAlpha="0.85"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+
+    <!-- Electric Charging Lightning Bolt -->
+    <path
+        android:pathData="M56,38 L47,53 L53,53 L51,70 L62,50 L56,50 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="54"
+                android:startY="38"
+                android:endX="54"
+                android:endY="70"
+                android:type="linear">
+                <item android:color="#38BDF8" android:offset="0.0" />
+                <item android:color="#10B981" android:offset="0.5" />
+                <item android:color="#4ADE80" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

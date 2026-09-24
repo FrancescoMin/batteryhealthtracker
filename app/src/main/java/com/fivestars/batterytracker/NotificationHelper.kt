@@ -74,7 +74,7 @@ object NotificationHelper {
         val text = "La temperatura ha superato la soglia di sicurezza (42°C). Rimuovi la cover o scollega temporaneamente la ricarica SuperVOOC per preservare la salute della cella."
 
         val notification = NotificationCompat.Builder(context, CHANNEL_OVERHEAT_ID)
-            .setSmallIcon(R.drawable.ic_launcher)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
@@ -132,7 +132,7 @@ object NotificationHelper {
         val notifId = if (isFullChargeTrigger) NOTIFICATION_FULL_CHARGE_ID else NOTIFICATION_ID
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(summaryText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(expandedText))
