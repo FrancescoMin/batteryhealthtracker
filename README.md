@@ -112,72 +112,98 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 
 ---
 
-## 📱 Supported Devices & Verified Database
+## 📱 Verified Device Battery Database & Hardware Compatibility
 
-The app includes an extensive, verified database of factory **rated (nominal)** and **typical** capacities for single-cell and serial dual-cell (1S/2S) architectures across the Oplus ecosystem:
+> [!NOTE]
+> The table below catalogues factory-verified battery specifications (nominal rated capacity according to **IEC 61960** and typical capacity) embedded directly within the application's auto-detection preset engine.  
+> **Important Hardware Clarification:** While low-level sysfs structures are standardized across the ColorOS, OxygenOS, and Realme UI codebases, physical sysfs node paths, SELinux policies, and fuel gauge drivers can vary based on regional variants, minor carrier updates, or custom ROMs. As such, real-world hardware reading capability cannot be 100% guaranteed on every unverified build. Community feedback, testing, and reports via [GitHub Issues](https://github.com/FrancescoMin/batteryhealthtracker/issues) are warmly encouraged!
 
 | Manufacturer | Model Series | Battery Architecture | Typical / Rated Capacity |
 | :--- | :--- | :--- | :--- |
+| **OnePlus** | OnePlus 15 | Serial Dual-Cell | 7300 mAh (2×3650) / 7150 mAh (2×3575) |
+| **OnePlus** | OnePlus 13 / 13R | Silicon-Carbon Dual-Cell | 6000 mAh / 5840 mAh |
+| **OnePlus** | OnePlus 12 / 12R | Dual-Cell Serial | 5400–5500 mAh / 5260–5360 mAh |
+| **OnePlus** | OnePlus 11 / 10 Pro | Dual-Cell Serial | 5000 mAh / 4880 mAh |
+| **OnePlus** | Nord 5 (Global & India) | High-Capacity Dual-Cell | 6800 mAh / 6650 mAh |
+| **OnePlus** | Nord 5 (EU/UK) | Dual-Cell Serial | 5200 mAh / 5200 mAh |
+| **OnePlus** | Nord 4 / CE 4 / CE 4 Lite | Dual-Cell Serial | 5500 mAh / 5360 mAh |
+| **OnePlus** | Nord 3 | Dual-Cell Serial | 5000 mAh / 4880 mAh |
+| **OnePlus** | OnePlus Open | Dual-Cell Foldable | 4805 mAh / 4680 mAh |
+| **Realme** | GT 8 Pro | Dual-Cell Serial | 7000 mAh (2×3500) / 6850 mAh (2×3425) |
+| **Realme** | GT 7 Pro (Global/EU/CN) | Dual-Cell Serial | 6500 mAh (2×3250) / 6310 mAh (2×3155) |
+| **Realme** | GT 7 Pro (India) | Dual-Cell Serial | 5800 mAh / 5660 mAh |
+| **Realme** | GT 6 / GT 6T / GT 5 Pro | Dual-Cell Serial | 5400–5500 mAh / 5260–5360 mAh |
+| **Realme** | 14 Pro+ | Silicon-Carbon Single-Cell | 6000 mAh / 5850 mAh |
+| **Realme** | 13 Pro+ | High-Density Single-Cell | 5200 mAh / 5050 mAh |
+| **Realme** | 12 Pro+ | High-Density Single-Cell | 5000 mAh / 4880 mAh |
 | **Oppo** | Find X9 Pro | Silicon-Carbon Dual-Cell | 7500 mAh / 7290 mAh (28.13 Wh / 27.34 Wh) |
 | **Oppo** | Find X9 | Silicon-Carbon Dual-Cell | 7025 mAh / 6840 mAh (26.35 Wh / 25.65 Wh) |
 | **Oppo** | Find X8 / X8 Pro | Silicon-Carbon Dual-Cell | 5630–5910 mAh (Typical) |
 | **Oppo** | Find X7 / X7 Ultra | Dual-Cell Serial | 5000 mAh / 4860–4880 mAh |
 | **Oppo** | Reno 16 (Global/EU) | High-Density Single-Cell | 6000 mAh / 5820 mAh (22.5 Wh / 21.83 Wh) |
 | **Oppo** | Reno 16 (China) | Silicon-Carbon | 6700 mAh / 6490 mAh |
-| **Oppo** | Reno 15 / 15 Pro | High-Density Single-Cell | 6500 mAh / 6335 mAh (25.48 Wh / 24.84 Wh) |
+| **Oppo** | Reno 15 / 15 Pro | High-Density Single-Cell | 6200–6500 mAh / 6040–6335 mAh |
 | **Oppo** | Reno 14 / 14 Pro | High-Density Single-Cell | 6000–6200 mAh / 5840–6060 mAh |
-| **OnePlus** | OnePlus 15 | Serial Dual-Cell | 7300 mAh (2×3650) / 7150 mAh (2×3575) |
-| **OnePlus** | OnePlus 13 / 13R | Silicon-Carbon Dual-Cell | 6000 mAh / 5840 mAh |
-| **OnePlus** | OnePlus 12 / 12R | Dual-Cell Serial | 5400–5500 mAh / 5260–5360 mAh |
-| **OnePlus** | OnePlus 11 / 10 Pro | Dual-Cell Serial | 5000 mAh / 4880 mAh |
-| **OnePlus** | OnePlus Open | Dual-Cell Foldable | 4805 mAh / 4680 mAh |
-| **Realme** | GT 8 Pro | Dual-Cell Serial | 7000 mAh (2×3500) / 6850 mAh (2×3425) |
-| **Realme** | GT 7 Pro (Global/EU) | Dual-Cell Serial | 6500 mAh (2×3250) / 6310 mAh (2×3155) |
-| **Realme** | GT 6 / GT 5 / Neo | Dual-Cell Serial | 5240–5500 mAh (Typical) |
+| **Oppo** | Reno 10 Pro / 11 Pro | Dual-Cell Serial | 4600 mAh / 4440 mAh |
 
-*Manual rated capacity override is also supported for custom or unlisted models.*
+*Manual rated capacity override is also supported in Settings for custom or unlisted models.*
 
 ---
 
 ## 🛠️ How It Works (Technical Architecture)
 
 ```mermaid
-flowchart LR
-    A[Oplus Kernel Sysfs Nodes] -->|Elevated Read| B[Shizuku Service]
-    B -->|IPC Binder| C[BatteryRepository]
-    C -->|Normalizes Telemetry| D[BatteryViewModel]
-    D -->|StateFlow| E[Jetpack Compose UI]
-    D -->|Persistent History| F[Room SQLite Database]
-    D -->|Periodic & 100% Triggers| G[WorkManager & Charge Receiver]
-    D -->|Sampling & Safety Alerts| H[NotificationHelper]
+flowchart TD
+    subgraph Data Sources & Hardware Tiers
+        A1["OPlus Kernel Sysfs MediaTek<br/>(oplus_chg/battery, battery_cc)"]
+        A2["OPlus Kernel Sysfs Snapdragon<br/>(power_supply/battery/bms, battery_cycle)"]
+        A3["Android 14+ HAL Interface<br/>(BatteryManager API 34+ id 7)"]
+        A4["Universal Android API Fallback<br/>(Standard BatteryManager)"]
+    end
+    
+    A1 & A2 -->|Elevated Shell via Shizuku| B[Multi-Path Hardware Resolver]
+    A3 -->|Automated HAL Cycle Fallback| B
+    A4 -->|Non-OPlus Fallback with Warnings| B
+    
+    B -->|Normalized Telemetry & Inferences| C[BatteryViewModel]
+    C -->|StateFlow| D[Jetpack Compose UI]
+    C -->|Persistent History| E[Room SQLite Database]
+    C -->|Periodic & 100% Triggers| F[WorkManager & Charge Receiver]
+    C -->|Sampling & Safety Alerts| G[NotificationHelper]
 ```
 
-1. **Permission Layer:** When granted access through **Shizuku**, the application accesses system-level shell commands to read standard and vendor-specific sysfs nodes that are normally blocked by SELinux from third-party app access.
-2. **Data Extraction:** Reads nodes including:
-   - `/sys/class/oplus_chg/battery/mcu_vote_soc` & `chip_soc`
-   - `/sys/class/oplus_chg/battery/batt_rm` (Remaining chemical capacity in mAh)
-   - `/sys/class/oplus_chg/battery/batt_fcc` (Full charge capacity in mAh)
-   - `/sys/class/oplus_chg/battery/batt_cc` (BMS cycle count)
-   - `/sys/class/oplus_chg/battery/short_c_hw_status`, `short_ic_otp_status`, `subboard_temp_err`
-   - `/sys/class/power_supply/battery/current_now`, `voltage_now`, `temp`
-3. **Data Processing:**
-   - Adapts to vendor sign conventions (discharging vs charging current).
-   - Computes State of Health: $\text{SOH} = \frac{C_{\text{fcc}}}{C_{\text{rated}}} \times 100\%$.
-   - Applies temperature normalization following IEC 61960 standards.
-4. **Reactive UI & Event Notifications:** Built entirely in **Jetpack Compose (Material 3)**, reactive flows dynamically render real-time changes, while `NotificationHelper` broadcasts instant local summaries for manual and automated sampling events.
+### Multi-Tiered Hardware Resolution & Fallback Strategy
+
+The application employs an intelligent multi-tiered pipeline that dynamically adapts to device vendors, kernel architectures, and processor families:
+
+1. **Tier 1: Direct OPlus Kernel Sysfs (Oppo, OnePlus, Realme via Shizuku)**
+   - **Processor Family Adaptation (Qualcomm Snapdragon vs. MediaTek Dimensity):**
+     - On **MediaTek** platforms (e.g. Dimensity 7300/8300/9400), cumulative charge cycles are registered under `/sys/class/oplus_chg/battery/battery_cc`.
+     - On **Qualcomm Snapdragon** platforms (e.g. Snapdragon 7+ Gen 3, 8 Gen 2/3/4), the kernel exposes cycle counts and power metrics under `battery_cycle`, `cycle_count`, `/sys/class/power_supply/battery/`, or `/sys/class/power_supply/bms/`.
+     - A chained, low-overhead shell transaction (`querySysfs`) queries these candidates in priority order within a single Binder transaction, eliminating latency.
+   - **Microampere ($\mu\text{Ah}$) Normalization:** Automatically recognizes and scales raw Qualcomm PMIC registers reporting in $\mu\text{Ah}$ ($> 100,000$) to standard milliampere-hours ($\text{mAh}$).
+   - **Bidirectional SOH & FCC Inference:** If a custom firmware exposes the physical State of Health (SOH) register (e.g., 98%) but restricts the raw Full Charge Capacity node, the app mathematically deduces true residual capacity against the verified factory IEC rating ($\text{Rated} \times \frac{\text{SOH}}{100}$), and vice versa.
+
+2. **Tier 2: Android 14+ Hardware HAL Fallback**
+   - If low-level sysfs cycle count nodes are modified or restricted by manufacturer SELinux policies across minor firmware updates, the app automatically queries Android 14's hardware HAL (`BatteryManager.getIntProperty(7)`).
+   - This ensures charge cycle counters remain fully operational on modern Android 14/15/16 devices even when custom sysfs files are unavailable.
+
+3. **Tier 3: Universal Android BatteryManager Fallback (Samsung, Google Pixel, Xiaomi, etc.)**
+   - When running on non-OPlus hardware or if Shizuku permissions are not granted, the app gracefully falls back to the standard Android `BatteryManager` API.
+   - **Reliability Badges & Scientific Transparency:** Standard Android APIs only expose `BATTERY_PROPERTY_CHARGE_COUNTER`, which reflects the **instantaneous Coulomb counter** (current charge present in the cell based on SoC), not the degraded chemical maximum capacity. In fallback mode, the app displays prominent **red warning badges** and explanatory dialogs to ensure users are never misled into confusing instantaneous charge with battery wear.
 
 ---
 
 ## 📥 Installation & Setup
 
 ### Prerequisites
-1. An **Oppo, OnePlus, or Realme** device running Android 14 or higher.
+1. An **Oppo, OnePlus, or Realme** device running Android 14 or higher (or any Android 14+ device with standard BatteryManager support).
 2. **Shizuku** installed and running:
    - Download Shizuku from [Google Play](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api) or [GitHub Releases](https://github.com/RikkaApps/Shizuku/releases).
    - Start Shizuku via **Wireless Debugging** (no computer required after initial setup) or via **Root** (if rooted).
 
 ### App Setup
-1. Download the latest `BatteryHealthTracker-v1.0.apk` from the [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases) section.
+1. Download the latest `BatteryHealthTracker-v1.1.apk` from the [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases) section.
 2. Install the APK on your device.
 3. Open **Battery Health Tracker**.
 4. When prompted on Android 13+, allow the **Notification Permission** (`POST_NOTIFICATIONS`):
