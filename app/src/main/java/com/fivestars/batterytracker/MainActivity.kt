@@ -217,19 +217,100 @@ fun BatteryTrackerDashboardScreen(
         }
     }
 
+    // Dialog per la spiegazione della salute della batteria (SOH)
+    var showHealthInfoDialog by remember { mutableStateOf(false) }
+
+    if (showHealthInfoDialog) {
+        val isBm = currentSnapshot?.isShizukuUsed != true
+        AlertDialog(
+            onDismissRequest = { showHealthInfoDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (isBm) Icons.Default.Warning else Icons.Default.Info,
+                        contentDescription = null,
+                        tint = if (isBm) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.dialog_health_info_title), fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Column {
+                        if (isBm) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .padding(top = 2.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = stringResource(R.string.dialog_health_bm_warning_title),
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = stringResource(R.string.dialog_health_bm_warning_desc),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        Text(
+                            text = stringResource(R.string.dialog_health_shizuku_desc),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showHealthInfoDialog = false }) {
+                    Text(stringResource(R.string.dialog_rm_info_close), fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
+
     // Dialog per la spiegazione delle oscillazioni di capacità residua (mAh / FCC)
     var showCapacityFluctuationDialog by remember { mutableStateOf(false) }
 
     if (showCapacityFluctuationDialog) {
+        val isBm = currentSnapshot?.isShizukuUsed != true
         AlertDialog(
             onDismissRequest = { showCapacityFluctuationDialog = false },
             containerColor = MaterialTheme.colorScheme.surface,
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Default.Info,
+                        imageVector = if (isBm) Icons.Default.Warning else Icons.Default.Info,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = if (isBm) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(22.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -242,14 +323,135 @@ fun BatteryTrackerDashboardScreen(
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    Text(
-                        text = stringResource(R.string.dialog_capacity_fluctuation_desc),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Column {
+                        if (isBm) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .padding(top = 2.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = stringResource(R.string.dialog_capacity_bm_warning_title),
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = stringResource(R.string.dialog_capacity_bm_warning_desc),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        Text(
+                            text = stringResource(R.string.dialog_capacity_fluctuation_desc),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showCapacityFluctuationDialog = false }) {
+                    Text(stringResource(R.string.dialog_rm_info_close), fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
+
+    // Dialog per la spiegazione dei cicli di carica
+    var showCyclesInfoDialog by remember { mutableStateOf(false) }
+
+    if (showCyclesInfoDialog) {
+        val isBm = currentSnapshot?.isShizukuUsed != true
+        val isCyclesWarn = (isBm && (currentSnapshot?.cycleCount == null || currentSnapshot?.cycleCount == 0)) || currentSnapshot?.cycleCount == null
+        AlertDialog(
+            onDismissRequest = { showCyclesInfoDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (isCyclesWarn) Icons.Default.Warning else Icons.Default.Info,
+                        contentDescription = null,
+                        tint = if (isCyclesWarn) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.dialog_cycles_info_title), fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Column {
+                        if (isCyclesWarn) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .padding(top = 2.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = stringResource(R.string.dialog_cycles_bm_warning_title),
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = stringResource(R.string.dialog_cycles_bm_warning_desc),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        Text(
+                            text = stringResource(R.string.dialog_cycles_desc),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showCyclesInfoDialog = false }) {
                     Text(stringResource(R.string.dialog_rm_info_close), fontWeight = FontWeight.Bold)
                 }
             }
@@ -485,6 +687,8 @@ fun BatteryTrackerDashboardScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 DashboardCards(
                     snapshot = currentSnapshot,
+                    onHealthInfoClick = { showHealthInfoDialog = true },
+                    onCyclesInfoClick = { showCyclesInfoDialog = true },
                     onCapacityInfoClick = { showCapacityFluctuationDialog = true }
                 )
             }
@@ -1028,14 +1232,42 @@ fun ShizukuStatusCard(
 @Composable
 fun DashboardCards(
     snapshot: BatterySnapshot?,
+    onHealthInfoClick: () -> Unit = {},
+    onCyclesInfoClick: () -> Unit = {},
     onCapacityInfoClick: () -> Unit = {}
 ) {
     val notAvail = stringResource(R.string.not_available)
+    val isBatteryManager = snapshot?.isShizukuUsed != true
+    val isHealthInaccurate = isBatteryManager || snapshot?.healthPercentage == null
+    val isCyclesInaccurate = (snapshot?.cycleCount == null) || (isBatteryManager && snapshot.cycleCount == 0)
+
     val healthText = snapshot?.healthPercentage?.let { "$it%" } ?: notAvail
-    val cyclesText = snapshot?.cycleCount?.let { "$it" } ?: notAvail
+    val cyclesText = if (isCyclesInaccurate) notAvail else (snapshot?.cycleCount?.let { "$it" } ?: notAvail)
     val capacityText = snapshot?.currentCapacityMah?.let { String.format(Locale.US, "%.0f mAh", it) } ?: notAvail
     val levelText = snapshot?.batteryLevelPercentage?.let { "$it%" } ?: notAvail
     val sourceText = snapshot?.source ?: notAvail
+
+    val capacitySubtitle = if (isBatteryManager) {
+        snapshot?.designCapacityMah?.let {
+            stringResource(R.string.card_capacity_sub_bm_with_design, it.toInt())
+        } ?: stringResource(R.string.card_capacity_sub_bm)
+    } else {
+        snapshot?.designCapacityMah?.let {
+            stringResource(R.string.card_capacity_sub_design, it.toInt())
+        } ?: stringResource(R.string.card_capacity_sub_fcc)
+    }
+
+    val healthSubtitle = if (isHealthInaccurate) {
+        stringResource(R.string.card_health_sub_bm)
+    } else {
+        stringResource(R.string.card_health_sub)
+    }
+
+    val cyclesSubtitle = if (isCyclesInaccurate) {
+        stringResource(R.string.card_cycles_sub_bm)
+    } else {
+        stringResource(R.string.card_cycles_sub)
+    }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // Riga 1: Salute % e Cicli
@@ -1046,17 +1278,23 @@ fun DashboardCards(
             MetricCard(
                 title = stringResource(R.string.card_health_title),
                 value = healthText,
-                subtitle = stringResource(R.string.card_health_sub),
+                subtitle = healthSubtitle,
                 icon = Icons.Default.BatteryChargingFull,
                 modifier = Modifier.weight(1f),
-                isHighlighted = true
+                isHighlighted = !isHealthInaccurate,
+                showInfoIcon = true,
+                showWarningIcon = isHealthInaccurate,
+                onClick = onHealthInfoClick
             )
             MetricCard(
                 title = stringResource(R.string.card_cycles_title),
                 value = cyclesText,
-                subtitle = stringResource(R.string.card_cycles_sub),
+                subtitle = cyclesSubtitle,
                 icon = Icons.Default.Autorenew,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                showInfoIcon = true,
+                showWarningIcon = isCyclesInaccurate,
+                onClick = onCyclesInfoClick
             )
         }
 
@@ -1068,10 +1306,11 @@ fun DashboardCards(
             MetricCard(
                 title = stringResource(R.string.card_capacity_title),
                 value = capacityText,
-                subtitle = snapshot?.designCapacityMah?.let { stringResource(R.string.card_capacity_sub_design, it.toInt()) } ?: stringResource(R.string.card_capacity_sub_fcc),
+                subtitle = capacitySubtitle,
                 icon = Icons.Default.Speed,
                 modifier = Modifier.weight(1f),
                 showInfoIcon = true,
+                showWarningIcon = isBatteryManager,
                 onClick = onCapacityInfoClick
             )
             MetricCard(
@@ -1118,6 +1357,7 @@ fun MetricCard(
     modifier: Modifier = Modifier,
     isHighlighted: Boolean = false,
     showInfoIcon: Boolean = false,
+    showWarningIcon: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {
     Card(
@@ -1141,12 +1381,21 @@ fun MetricCard(
                         style = MaterialTheme.typography.labelMedium,
                         color = if (isHighlighted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    if (showWarningIcon) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "Warning",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
                     if (showInfoIcon) {
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = "Info",
-                            tint = if (isHighlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (showWarningIcon) MaterialTheme.colorScheme.error else if (isHighlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(13.dp)
                         )
                     }

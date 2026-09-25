@@ -72,6 +72,54 @@ object OplusDevicePresets {
         ),
         DeviceBatteryPreset(
             brand = "OnePlus",
+            modelName = "Nord 5",
+            regionVariant = "India / Global",
+            typicalMah = 6800,
+            ratedMah = 6650.0,
+            codeNames = listOf("CPH2707", "CPH2709")
+        ),
+        DeviceBatteryPreset(
+            brand = "OnePlus",
+            modelName = "Nord 5",
+            regionVariant = "EU / UK",
+            typicalMah = 5200,
+            ratedMah = 5200.0,
+            codeNames = listOf("CPH2709_EU")
+        ),
+        DeviceBatteryPreset(
+            brand = "OnePlus",
+            modelName = "13R",
+            regionVariant = null,
+            typicalMah = 6000,
+            ratedMah = 5840.0,
+            codeNames = listOf("CPH2649", "CPH2645", "CPH2647")
+        ),
+        DeviceBatteryPreset(
+            brand = "OnePlus",
+            modelName = "Nord 3",
+            regionVariant = null,
+            typicalMah = 5000,
+            ratedMah = 4880.0,
+            codeNames = listOf("CPH2491", "CPH2493")
+        ),
+        DeviceBatteryPreset(
+            brand = "OnePlus",
+            modelName = "Nord CE 4",
+            regionVariant = null,
+            typicalMah = 5500,
+            ratedMah = 5360.0,
+            codeNames = listOf("CPH2613")
+        ),
+        DeviceBatteryPreset(
+            brand = "OnePlus",
+            modelName = "Nord CE 4 Lite",
+            regionVariant = null,
+            typicalMah = 5500,
+            ratedMah = 5360.0,
+            codeNames = listOf("CPH2621", "CPH2619")
+        ),
+        DeviceBatteryPreset(
+            brand = "OnePlus",
             modelName = "Open",
             regionVariant = null,
             typicalMah = 4805,
@@ -238,11 +286,35 @@ object OplusDevicePresets {
         // --- REALME ---
         DeviceBatteryPreset(
             brand = "Realme",
+            modelName = "12 Pro+",
+            regionVariant = null,
+            typicalMah = 5000,
+            ratedMah = 4880.0,
+            codeNames = listOf("RMX3840", "RMX3841")
+        ),
+        DeviceBatteryPreset(
+            brand = "Realme",
             modelName = "13 Pro+",
             regionVariant = null,
             typicalMah = 5200,
             ratedMah = 5050.0,
-            codeNames = listOf("RMX3921")
+            codeNames = listOf("RMX3921", "RMX3920")
+        ),
+        DeviceBatteryPreset(
+            brand = "Realme",
+            modelName = "14 Pro+",
+            regionVariant = null,
+            typicalMah = 6000,
+            ratedMah = 5850.0,
+            codeNames = listOf("RMX3980", "RMX3981")
+        ),
+        DeviceBatteryPreset(
+            brand = "Realme",
+            modelName = "GT 5 Pro",
+            regionVariant = null,
+            typicalMah = 5400,
+            ratedMah = 5260.0,
+            codeNames = listOf("RMX3888")
         ),
         DeviceBatteryPreset(
             brand = "Realme",
@@ -250,7 +322,15 @@ object OplusDevicePresets {
             regionVariant = null,
             typicalMah = 5500,
             ratedMah = 5360.0,
-            codeNames = listOf("RMX3851")
+            codeNames = listOf("RMX3851", "RMX3850")
+        ),
+        DeviceBatteryPreset(
+            brand = "Realme",
+            modelName = "GT 6T",
+            regionVariant = null,
+            typicalMah = 5500,
+            ratedMah = 5360.0,
+            codeNames = listOf("RMX3853")
         ),
         DeviceBatteryPreset(
             brand = "Realme",
@@ -292,10 +372,10 @@ object OplusDevicePresets {
     /**
      * Rileva se il dispositivo corrente corrisponde a uno dei preset noti
      */
-    fun detectDevicePreset(): DeviceBatteryPreset? {
-        val model = Build.MODEL.uppercase()
+    fun detectDevicePreset(model: String = Build.MODEL): DeviceBatteryPreset? {
+        val upper = model.uppercase()
         return ALL_PRESETS.firstOrNull { preset ->
-            preset.codeNames.any { code -> model.contains(code.uppercase()) }
+            preset.codeNames.any { code -> upper.contains(code.uppercase()) }
         }
     }
 }

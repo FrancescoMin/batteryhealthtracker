@@ -102,15 +102,53 @@ class BatteryRepository(private val context: Context) {
 
     private fun readFromOplusSysfs(batteryLevel: Int?): BatterySnapshot? {
         return try {
-            val fccStr = executeShizukuCommand("cat /sys/class/oplus_chg/battery/battery_fcc")
-            val designStr = executeShizukuCommand("cat /sys/class/oplus_chg/battery/design_capacity")
-            val ccStr = executeShizukuCommand("cat /sys/class/oplus_chg/battery/battery_cc")
-            val sohStr = executeShizukuCommand("cat /sys/class/oplus_chg/battery/battery_soh")
+            val rawFccVal = querySysfs(
+                "/sys/class/oplus_chg/battery/battery_fcc",
+                "/sys/class/oplus_chg/battery/fcc",
+                "/sys/class/power_supply/battery/charge_full",
+                "/sys/class/power_supply/bms/charge_full",
+                "/sys/class/power_supply/battery/batt_fcc",
+                "/sys/class/power_supply/battery/battery_fcc"
+            )?.toDoubleOrNull()
+            val fcc = if (rawFccVal != null && rawFccVal > 100000) rawFccVal / 1000.0 else rawFccVal
 
-            val rawSoh = sohStr?.toIntOrNull()
-            val cycles = ccStr?.toIntOrNull()
-            val fcc = fccStr?.toDoubleOrNull()
-            val rawDesign = designStr?.toDoubleOrNull()
+            val rawDesignVal = querySysfs(
+                "/sys/class/oplus_chg/battery/design_capacity",
+                "/sys/class/power_supply/battery/charge_full_design",
+                "/sys/class/power_supply/bms/charge_full_design",
+                "/sys/class/power_supply/battery/design_capacity"
+            )?.toDoubleOrNull()
+            val rawDesign = if (rawDesignVal != null && rawDesignVal > 100000) rawDesignVal / 1000.0 else rawDesignVal
+
+            val rawCyclesVal = querySysfs(
+                "/sys/class/oplus_chg/battery/battery_cycle",
+                "/sys/class/oplus_chg/battery/battery_cc",
+                "/sys/class/oplus_chg/battery/cycle_count",
+                "/sys/class/power_supply/battery/cycle_count",
+                "/sys/class/power_supply/bms/cycle_count",
+                "/sys/class/power_supply/battery/battery_cycle",
+                "/sys/class/power_supply/battery/charge_cycle"
+            )?.toIntOrNull()
+
+            val cycles = if (rawCyclesVal != null && rawCyclesVal >= 0) {
+                rawCyclesVal
+            } else {
+                try {
+                    val bm = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+                    val bmCycles = bm.getIntProperty(7)
+                    if (bmCycles >= 0) bmCycles else null
+                } catch (_: Exception) {
+                    null
+                }
+            }
+
+            val rawSoh = querySysfs(
+                "/sys/class/oplus_chg/battery/battery_soh",
+                "/sys/class/oplus_chg/battery/soh",
+                "/sys/class/power_supply/battery/battery_soh",
+                "/sys/class/power_supply/battery/soh",
+                "/sys/class/power_supply/bms/soh"
+            )?.toIntOrNull()
 
             // Determinazione della capacità nominale (Rated Capacity IEC 61960):
             // 1. Se l'utente ha impostato una capacità manuale o scelto un preset, usa quel valore
@@ -128,10 +166,10 @@ class BatteryRepository(private val context: Context) {
                     rawDesign != null && rawDesign in 7400.0..7650.0 -> 7290.0 // Oppo Find X9 Pro (tipica 7500 / nominale 7290)
                     rawDesign != null && rawDesign in 7200.0..7399.0 -> 7150.0 // OnePlus 15 (tipica 7300 / nominale 7150)
                     rawDesign != null && rawDesign in 6950.0..7100.0 -> 6840.0 // Find X9 (7025 / 6840) / Realme GT 8 Pro (7000 / 6850)
-                    rawDesign != null && rawDesign in 6600.0..6800.0 -> 6490.0 // Reno 16 Cina (6700 / 6490)
+                    rawDesign != null && rawDesign in 6600.0..6800.0 -> 6490.0 // Reno 16 Cina (6700 / 6490) / OnePlus Nord 5 (6800 / 6650)
                     rawDesign != null && rawDesign in 6400.0..6599.0 -> 6310.0 // GT 7 Pro EU/Cina (6500 / 6310) / Reno 15 (6500 / 6335)
                     rawDesign != null && rawDesign in 6100.0..6300.0 -> 6060.0 // Reno 14 Pro / 15 Pro (6200 / 6060)
-                    rawDesign != null && rawDesign in 5900.0..6099.0 -> 5840.0 // Reno 14 / OnePlus 13 / Reno 16 EU (5820-5840)
+                    rawDesign != null && rawDesign in 5900.0..6099.0 -> 5840.0 // Reno 14 / OnePlus 13 / Reno 16 EU (5820-5840) / Realme 14 Pro+ (6000 / 5850)
                     rawDesign != null && rawDesign in 5750.0..5899.0 -> 5660.0 // GT 7 Pro India (5800 / 5660)
                     rawDesign != null && rawDesign in 5550.0..5749.0 -> 5490.0 // Find X8 (5630 / 5490)
                     rawDesign != null && rawDesign in 5350.0..5549.0 -> 5360.0 // OnePlus 12R / Nord 4 / GT 6 (5500 / 5360)
@@ -153,27 +191,47 @@ class BatteryRepository(private val context: Context) {
                 rawSoh
             }
 
+            val effectiveFcc = if (fcc != null && fcc > 0) {
+                fcc
+            } else if (rawSoh != null && rawSoh > 0) {
+                Math.round((ratedDesign * rawSoh / 100.0) * 10.0) / 10.0
+            } else {
+                null
+            }
+
             // --- 1. Capacità Chimica Assoluta Qmax ---
-            val headLine = executeShizukuCommand("cat /sys/class/oplus_chg/battery/battery_log_head")
-            val contentLine = executeShizukuCommand("cat /sys/class/oplus_chg/battery/battery_log_content")
+            val headLine = querySysfs(
+                "/sys/class/oplus_chg/battery/battery_log_head",
+                "/sys/class/power_supply/battery/battery_log_head"
+            )
+            val contentLine = querySysfs(
+                "/sys/class/oplus_chg/battery/battery_log_content",
+                "/sys/class/power_supply/battery/battery_log_content"
+            )
             val qMaxMah = if (!headLine.isNullOrEmpty() && !contentLine.isNullOrEmpty()) {
                 val heads = headLine.split(',')
                 val values = contentLine.split(',')
                 val qIdx = heads.indexOf("batt_qmax")
                 if (qIdx != -1 && qIdx < values.size) {
-                    values[qIdx].trim().toIntOrNull()?.let { normalizeQmax(it, fcc?.toInt()) }
+                    values[qIdx].trim().toIntOrNull()?.let { normalizeQmax(it, (effectiveFcc ?: fcc)?.toInt()) }
                 } else null
             } else null
 
             // --- 2. Rilevamento Doppia Cella (SuperVOOC) e Voltaggi Singole Celle ---
-            val agingData = executeShizukuCommand("cat /sys/class/oplus_chg/battery/aging_ffc_data")
+            val agingData = querySysfs(
+                "/sys/class/oplus_chg/battery/aging_ffc_data",
+                "/sys/class/power_supply/battery/aging_ffc_data"
+            )
             val isDual = when (agingData?.split(',')?.getOrNull(1)?.trim()) {
                 "2" -> true
                 "1" -> false
                 else -> null
             }
 
-            val bccParms = executeShizukuCommand("cat /sys/class/oplus_chg/battery/bcc_parms")
+            val bccParms = querySysfs(
+                "/sys/class/oplus_chg/battery/bcc_parms",
+                "/sys/class/power_supply/battery/bcc_parms"
+            )
             var cell0Volt: Int? = null
             var cell1Volt: Int? = null
             var bccCurrent: Int? = null
@@ -184,15 +242,38 @@ class BatteryRepository(private val context: Context) {
                 cell1Volt = parts.getOrNull(11)?.toIntOrNull()?.takeIf { it > 0 }
             }
             if (cell0Volt == null || cell0Volt == 0) {
-                cell0Volt = executeShizukuCommand("cat /sys/class/oplus_chg/battery/gauge_vbat")?.toIntOrNull()
-                    ?: executeShizukuCommand("cat /sys/class/oplus_chg/battery/batt_volt")?.toIntOrNull()
+                val rawV = querySysfs(
+                    "/sys/class/oplus_chg/battery/gauge_vbat",
+                    "/sys/class/oplus_chg/battery/batt_volt",
+                    "/sys/class/power_supply/battery/voltage_now",
+                    "/sys/class/power_supply/battery/batt_vol",
+                    "/sys/class/power_supply/bms/voltage_now"
+                )?.toIntOrNull()
+                if (rawV != null && rawV > 0) {
+                    cell0Volt = if (rawV > 100_000) rawV / 1000 else rawV
+                }
+            }
+            if (cell1Volt == null || cell1Volt == 0) {
+                val rawV1 = querySysfs(
+                    "/sys/class/oplus_chg/battery/cell1_volt",
+                    "/sys/class/power_supply/battery/cell1_volt"
+                )?.toIntOrNull()
+                if (rawV1 != null && rawV1 > 0) {
+                    cell1Volt = if (rawV1 > 100_000) rawV1 / 1000 else rawV1
+                }
             }
 
             // --- 3. Tensione Minima di Spegnimento vbat_uv ---
-            val vbatUv = executeShizukuCommand("cat /sys/class/oplus_chg/battery/vbat_uv")?.toIntOrNull()
+            val vbatUv = querySysfs(
+                "/sys/class/oplus_chg/battery/vbat_uv",
+                "/sys/class/power_supply/battery/vbat_uv"
+            )?.toIntOrNull()
 
             // --- 4. Raw SOH & Raw FCC per Batterie al Silicio-Carbonio ---
-            val battType = executeShizukuCommand("cat /sys/class/oplus_chg/battery/battery_type")
+            val battType = querySysfs(
+                "/sys/class/oplus_chg/battery/battery_type",
+                "/sys/class/power_supply/battery/battery_type"
+            )
             var rawSohPercentage: Float? = null
             var rawFccMah: Int? = null
 
@@ -208,8 +289,9 @@ class BatteryRepository(private val context: Context) {
                         rawSohPercentage = Math.round(computedRawSoh * 10f) / 10f
 
                         val fccOffset = match.second
-                        if (fcc != null) {
-                            rawFccMah = (fcc - (fccOffset * computedRawSoh.toInt() / 100)).toInt()
+                        val refFcc = effectiveFcc ?: fcc
+                        if (refFcc != null) {
+                            rawFccMah = (refFcc - (fccOffset * computedRawSoh.toInt() / 100)).toInt()
                         }
                     }
                 }
@@ -218,8 +300,16 @@ class BatteryRepository(private val context: Context) {
             }
 
             // --- 5. Dati Esclusivi Oppo: Date, Età, Autenticità, Remaining mAh ---
-            val manuDate = executeShizukuCommand("cat /sys/class/oplus_chg/battery/battery_manu_date")?.takeIf { it.isNotBlank() }
-            val firstUsageDate = executeShizukuCommand("cat /sys/class/oplus_chg/battery/battery_first_usage_date")?.takeIf { it.isNotBlank() }
+            val manuDate = querySysfs(
+                "/sys/class/oplus_chg/battery/battery_manu_date",
+                "/sys/class/power_supply/battery/battery_manu_date",
+                "/sys/class/power_supply/battery/manu_date"
+            )?.takeIf { it.isNotBlank() }
+            val firstUsageDate = querySysfs(
+                "/sys/class/oplus_chg/battery/battery_first_usage_date",
+                "/sys/class/power_supply/battery/battery_first_usage_date",
+                "/sys/class/power_supply/battery/first_usage_date"
+            )?.takeIf { it.isNotBlank() }
 
             var batteryAgeMonths: Int? = null
             val refDateStr = manuDate ?: firstUsageDate
@@ -238,16 +328,28 @@ class BatteryRepository(private val context: Context) {
                 }
             }
 
-            val authStr = executeShizukuCommand("cat /sys/class/oplus_chg/battery/authenticate")
+            val authStr = querySysfs(
+                "/sys/class/oplus_chg/battery/authenticate",
+                "/sys/class/power_supply/battery/authenticate",
+                "/sys/class/power_supply/battery/authentic"
+            )
             val isAuthentic = authStr?.trim() == "1" || authStr?.trim()?.equals("true", ignoreCase = true) == true
 
-            val rmStr = executeShizukuCommand("cat /sys/class/oplus_chg/battery/battery_rm")
-            val remainingMah = rmStr?.toDoubleOrNull()
+            val rmRaw = querySysfs(
+                "/sys/class/oplus_chg/battery/battery_rm",
+                "/sys/class/oplus_chg/battery/rm",
+                "/sys/class/power_supply/battery/charge_now",
+                "/sys/class/power_supply/bms/charge_now"
+            )?.toDoubleOrNull()
+            val remainingMah = if (rmRaw != null && rmRaw > 100000) rmRaw / 1000.0 else rmRaw
 
             // --- 6. Potenza in Watt, Protocollo SuperVOOC, Temperatura con Allarme ---
             val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
             val plugged = intent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: 0
-            val rawStatus = executeShizukuCommand("cat /sys/class/power_supply/battery/status")?.trim()
+            val rawStatus = querySysfs(
+                "/sys/class/power_supply/battery/status",
+                "/sys/class/oplus_chg/battery/status"
+            )?.trim()
             val isPlugged = (plugged > 0) || rawStatus.equals("Charging", ignoreCase = true) || rawStatus.equals("Full", ignoreCase = true)
 
             val vMv = cell0Volt ?: 4000
@@ -271,9 +373,18 @@ class BatteryRepository(private val context: Context) {
                 Math.round(((vMv.toDouble() * currentMa.toDouble()) / 1_000_000.0) * 10.0) / 10.0
             } else null
 
-            val voocIng = executeShizukuCommand("cat /sys/class/oplus_chg/battery/voocchg_ing")?.trim()
-            val ppsIng = executeShizukuCommand("cat /sys/class/oplus_chg/battery/ppschg_ing")?.trim()
-            val fastChgType = executeShizukuCommand("cat /sys/class/oplus_chg/usb/fast_chg_type")?.trim()
+            val voocIng = querySysfs(
+                "/sys/class/oplus_chg/battery/voocchg_ing",
+                "/sys/class/power_supply/battery/voocchg_ing"
+            )?.trim()
+            val ppsIng = querySysfs(
+                "/sys/class/oplus_chg/battery/ppschg_ing",
+                "/sys/class/power_supply/battery/ppschg_ing"
+            )?.trim()
+            val fastChgType = querySysfs(
+                "/sys/class/oplus_chg/usb/fast_chg_type",
+                "/sys/class/power_supply/usb/fast_chg_type"
+            )?.trim()
             val chargingProtocol = when {
                 !isPlugged -> {
                     if (currentMa != null && currentMa < -20) "In Scarica" else "Standby"
@@ -284,8 +395,12 @@ class BatteryRepository(private val context: Context) {
                 else -> "Standby"
             }
 
-            val tempStr = executeShizukuCommand("cat /sys/class/oplus_chg/battery/batt_temp")
-            var tempCelsius = tempStr?.toDoubleOrNull()?.let { if (it > 200.0) it / 10.0 else it }
+            val tempRaw = querySysfs(
+                "/sys/class/oplus_chg/battery/batt_temp",
+                "/sys/class/power_supply/battery/temp",
+                "/sys/class/power_supply/bms/temp"
+            )?.toDoubleOrNull()
+            var tempCelsius = tempRaw?.let { if (it > 200.0) it / 10.0 else it }
             if (tempCelsius == null) {
                 val rawTemp = intent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -999) ?: -999
                 if (rawTemp != -999) {
@@ -294,19 +409,30 @@ class BatteryRepository(private val context: Context) {
             }
 
             // --- 7. Resistenza Interna / ESR (Punto 1) ---
-            val ocvStr = executeShizukuCommand("cat /sys/class/power_supply/battery/voltage_ocv")
+            val ocvStr = querySysfs(
+                "/sys/class/power_supply/battery/voltage_ocv",
+                "/sys/class/power_supply/bms/voltage_ocv",
+                "/sys/class/oplus_chg/battery/voltage_ocv"
+            )
             val rawOcv = ocvStr?.toIntOrNull()
             val voltageOcvMv = if (rawOcv != null) {
                 if (rawOcv > 100_000) rawOcv / 1000 else rawOcv
             } else null
 
-            val vNowStr = executeShizukuCommand("cat /sys/class/power_supply/battery/voltage_now")
+            val vNowStr = querySysfs(
+                "/sys/class/power_supply/battery/voltage_now",
+                "/sys/class/power_supply/bms/voltage_now"
+            )
             val rawVnow = vNowStr?.toIntOrNull()
             val vNowMv = if (rawVnow != null && rawVnow > 0) {
                 if (rawVnow > 100_000) rawVnow / 1000 else rawVnow
             } else cell0Volt
 
-            val curNowStr = executeShizukuCommand("cat /sys/class/power_supply/battery/current_now")
+            val curNowStr = querySysfs(
+                "/sys/class/power_supply/battery/current_now",
+                "/sys/class/power_supply/bms/current_now",
+                "/sys/class/oplus_chg/battery/batt_current"
+            )
             val rawCurNow = curNowStr?.toIntOrNull()
             val curMa = if (rawCurNow != null && rawCurNow != 0) {
                 if (Math.abs(rawCurNow) > 10000) rawCurNow / 1000 else rawCurNow
@@ -364,7 +490,10 @@ class BatteryRepository(private val context: Context) {
             }
 
             // --- 10. Saturazione Reale: True Full Charge vs Display 100% (Punto 4) ---
-            val chipSoc = executeShizukuCommand("cat /sys/class/oplus_chg/battery/chip_soc")?.toIntOrNull()
+            val chipSoc = querySysfs(
+                "/sys/class/oplus_chg/battery/chip_soc",
+                "/sys/class/power_supply/battery/chip_soc"
+            )?.toIntOrNull()
 
             val isTrueFullCharge: Boolean?
             val saturationStatus: String?
@@ -393,17 +522,27 @@ class BatteryRepository(private val context: Context) {
             }
 
             // --- 11. Compensazione Termica della Capacità a 25°C (Standard IEC 61960 - Punto 5) ---
-            val tempCompensatedCapacityMah: Double? = if (fcc != null && fcc > 0 && tempCelsius != null) {
+            val refCapacity = effectiveFcc ?: fcc
+            val tempCompensatedCapacityMah: Double? = if (refCapacity != null && refCapacity > 0 && tempCelsius != null) {
                 val deltaT = tempCelsius - 25.0
                 // Coefficiente termico standard per celle Li-ion / Silicio-Carbonio: 0.6% per °C (0.006)
-                val comp = fcc / (1.0 + 0.006 * deltaT)
+                val comp = refCapacity / (1.0 + 0.006 * deltaT)
                 Math.round(comp * 10.0) / 10.0
             } else null
 
             // --- 12. Flag di Protezione e Sicurezza Hardware BMS (Punto 6) ---
-            val shortCHwStatus = executeShizukuCommand("cat /sys/class/oplus_chg/battery/short_c_hw_status")?.toIntOrNull()
-            val shortIcOtpStatus = executeShizukuCommand("cat /sys/class/oplus_chg/battery/short_ic_otp_status")?.toIntOrNull()
-            val subboardTempErr = executeShizukuCommand("cat /sys/class/oplus_chg/battery/subboard_temp_err")?.toIntOrNull()
+            val shortCHwStatus = querySysfs(
+                "/sys/class/oplus_chg/battery/short_c_hw_status",
+                "/sys/class/power_supply/battery/short_c_hw_status"
+            )?.toIntOrNull()
+            val shortIcOtpStatus = querySysfs(
+                "/sys/class/oplus_chg/battery/short_ic_otp_status",
+                "/sys/class/power_supply/battery/short_ic_otp_status"
+            )?.toIntOrNull()
+            val subboardTempErr = querySysfs(
+                "/sys/class/oplus_chg/battery/subboard_temp_err",
+                "/sys/class/power_supply/battery/subboard_temp_err"
+            )?.toIntOrNull()
 
             val faults = mutableListOf<String>()
             if (shortCHwStatus != null && shortCHwStatus != 0) faults.add("ShortCircuit($shortCHwStatus)")
@@ -418,13 +557,13 @@ class BatteryRepository(private val context: Context) {
                 NotificationHelper.showOverheatNotification(context, tempCelsius)
             }
 
-            Log.d(tag, "Oplus Sysfs: FCC=$fcc mAh, Qmax=$qMaxMah mAh, Dual=$isDual, Cell0=$cell0Volt mV, Cell1=$cell1Volt mV, ESR=$internalResistanceMohm mOhm, Sync=$bmsSyncStatus, TrueFull=$isTrueFullCharge, SatStatus=$saturationStatus, TempComp=$tempCompensatedCapacityMah, Safe=$isHardwareSafe")
+            Log.d(tag, "Oplus Sysfs: FCC=${effectiveFcc ?: fcc} mAh, Qmax=$qMaxMah mAh, Dual=$isDual, Cell0=$cell0Volt mV, Cell1=$cell1Volt mV, ESR=$internalResistanceMohm mOhm, Sync=$bmsSyncStatus, TrueFull=$isTrueFullCharge, SatStatus=$saturationStatus, TempComp=$tempCompensatedCapacityMah, Safe=$isHardwareSafe")
 
-            if (effectiveHealth != null || cycles != null || fcc != null) {
+            if (effectiveHealth != null || cycles != null || (effectiveFcc ?: fcc) != null || cell0Volt != null || remainingMah != null) {
                 BatterySnapshot(
                     cycleCount = cycles,
                     healthPercentage = effectiveHealth,
-                    currentCapacityMah = fcc,
+                    currentCapacityMah = effectiveFcc ?: fcc,
                     designCapacityMah = ratedDesign,
                     batteryLevelPercentage = batteryLevel,
                     source = "Oplus Sysfs (Shizuku)",
@@ -504,6 +643,20 @@ class BatteryRepository(private val context: Context) {
             list
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    private fun querySysfs(vararg paths: String): String? {
+        if (paths.isEmpty()) return null
+        val chainedCmd = paths.joinToString(" || ") { "cat $it 2>/dev/null" }
+        val result = executeShizukuCommand(chainedCmd)?.trim()
+        return if (!result.isNullOrEmpty() &&
+            !result.equals("No such file or directory", ignoreCase = true) &&
+            !result.contains("Permission denied", ignoreCase = true)
+        ) {
+            result
+        } else {
+            null
         }
     }
 
@@ -592,11 +745,15 @@ class BatteryRepository(private val context: Context) {
             else -> "STANDBY"
         }
 
+        val userRated = preferences.getCustomRatedCapacity()
+        val detectedPreset = OplusDevicePresets.detectDevicePreset()
+        val ratedDesign = userRated ?: detectedPreset?.ratedMah
+
         return BatterySnapshot(
             cycleCount = cycleCount,
             healthPercentage = healthPercentage,
             currentCapacityMah = capacityMah,
-            designCapacityMah = null,
+            designCapacityMah = ratedDesign,
             batteryLevelPercentage = batteryLevel,
             source = "BatteryManager",
             isShizukuUsed = false,
