@@ -124,8 +124,8 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 | **OnePlus** | OnePlus 13 / 13R | Silicon-Carbon Dual-Cell | 6000 mAh / 5840 mAh |
 | **OnePlus** | OnePlus 12 / 12R | Dual-Cell Serial | 5400–5500 mAh / 5260–5360 mAh |
 | **OnePlus** | OnePlus 11 / 10 Pro | Dual-Cell Serial | 5000 mAh / 4880 mAh |
-| **OnePlus** | Nord 5 (Global & India) | High-Capacity Dual-Cell | 6800 mAh / 6650 mAh |
-| **OnePlus** | Nord 5 (EU/UK) | Dual-Cell Serial | 5200 mAh / 5200 mAh |
+| **OnePlus** | Nord 5 (Global & India)* | High-Capacity Dual-Cell | 6800 mAh / 6650 mAh |
+| **OnePlus** | Nord 5 (EU/UK)* | Dual-Cell Serial | 5200 mAh / 5200 mAh |
 | **OnePlus** | Nord 4 / CE 4 / CE 4 Lite | Dual-Cell Serial | 5500 mAh / 5360 mAh |
 | **OnePlus** | Nord 3 | Dual-Cell Serial | 5000 mAh / 4880 mAh |
 | **OnePlus** | OnePlus Open | Dual-Cell Foldable | 4805 mAh / 4680 mAh |
@@ -147,6 +147,9 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 | **Oppo** | Reno 10 Pro / 11 Pro | Dual-Cell Serial | 4600 mAh / 4440 mAh |
 
 *Manual rated capacity override is also supported in Settings for custom or unlisted models.*
+
+> [!NOTE]
+> \* **OnePlus Nord 5 Root Requirement:** On the OnePlus Nord 5 (CPH2707 / Snapdragon 8s Gen 3), OxygenOS SELinux policies strictly isolate Qualcomm battery sysfs nodes from standard shell access (Shizuku). Direct hardware BMS readings on this model require **Root (`su`) permissions**.
 
 ---
 
@@ -203,7 +206,7 @@ The application employs an intelligent multi-tiered pipeline that dynamically ad
    - Start Shizuku via **Wireless Debugging** (no computer required after initial setup) or via **Root** (if rooted).
 
 ### App Setup
-1. Download the latest `BatteryHealthTracker-v1.1.apk` from the [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases) section.
+1. Download the latest `BatteryHealthTracker-v1.2.apk` from the [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases) section.
 2. Install the APK on your device.
 3. Open **Battery Health Tracker**.
 4. When prompted on Android 13+, allow the **Notification Permission** (`POST_NOTIFICATIONS`):
