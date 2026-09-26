@@ -1628,8 +1628,14 @@ fun OplusAdvancedHardwareCard(snapshot: BatterySnapshot?) {
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.width(6.dp))
+                        val protocolLabel = when (snapshot?.chargingProtocol) {
+                            "In Scarica", "DISCHARGING" -> stringResource(R.string.diag_discharging)
+                            "Carica Standard", "STANDARD" -> stringResource(R.string.diag_standard_charging)
+                            "Standby", "STANDBY" -> stringResource(R.string.diag_standby)
+                            else -> snapshot?.chargingProtocol ?: stringResource(R.string.diag_standby)
+                        }
                         Text(
-                            text = "(${snapshot?.chargingProtocol ?: stringResource(R.string.diag_standby)})",
+                            text = "($protocolLabel)",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1722,10 +1728,24 @@ fun OplusAdvancedHardwareCard(snapshot: BatterySnapshot?) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Tessera 5: Resistenza Interna ESR
+                val esrSubtitle = when {
+                    snapshot?.internalResistanceMohm == null -> stringResource(R.string.diag_tile_esr_sub)
+                    snapshot.chargingProtocol in listOf("SuperVOOC", "USB-PD / PPS", "STANDARD", "Carica Standard") -> {
+                        stringResource(R.string.diag_tile_esr_sub_charging)
+                    }
+                    snapshot.chargingPowerWatts != null && Math.abs(snapshot.chargingPowerWatts) > 2.2 -> {
+                        stringResource(R.string.diag_tile_esr_sub_heavy)
+                    }
+                    snapshot.chargingPowerWatts != null -> {
+                        stringResource(R.string.diag_tile_esr_sub_light)
+                    }
+                    else -> stringResource(R.string.diag_tile_esr_sub)
+                }
+
                 DiagnosticTile(
                     label = stringResource(R.string.diag_tile_esr),
                     value = snapshot?.internalResistanceMohm?.let { "$it mΩ" } ?: notAvail,
-                    subtitle = stringResource(R.string.diag_tile_esr_sub),
+                    subtitle = esrSubtitle,
                     modifier = Modifier.weight(1f),
                     showInfoIcon = true,
                     onClick = { activeInfoDialog = DiagnosticInfoType.RESISTANCE }
@@ -1763,10 +1783,10 @@ fun OplusAdvancedHardwareCard(snapshot: BatterySnapshot?) {
             ) {
                 // Tessera 7: Saturazione Reale (True Full vs Display 100%)
                 val satValue = when (snapshot?.saturationStatus) {
-                    "SATURATED" -> "100% Satura"
-                    "CV_TAPERING" -> "100% (Fase CV)"
-                    "CHARGING" -> snapshot.chipSoc?.let { "SOC $it%" } ?: "In Carica"
-                    "DISCHARGING" -> snapshot.chipSoc?.let { "SOC $it%" } ?: "In Uso"
+                    "SATURATED" -> stringResource(R.string.diag_sat_value_saturated)
+                    "CV_TAPERING" -> stringResource(R.string.diag_sat_value_tapering)
+                    "CHARGING" -> snapshot.chipSoc?.let { "SOC $it%" } ?: stringResource(R.string.diag_standard_charging)
+                    "DISCHARGING" -> snapshot.chipSoc?.let { "SOC $it%" } ?: stringResource(R.string.diag_discharging)
                     else -> notAvail
                 }
                 val satSubtitle = when (snapshot?.saturationStatus) {
