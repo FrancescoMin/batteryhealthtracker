@@ -387,7 +387,7 @@ fun ThemeDialog(
         Triple(AppThemeMode.AMOLED, stringResource(R.string.theme_amoled), stringResource(R.string.theme_amoled_desc))
     )
 
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.settings_theme_title), fontWeight = FontWeight.Bold) },
         text = {
@@ -442,7 +442,7 @@ fun LanguageDialog(
         "es" to stringResource(R.string.lang_es)
     )
 
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.settings_section_language), fontWeight = FontWeight.Bold) },
         text = {
@@ -528,6 +528,7 @@ fun EditCapacityDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
+        EnforceDialogHighRefreshRate()
         Surface(
             modifier = Modifier
                 .fillMaxWidth(0.95f)

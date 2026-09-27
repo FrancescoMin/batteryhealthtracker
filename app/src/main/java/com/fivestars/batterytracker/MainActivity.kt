@@ -88,19 +88,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Forza la frequenza di aggiornamento a 120 Hz (o massimo supportato dal display) per garantire massima fluidità
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val supportedModes = display?.supportedModes ?: emptyArray()
-            val maxMode = supportedModes.maxByOrNull { it.refreshRate }
-            if (maxMode != null) {
-                val params = window.attributes
-                params.preferredDisplayModeId = maxMode.modeId
-                window.attributes = params
-            }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val params = window.attributes
-            params.preferredRefreshRate = 120f
-            window.attributes = params
-        }
+        enforceHighRefreshRate(window, this)
 
         setContent {
             val themeMode by viewModel.appThemeMode.collectAsState()
@@ -117,6 +105,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        enforceHighRefreshRate(window, this)
         viewModel.refreshSnapshot()
     }
 }
@@ -222,7 +211,7 @@ fun BatteryTrackerDashboardScreen(
 
     if (showHealthInfoDialog) {
         val isBm = currentSnapshot?.isShizukuUsed != true
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = { showHealthInfoDialog = false },
             containerColor = MaterialTheme.colorScheme.surface,
             title = {
@@ -302,7 +291,7 @@ fun BatteryTrackerDashboardScreen(
 
     if (showCapacityFluctuationDialog) {
         val isBm = currentSnapshot?.isShizukuUsed != true
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = { showCapacityFluctuationDialog = false },
             containerColor = MaterialTheme.colorScheme.surface,
             title = {
@@ -383,7 +372,7 @@ fun BatteryTrackerDashboardScreen(
     if (showCyclesInfoDialog) {
         val isBm = currentSnapshot?.isShizukuUsed != true
         val isCyclesWarn = (isBm && (currentSnapshot?.cycleCount == null || currentSnapshot?.cycleCount == 0)) || currentSnapshot?.cycleCount == null
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = { showCyclesInfoDialog = false },
             containerColor = MaterialTheme.colorScheme.surface,
             title = {
@@ -461,7 +450,7 @@ fun BatteryTrackerDashboardScreen(
     // Dialog di conferma eliminazione multipla
     val selectionCount = selectedRecordIds.size
     if (showDeleteConfirmDialog && selectionCount > 0) {
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = {
                 showDeleteConfirmDialog = false
             },
@@ -908,7 +897,7 @@ fun TrashScreen(
     BackHandler(onBack = onNavigateBack)
 
     if (showEmptyTrashConfirmDialog) {
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = { showEmptyTrashConfirmDialog = false },
             containerColor = MaterialTheme.colorScheme.surface,
             title = { Text(stringResource(R.string.trash_empty_dialog_title)) },
@@ -1467,59 +1456,68 @@ enum class DiagnosticInfoType {
 }
 
 @Composable
+private fun DiagnosticHardwareDialog(
+    dialogType: DiagnosticInfoType?,
+    onDismiss: () -> Unit
+) {
+    if (dialogType == null) return
+    val (titleRes, descRes) = when (dialogType) {
+        DiagnosticInfoType.VOLTAGE -> Pair(R.string.dialog_voltage_info_title, R.string.dialog_voltage_info_desc)
+        DiagnosticInfoType.QMAX -> Pair(R.string.dialog_qmax_info_title, R.string.dialog_qmax_info_desc)
+        DiagnosticInfoType.RM -> Pair(R.string.dialog_rm_info_title, R.string.dialog_rm_info_desc)
+        DiagnosticInfoType.CUTOFF -> Pair(R.string.dialog_cutoff_info_title, R.string.dialog_cutoff_info_desc)
+        DiagnosticInfoType.RESISTANCE -> Pair(R.string.dialog_esr_info_title, R.string.dialog_esr_info_desc)
+        DiagnosticInfoType.CELL_BALANCE -> Pair(R.string.dialog_cell_bal_info_title, R.string.dialog_cell_bal_info_desc)
+        DiagnosticInfoType.BMS_SYNC -> Pair(R.string.dialog_bms_sync_title, R.string.dialog_bms_sync_desc)
+        DiagnosticInfoType.SATURATION -> Pair(R.string.dialog_saturation_info_title, R.string.dialog_saturation_info_desc)
+        DiagnosticInfoType.TEMP_COMPENSATION -> Pair(R.string.dialog_temp_comp_info_title, R.string.dialog_temp_comp_info_desc)
+        DiagnosticInfoType.SAFETY_FLAGS -> Pair(R.string.dialog_safety_info_title, R.string.dialog_safety_info_desc)
+    }
+
+    AppAlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(titleRes), fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = stringResource(descRes),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_rm_info_close), fontWeight = FontWeight.Bold)
+            }
+        }
+    )
+}
+
+@Composable
 fun OplusAdvancedHardwareCard(snapshot: BatterySnapshot?) {
     val notAvail = stringResource(R.string.not_available)
     var activeInfoDialog by remember { mutableStateOf<DiagnosticInfoType?>(null) }
 
-    if (activeInfoDialog != null) {
-        val (titleRes, descRes) = when (activeInfoDialog) {
-            DiagnosticInfoType.VOLTAGE -> Pair(R.string.dialog_voltage_info_title, R.string.dialog_voltage_info_desc)
-            DiagnosticInfoType.QMAX -> Pair(R.string.dialog_qmax_info_title, R.string.dialog_qmax_info_desc)
-            DiagnosticInfoType.RM -> Pair(R.string.dialog_rm_info_title, R.string.dialog_rm_info_desc)
-            DiagnosticInfoType.CUTOFF -> Pair(R.string.dialog_cutoff_info_title, R.string.dialog_cutoff_info_desc)
-            DiagnosticInfoType.RESISTANCE -> Pair(R.string.dialog_esr_info_title, R.string.dialog_esr_info_desc)
-            DiagnosticInfoType.CELL_BALANCE -> Pair(R.string.dialog_cell_bal_info_title, R.string.dialog_cell_bal_info_desc)
-            DiagnosticInfoType.BMS_SYNC -> Pair(R.string.dialog_bms_sync_title, R.string.dialog_bms_sync_desc)
-            DiagnosticInfoType.SATURATION -> Pair(R.string.dialog_saturation_info_title, R.string.dialog_saturation_info_desc)
-            DiagnosticInfoType.TEMP_COMPENSATION -> Pair(R.string.dialog_temp_comp_info_title, R.string.dialog_temp_comp_info_desc)
-            DiagnosticInfoType.SAFETY_FLAGS -> Pair(R.string.dialog_safety_info_title, R.string.dialog_safety_info_desc)
-            null -> Pair(0, 0)
-        }
-
-        AlertDialog(
-            onDismissRequest = { activeInfoDialog = null },
-            containerColor = MaterialTheme.colorScheme.surface,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(titleRes), fontWeight = FontWeight.Bold)
-                }
-            },
-            text = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text(
-                        text = stringResource(descRes),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { activeInfoDialog = null }) {
-                    Text(stringResource(R.string.dialog_rm_info_close), fontWeight = FontWeight.Bold)
-                }
-            }
-        )
-    }
+    DiagnosticHardwareDialog(
+        dialogType = activeInfoDialog,
+        onDismiss = { activeInfoDialog = null }
+    )
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -2131,7 +2129,7 @@ fun BatteryHealthTrendCard(
     var showProjectionDialog by remember { mutableStateOf(false) }
 
     if (showProjectionDialog) {
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = { showProjectionDialog = false },
             containerColor = MaterialTheme.colorScheme.surface,
             title = {
@@ -2303,6 +2301,20 @@ fun BatteryHealthTrendCard(
                     }
                 }
 
+                val actualMin = remember(sortedHistory) {
+                    (sortedHistory.mapNotNull { it.healthPercentage }.minOrNull() ?: 80).toFloat()
+                }
+                val minY = remember(actualMin) { minOf(75f, actualMin - 2f) }
+                val maxY = 100f
+                val healthRange = remember(minY) { (maxY - minY).coerceAtLeast(10f) }
+                val gridLevels = remember(outlineColor, warningColor, label100Layout, label90Layout, label80Layout) {
+                    listOf(
+                        Triple(100f, outlineColor, label100Layout),
+                        Triple(90f, outlineColor, label90Layout),
+                        Triple(80f, warningColor, label80Layout)
+                    )
+                }
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -2321,24 +2333,12 @@ fun BatteryHealthTrendCard(
                         val usableWidth = width - paddingLeft - paddingRight
                         val usableHeight = height - paddingTop - paddingBottom
 
-                        val healthValues = sortedHistory.map { it.healthPercentage!! }
-                        val actualMin = (healthValues.minOrNull() ?: 80).toFloat()
-                        // Assicuriamo che l'intervallo mostri sempre almeno da 75% o min-2% fino al 100%
-                        val minY = minOf(75f, actualMin - 2f)
-                        val maxY = 100f
-                        val healthRange = (maxY - minY).coerceAtLeast(10f)
-
                         fun getYForHealth(health: Float): Float {
                             val normY = (health - minY) / healthRange
                             return height - paddingBottom - (normY * usableHeight)
                         }
 
                         // 1. Griglia orizzontale di riferimento a 100%, 90%, 80%
-                        val gridLevels = listOf(
-                            Triple(100f, outlineColor, label100Layout),
-                            Triple(90f, outlineColor, label90Layout),
-                            Triple(80f, warningColor, label80Layout)
-                        )
 
                         for ((lvl, lineColor, textResult) in gridLevels) {
                             if (lvl in minY..maxY) {
