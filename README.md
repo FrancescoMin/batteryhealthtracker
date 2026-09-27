@@ -114,37 +114,41 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 
 ## 📱 Verified Device Battery Database & Hardware Compatibility
 
-> [!NOTE]
-> The table below catalogues factory-verified battery specifications (nominal rated capacity according to **IEC 61960** and typical capacity) embedded directly within the application's auto-detection preset engine.  
-> **Important Hardware Clarification:** While low-level sysfs structures are standardized across the ColorOS, OxygenOS, and Realme UI codebases, physical sysfs node paths, SELinux policies, and fuel gauge drivers can vary based on regional variants, minor carrier updates, or custom ROMs. As such, real-world hardware reading capability cannot be 100% guaranteed on every unverified build. Community feedback, testing, and reports via [GitHub Issues](https://github.com/FrancescoMin/batteryhealthtracker/issues) are warmly encouraged!
+> [!IMPORTANT]
+> **Compatibility & Verification Status:**
+> - 🟢 **Oppo Reno 14 (EU):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (all BMS telemetry, SOH, FCC, cycle counts, voltage, power, and safety registers read with complete accuracy).
+> - 🟡 **Other Devices:** Due to variations in regional firmware, SELinux enforcement (e.g. OnePlus Nord 5 requiring root for direct Qualcomm sysfs access), and vendor driver differences across ColorOS, OxygenOS, and Realme UI, **full hardware compatibility is not yet guaranteed for other models**.
+> - 🤝 **We Need Your Help!** If you own any other OnePlus, Oppo, or Realme device, we warmly invite you to test the app with Shizuku and share your findings via [GitHub Issues](https://github.com/FrancescoMin/batteryhealthtracker/issues). Your feedback, logs, and contributions are essential to expanding certified device support across the community!
 
-| Manufacturer | Model Series | Battery Architecture | Typical / Rated Capacity |
-| :--- | :--- | :--- | :--- |
-| **OnePlus** | OnePlus 15 | Serial Dual-Cell | 7300 mAh (2×3650) / 7150 mAh (2×3575) |
-| **OnePlus** | OnePlus 13 / 13R | Silicon-Carbon Dual-Cell | 6000 mAh / 5840 mAh |
-| **OnePlus** | OnePlus 12 / 12R | Dual-Cell Serial | 5400–5500 mAh / 5260–5360 mAh |
-| **OnePlus** | OnePlus 11 / 10 Pro | Dual-Cell Serial | 5000 mAh / 4880 mAh |
-| **OnePlus** | Nord 5 (Global & India)* | High-Capacity Dual-Cell | 6800 mAh / 6650 mAh |
-| **OnePlus** | Nord 5 (EU/UK)* | Dual-Cell Serial | 5200 mAh / 5200 mAh |
-| **OnePlus** | Nord 4 / CE 4 / CE 4 Lite | Dual-Cell Serial | 5500 mAh / 5360 mAh |
-| **OnePlus** | Nord 3 | Dual-Cell Serial | 5000 mAh / 4880 mAh |
-| **OnePlus** | OnePlus Open | Dual-Cell Foldable | 4805 mAh / 4680 mAh |
-| **Realme** | GT 8 Pro | Dual-Cell Serial | 7000 mAh (2×3500) / 6850 mAh (2×3425) |
-| **Realme** | GT 7 Pro (Global/EU/CN) | Dual-Cell Serial | 6500 mAh (2×3250) / 6310 mAh (2×3155) |
-| **Realme** | GT 7 Pro (India) | Dual-Cell Serial | 5800 mAh / 5660 mAh |
-| **Realme** | GT 6 / GT 6T / GT 5 Pro | Dual-Cell Serial | 5400–5500 mAh / 5260–5360 mAh |
-| **Realme** | 14 Pro+ | Silicon-Carbon Single-Cell | 6000 mAh / 5850 mAh |
-| **Realme** | 13 Pro+ | High-Density Single-Cell | 5200 mAh / 5050 mAh |
-| **Realme** | 12 Pro+ | High-Density Single-Cell | 5000 mAh / 4880 mAh |
-| **Oppo** | Find X9 Pro | Silicon-Carbon Dual-Cell | 7500 mAh / 7290 mAh (28.13 Wh / 27.34 Wh) |
-| **Oppo** | Find X9 | Silicon-Carbon Dual-Cell | 7025 mAh / 6840 mAh (26.35 Wh / 25.65 Wh) |
-| **Oppo** | Find X8 / X8 Pro | Silicon-Carbon Dual-Cell | 5630–5910 mAh (Typical) |
-| **Oppo** | Find X7 / X7 Ultra | Dual-Cell Serial | 5000 mAh / 4860–4880 mAh |
-| **Oppo** | Reno 16 (Global/EU) | High-Density Single-Cell | 6000 mAh / 5820 mAh (22.5 Wh / 21.83 Wh) |
-| **Oppo** | Reno 16 (China) | Silicon-Carbon | 6700 mAh / 6490 mAh |
-| **Oppo** | Reno 15 / 15 Pro | High-Density Single-Cell | 6200–6500 mAh / 6040–6335 mAh |
-| **Oppo** | Reno 14 / 14 Pro | High-Density Single-Cell | 6000–6200 mAh / 5840–6060 mAh |
-| **Oppo** | Reno 10 Pro / 11 Pro | Dual-Cell Serial | 4600 mAh / 4440 mAh |
+| Manufacturer | Model Series | Battery Architecture | Typical / Rated Capacity | Compatibility Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Oppo** | **Reno 14 (EU)** | High-Density Single-Cell | 6000 mAh / 5840 mAh | ✅ **100% Verified (Shizuku)** |
+| **OnePlus** | OnePlus 13 | Silicon-Carbon Dual-Cell | 6000 mAh / 5840 mAh | 🧪 Testing in progress / 🤝 Help wanted |
+| **OnePlus** | OnePlus 13R | Silicon-Carbon Dual-Cell | 6000 mAh / 5840 mAh | 🤝 Help wanted |
+| **OnePlus** | OnePlus 15 | Serial Dual-Cell | 7300 mAh (2×3650) / 7150 mAh (2×3575) | 🤝 Help wanted |
+| **OnePlus** | OnePlus 12 / 12R | Dual-Cell Serial | 5400–5500 mAh / 5260–5360 mAh | 🤝 Help wanted |
+| **OnePlus** | OnePlus 11 / 10 Pro | Dual-Cell Serial | 5000 mAh / 4880 mAh | 🤝 Help wanted |
+| **OnePlus** | Nord 5 (Global & India)* | High-Capacity Dual-Cell | 6800 mAh / 6650 mAh | ⚠️ Requires Root (SELinux) |
+| **OnePlus** | Nord 5 (EU/UK)* | Dual-Cell Serial | 5200 mAh / 5200 mAh | 🤝 Help wanted |
+| **OnePlus** | Nord 4 / CE 4 / CE 4 Lite | Dual-Cell Serial | 5500 mAh / 5360 mAh | 🤝 Help wanted |
+| **OnePlus** | Nord 3 | Dual-Cell Serial | 5000 mAh / 4880 mAh | 🤝 Help wanted |
+| **OnePlus** | OnePlus Open | Dual-Cell Foldable | 4805 mAh / 4680 mAh | 🤝 Help wanted |
+| **Realme** | GT 8 Pro | Dual-Cell Serial | 7000 mAh (2×3500) / 6850 mAh (2×3425) | 🤝 Help wanted |
+| **Realme** | GT 7 Pro (Global/EU/CN) | Dual-Cell Serial | 6500 mAh (2×3250) / 6310 mAh (2×3155) | 🤝 Help wanted |
+| **Realme** | GT 7 Pro (India) | Dual-Cell Serial | 5800 mAh / 5660 mAh | 🤝 Help wanted |
+| **Realme** | GT 6 / GT 6T / GT 5 Pro | Dual-Cell Serial | 5400–5500 mAh / 5260–5360 mAh | 🤝 Help wanted |
+| **Realme** | 14 Pro+ | Silicon-Carbon Single-Cell | 6000 mAh / 5850 mAh | 🤝 Help wanted |
+| **Realme** | 13 Pro+ | High-Density Single-Cell | 5200 mAh / 5050 mAh | 🤝 Help wanted |
+| **Realme** | 12 Pro+ | High-Density Single-Cell | 5000 mAh / 4880 mAh | 🤝 Help wanted |
+| **Oppo** | Find X9 Pro | Silicon-Carbon Dual-Cell | 7500 mAh / 7290 mAh (28.13 Wh / 27.34 Wh) | 🤝 Help wanted |
+| **Oppo** | Find X9 | Silicon-Carbon Dual-Cell | 7025 mAh / 6840 mAh (26.35 Wh / 25.65 Wh) | 🤝 Help wanted |
+| **Oppo** | Find X8 / X8 Pro | Silicon-Carbon Dual-Cell | 5630–5910 mAh (Typical) | 🤝 Help wanted |
+| **Oppo** | Find X7 / X7 Ultra | Dual-Cell Serial | 5000 mAh / 4860–4880 mAh | 🤝 Help wanted |
+| **Oppo** | Reno 16 (Global/EU) | High-Density Single-Cell | 6000 mAh / 5820 mAh (22.5 Wh / 21.83 Wh) | 🤝 Help wanted |
+| **Oppo** | Reno 16 (China) | Silicon-Carbon | 6700 mAh / 6490 mAh | 🤝 Help wanted |
+| **Oppo** | Reno 15 / 15 Pro | High-Density Single-Cell | 6200–6500 mAh / 6040–6335 mAh | 🤝 Help wanted |
+| **Oppo** | Reno 14 Pro | High-Density Single-Cell | 6200 mAh / 6060 mAh | 🤝 Help wanted |
+| **Oppo** | Reno 10 Pro / 11 Pro | Dual-Cell Serial | 4600 mAh / 4440 mAh | 🤝 Help wanted |
 
 *Manual rated capacity override is also supported in Settings for custom or unlisted models.*
 
