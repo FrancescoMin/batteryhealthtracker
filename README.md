@@ -262,6 +262,14 @@ The application employs an intelligent multi-tiered pipeline that dynamically ad
 
 Contributions, device profile additions, translations, and feature suggestions are welcome!
 
+### 📱 Device Testing & Verification
+Do you own any of the devices marked as **`🤝 Help wanted`** in the [Hardware Compatibility Table](#-verified-device-battery-database--hardware-compatibility)?  
+**Testing the app on your device is warmly encouraged and greatly appreciated!**
+- Install the app and grant access via [Shizuku](https://shizuku.rikka.app/) (no root required for most devices).
+- Verify if real-time hardware telemetry (SOH, capacity, cycle count, temperature, voltage) is extracted accurately.
+- Share your findings or report any anomalies by opening a [GitHub Issue](https://github.com/FrancescoMin/batteryhealthtracker/issues) including your device model, firmware/build version, and screenshots or logs.
+
+### 💻 Code & Preset Contributions
 1. Fork the project.
 2. Create your feature branch (`git checkout -b feature/NewDevicePreset`).
 3. Commit your changes (`git commit -m "Add verified battery preset for Device X"`).
