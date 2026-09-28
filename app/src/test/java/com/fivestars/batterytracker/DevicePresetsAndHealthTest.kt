@@ -254,4 +254,18 @@ class DevicePresetsAndHealthTest {
         val oldWrongHealth = Math.round((learnedFcc / ratedMah) * 100.0).toInt().coerceIn(1, 100)
         assertEquals(100, oldWrongHealth)
     }
+
+    @Test
+    fun testUsageStatsAndDaysSinceFirstBootCalculation() {
+        val daysSinceFirstBoot = 390
+        val cycles = 320
+
+        val daysPerCycle = daysSinceFirstBoot.toDouble() / cycles.toDouble()
+        val cyclesPerDay = cycles.toDouble() / daysSinceFirstBoot.toDouble()
+
+        assertEquals(1.21875, daysPerCycle, 0.001)
+        assertEquals(0.82051, cyclesPerDay, 0.001)
+        assertTrue(daysPerCycle > 1.0)
+        assertTrue(cyclesPerDay < 1.0)
+    }
 }

@@ -39,6 +39,7 @@ data class BatterySnapshot(
     val manuDate: String? = null,
     val firstUsageDate: String? = null,
     val batteryAgeMonths: Int? = null,
+    val daysSinceFirstUsage: Int? = null,
     val isAuthentic: Boolean? = null,
     val remainingCapacityMah: Double? = null,
     val chargingPowerWatts: Double? = null,
@@ -468,20 +469,38 @@ class BatteryRepository(private val context: Context) {
             )?.takeIf { it.isNotBlank() }
 
             var batteryAgeMonths: Int? = null
-            val refDateStr = manuDate ?: firstUsageDate
-            if (!refDateStr.isNullOrEmpty()) {
+            var daysSinceFirstUsage: Int? = null
+            val refUsageDateStr = firstUsageDate ?: manuDate
+            if (!refUsageDateStr.isNullOrEmpty()) {
                 try {
                     val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-                    val parsed = sdf.parse(refDateStr)
+                    val parsed = sdf.parse(refUsageDateStr)
                     if (parsed != null) {
                         val diffMs = System.currentTimeMillis() - parsed.time
                         if (diffMs > 0) {
                             batteryAgeMonths = (diffMs / (1000L * 60 * 60 * 24 * 30.4375)).toInt()
+                            daysSinceFirstUsage = (diffMs / (1000L * 60 * 60 * 24L)).toInt()
                         }
                     }
                 } catch (e: Exception) {
-                    Log.d(tag, "Errore parsing data produzione: $refDateStr", e)
+                    Log.d(tag, "Errore parsing data produzione/avvio: $refUsageDateStr", e)
                 }
+            }
+
+            if (daysSinceFirstUsage == null) {
+                try {
+                    val pInfo = context.packageManager.getPackageInfo("android", 0)
+                    val firstBootMs = pInfo.firstInstallTime
+                    if (firstBootMs > 0) {
+                        val diffMs = System.currentTimeMillis() - firstBootMs
+                        if (diffMs > 0) {
+                            daysSinceFirstUsage = (diffMs / (1000L * 60 * 60 * 24L)).toInt()
+                            if (batteryAgeMonths == null) {
+                                batteryAgeMonths = (diffMs / (1000L * 60 * 60 * 24 * 30.4375)).toInt()
+                            }
+                        }
+                    }
+                } catch (_: Exception) {}
             }
 
             val authStr = querySysfs(
@@ -767,6 +786,7 @@ class BatteryRepository(private val context: Context) {
                     manuDate = manuDate,
                     firstUsageDate = firstUsageDate,
                     batteryAgeMonths = batteryAgeMonths,
+                    daysSinceFirstUsage = daysSinceFirstUsage,
                     isAuthentic = isAuthentic,
                     remainingCapacityMah = remainingMah,
                     chargingPowerWatts = chargingPowerWatts,
@@ -1164,6 +1184,15 @@ class BatteryRepository(private val context: Context) {
             isSuccess = true
         )
 
+        val bmDaysSinceFirstUsage = try {
+            val pInfo = context.packageManager.getPackageInfo("android", 0)
+            val firstBootMs = pInfo.firstInstallTime
+            if (firstBootMs > 0) {
+                val diffMs = System.currentTimeMillis() - firstBootMs
+                if (diffMs > 0) (diffMs / (1000L * 60 * 60 * 24L)).toInt() else null
+            } else null
+        } catch (_: Exception) { null }
+
         return BatterySnapshot(
             cycleCount = cycleCount,
             healthPercentage = effectiveHealth,
@@ -1173,6 +1202,7 @@ class BatteryRepository(private val context: Context) {
             source = "BatteryManager",
             isShizukuUsed = false,
             isHealthCalculated = isHealthCalculated,
+            daysSinceFirstUsage = bmDaysSinceFirstUsage,
             batteryTemperatureCelsius = tempC,
             isTrueFullCharge = isTrueFull,
             saturationStatus = satStatus,

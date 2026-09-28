@@ -254,7 +254,7 @@ The application employs an intelligent multi-tiered pipeline that dynamically ad
      - Tap or toggle **"Disable system optimization"** (*"Disabilita l'ottimizzazione del sistema"*) and/or **"Disable background optimization"** (*"Disabilita ottimizzazione in background"*), if available on your firmware version.
 
 ### App Setup
-1. Download the latest `BatteryHealthTracker-v1.3.apk` from the [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases) section.
+1. Download the latest `BatteryHealthTracker-v1.4.apk` from the [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases) section.
 2. Install the APK on your device.
 3. Open **Battery Health Tracker**.
 4. When prompted on Android 13+, allow the **Notification Permission** (`POST_NOTIFICATIONS`):

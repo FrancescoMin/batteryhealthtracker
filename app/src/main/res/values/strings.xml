@@ -264,4 +264,10 @@
     <string name="console_card_title">Hardware Diagnostics Console</string>
     <string name="console_card_desc">View raw kernel queries &amp; share logs for GitHub compatibility</string>
     <string name="action_more_options">More options</string>
+
+    <!-- Usage Stats & Days since first boot -->
+    <string name="trend_days_since_first_boot">%1$d days since first boot</string>
+    <string name="trend_usage_ratio">Ratio: %1$.2f days/cycle (%2$.2f cycles/day)</string>
+    <string name="dialog_usage_stats_title">Usage Stats since First Boot</string>
+    <string name="dialog_usage_stats_desc" formatted="false">How are usage statistics calculated?\n\n• Days Since First Boot:\nThe actual time elapsed since the device was first powered on and initialized.\n\n• Usage Ratio (Days per Cycle):\nCompares total active calendar days against cumulative full charge cycles (days / cycles).\n\n• Healthy Benchmark:\nA ratio above 1.0 day per cycle (less than 1 full charge cycle per day) indicates light-to-moderate charging habits, greatly optimizing long-term battery lifespan.</string>
 </resources>

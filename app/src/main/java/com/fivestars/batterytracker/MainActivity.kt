@@ -745,7 +745,8 @@ fun BatteryTrackerDashboardScreen(
                 BatteryHealthTrendCard(
                     history = history,
                     projection = viewModel.getBatteryProjection(),
-                    currentCycles = currentSnapshot?.cycleCount
+                    currentCycles = currentSnapshot?.cycleCount,
+                    daysSinceFirstBoot = currentSnapshot?.daysSinceFirstUsage
                 )
             }
 
@@ -2429,9 +2430,47 @@ fun DiagnosticTile(
 fun BatteryHealthTrendCard(
     history: List<BatteryData>,
     projection: BatteryViewModel.BatteryProjection?,
-    currentCycles: Int?
+    currentCycles: Int?,
+    daysSinceFirstBoot: Int? = null
 ) {
     var showProjectionDialog by remember { mutableStateOf(false) }
+    var showUsageStatsDialog by remember { mutableStateOf(false) }
+
+    if (showUsageStatsDialog) {
+        AppAlertDialog(
+            onDismissRequest = { showUsageStatsDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.dialog_usage_stats_title), fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = stringResource(R.string.dialog_usage_stats_desc),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showUsageStatsDialog = false }) {
+                    Text(stringResource(R.string.dialog_rm_info_close), fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
 
     if (showProjectionDialog) {
         AppAlertDialog(
@@ -2531,6 +2570,62 @@ fun BatteryHealthTrendCard(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Info",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // Box Statistiche Utilizzo: Giorni dal 1° Avvio & Rapporto Cicli
+            if (daysSinceFirstBoot != null && daysSinceFirstBoot > 0) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showUsageStatsDialog = true }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarMonth,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.trend_days_since_first_boot, daysSinceFirstBoot),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                if (currentCycles != null && currentCycles > 0) {
+                                    val daysPerCycle = daysSinceFirstBoot.toDouble() / currentCycles.toDouble()
+                                    val cyclesPerDay = currentCycles.toDouble() / daysSinceFirstBoot.toDouble()
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = stringResource(R.string.trend_usage_ratio, daysPerCycle, cyclesPerDay),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                         }
                         Spacer(modifier = Modifier.width(6.dp))
                         Icon(

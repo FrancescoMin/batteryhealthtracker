@@ -264,4 +264,10 @@
     <string name="console_card_title">Console Diagnostica Hardware</string>
     <string name="console_card_desc">Visualizza i comandi kernel e condividi i log per le issue su GitHub</string>
     <string name="action_more_options">Altre opzioni</string>
+
+    <!-- Statistiche Utilizzo & Giorni dal primo avvio -->
+    <string name="trend_days_since_first_boot">%1$d giorni dal primo avvio</string>
+    <string name="trend_usage_ratio">Rapporto: %1$.2f giorni/ciclo (%2$.2f cicli/giorno)</string>
+    <string name="dialog_usage_stats_title">Statistiche dal Primo Avvio</string>
+    <string name="dialog_usage_stats_desc" formatted="false">Come vengono calcolate le statistiche di utilizzo?\n\n• Giorni dal primo avvio:\nIl tempo effettivo trascorso dal momento in cui lo smartphone è stato inizializzato e avviato per la prima volta.\n\n• Rapporto di utilizzo (Giorni per Ciclo):\nMisura quanti giorni trascorrono in media tra una ricarica completa e l\'altra (giorni totali / cicli totali).\n\n• Valutazione abitudini:\nUn valore superiore a 1,0 giorno per ciclo (meno di 1 ciclo completo al giorno) indica un\'abitudine di ricarica ottimale, ideale per preservare la salute chimica della cella nel lungo termine.</string>
 </resources>
