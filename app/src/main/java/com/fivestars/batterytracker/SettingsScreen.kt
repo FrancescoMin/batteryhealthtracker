@@ -44,6 +44,15 @@ fun SettingsScreen(
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
 
+    val appVersionName = remember(context) {
+        try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            pInfo.versionName ?: "1.3"
+        } catch (_: Exception) {
+            "1.3"
+        }
+    }
+
     BackHandler(onBack = onNavigateBack)
 
     if (showThemeDialog) {
@@ -365,7 +374,7 @@ fun SettingsScreen(
                         HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
                         InfoRow(
                             label = stringResource(R.string.settings_app_version),
-                            value = "1.0 - Oplus Edition (Oppo, OnePlus, Realme)"
+                            value = "$appVersionName - Oplus Edition (Oppo, OnePlus, Realme)"
                         )
                     }
                 }

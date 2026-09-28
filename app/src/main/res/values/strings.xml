@@ -43,6 +43,7 @@
     <string name="dashboard_section_title">Current Battery Status</string>
     <string name="card_health_title">Battery Health</string>
     <string name="card_health_sub">Calculated SOH</string>
+    <string name="card_health_sub_bms">BMS Hardware / OS</string>
     <string name="card_health_sub_bm">Unavailable via API</string>
     <string name="card_cycles_title">Charge Cycles</string>
     <string name="card_cycles_sub">Completed</string>
@@ -250,4 +251,17 @@
     <string name="theme_dark_desc">Dark shades, reduces eye strain</string>
     <string name="theme_amoled">AMOLED Pure Black</string>
     <string name="theme_amoled_desc">Turn off OLED pixels (#000000) for maximum battery saving</string>
+
+    <!-- Diagnostic Console -->
+    <string name="action_diagnostic_console">Diagnostic Console</string>
+    <string name="console_title">Diagnostic Console &amp; Logs</string>
+    <string name="console_subtitle">Raw command outputs for device verification &amp; GitHub issues</string>
+    <string name="console_btn_copy">Copy Report</string>
+    <string name="console_btn_issues">Open GitHub Issues</string>
+    <string name="console_btn_clear">Clear</string>
+    <string name="console_copied_toast">Diagnostic report copied to clipboard!</string>
+    <string name="console_empty_logs">No commands executed yet.\nTap refresh in dashboard to run hardware queries.</string>
+    <string name="console_card_title">Hardware Diagnostics Console</string>
+    <string name="console_card_desc">View raw kernel queries &amp; share logs for GitHub compatibility</string>
+    <string name="action_more_options">More options</string>
 </resources>

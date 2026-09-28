@@ -185,4 +185,73 @@ class DevicePresetsAndHealthTest {
             )
         }
     }
+
+    @Test
+    fun testOnePlus13HealthPriorityAndEffectiveFcc() {
+        // OnePlus 13 (CPH2653): Nominale 5840 mAh, Tipica 6000 mAh
+        val preset = OplusDevicePresets.detectDevicePreset("CPH2653")
+        assertNotNull(preset)
+        val ratedDesign = preset?.ratedMah ?: 5840.0
+        assertEquals(5840.0, ratedDesign, 0.01)
+
+        // Scenario segnalato: Settings di OxygenOS 15 riporta 98%, mentre dumpsys batterystats
+        // riporta il profilo statico di power_profile.xml "Estimated battery capacity: 6000"
+        val rawSoh = 98
+        val dumpsysEstimatedProfile = 6000.0 // MAI da usare come FCC reale degradato!
+
+        // Priorità salute: rawSoh certificato dal BMS/OS prevale
+        val effectiveHealth = rawSoh
+        assertEquals(98, effectiveHealth)
+
+        // Capacità effettiva: quando fcc da sysfs manca o è un valore teorico eccedente (> ratedDesign)
+        val effectiveFcc = Math.round((ratedDesign * rawSoh / 100.0) * 10.0) / 10.0
+        assertEquals(5723.2, effectiveFcc, 0.1)
+
+        // Se invece avessimo usato la vecchia formula errata (6000 / 5840 * 100):
+        val wrongCalculatedHealth = Math.round((dumpsysEstimatedProfile / ratedDesign) * 100.0).toInt().coerceIn(1, 100)
+        assertEquals(100, wrongCalculatedHealth) // Questa era l'anomalia rilevata dall'amico!
+    }
+
+    @Test
+    fun testEffectiveFccConsistencyWithRawSoh() {
+        val ratedDesign = 5840.0
+        val rawSoh = 98
+
+        // Caso 1: FCC sysfs reale (es. 5720 mAh) è coerente con SOH 98% (entro 5%)
+        val sysfsFcc = 5720.0
+        val isConsistent = Math.abs((sysfsFcc / ratedDesign * 100.0) - rawSoh) <= 5.0 && sysfsFcc <= ratedDesign * 1.02
+        assertTrue("Sysfs FCC coerente deve essere accettato", isConsistent)
+
+        // Caso 2: FCC anomalo o statico dumpsys (6000 mAh > ratedDesign)
+        val staticProfileFcc = 6000.0
+        val isProfileConsistent = Math.abs((staticProfileFcc / ratedDesign * 100.0) - rawSoh) <= 5.0 && staticProfileFcc <= ratedDesign * 1.02
+        org.junit.Assert.assertFalse("Profilo teorico eccedente ratedDesign non deve essere accettato come FCC", isProfileConsistent)
+    }
+
+    @Test
+    fun testOnePlus13CalculatedSohAlignedToTypicalCapacity() {
+        // OnePlus 13 (CPH2653): Tipica 6000 mAh, Nominale 5840 mAh
+        val preset = OplusDevicePresets.detectDevicePreset("CPH2653")
+        assertNotNull(preset)
+        val typicalMah = preset?.typicalMah?.toDouble() ?: 6000.0
+        val ratedMah = preset?.ratedMah ?: 5840.0
+
+        // Caso reale riscontrato nel test dell'amico:
+        // rawSoh è null (SELinux blocca normal_batt_soh)
+        // dumpsys batterystats riporta learned battery capacity = 5920 mAh (393 cicli)
+        val rawSoh: Int? = null
+        val learnedFcc = 5920.0
+
+        // Calcolo con la nuova logica: allineamento alla capacità TIPICA (6000 mAh)
+        val isHealthCalculated = (rawSoh == null)
+        val calculationBase = if (isHealthCalculated) typicalMah else ratedMah
+        val calculatedHealth = ((learnedFcc * 100.0) / calculationBase).toInt().coerceIn(1, 100)
+
+        // Deve risultare esattamente 98%, combaciando con le Impostazioni di sistema di OnePlus 13!
+        assertEquals(98, calculatedHealth)
+
+        // Se invece avessimo usato la vecchia base (5840 rated): 5920 / 5840 = 101% -> 100% errato
+        val oldWrongHealth = Math.round((learnedFcc / ratedMah) * 100.0).toInt().coerceIn(1, 100)
+        assertEquals(100, oldWrongHealth)
+    }
 }

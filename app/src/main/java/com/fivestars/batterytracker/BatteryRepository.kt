@@ -27,6 +27,7 @@ data class BatterySnapshot(
     val batteryLevelPercentage: Int?,
     val source: String,
     val isShizukuUsed: Boolean,
+    val isHealthCalculated: Boolean = false,
     val qMaxMah: Int? = null,
     val isDualBattery: Boolean? = null,
     val cell0VoltageMv: Int? = null,
@@ -148,12 +149,16 @@ class BatteryRepository(private val context: Context) {
     private fun readFromOplusSysfs(batteryLevel: Int?): BatterySnapshot? {
         return try {
             val rawFccVal = querySysfs(
+                "/sys/class/oplus_chg/battery/normal_batt_fcc",
+                "/sys/class/oplus_chg/battery/sub_batt_fcc",
+                "/sys/class/oplus_chg/battery/batt_fcc",
                 "/sys/class/oplus_chg/battery/battery_fcc",
                 "/sys/class/oplus_chg/battery/fcc",
                 "/sys/class/power_supply/battery/charge_full",
                 "/sys/class/power_supply/bms/charge_full",
                 "/sys/class/power_supply/battery/batt_fcc",
-                "/sys/class/power_supply/battery/battery_fcc"
+                "/sys/class/power_supply/battery/battery_fcc",
+                "/sys/class/power_supply/bms/batt_fcc"
             )?.toDoubleOrNull()
             var fcc = if (rawFccVal != null && rawFccVal > 100000) rawFccVal / 1000.0 else rawFccVal
 
@@ -195,42 +200,79 @@ class BatteryRepository(private val context: Context) {
             }
 
             var rawSoh = querySysfs(
+                "/sys/class/oplus_chg/battery/normal_batt_soh",
+                "/sys/class/oplus_chg/battery/sub_batt_soh",
+                "/sys/class/oplus_chg/battery/batt_soh",
                 "/sys/class/oplus_chg/battery/battery_soh",
                 "/sys/class/oplus_chg/battery/soh",
                 "/sys/class/power_supply/battery/battery_soh",
                 "/sys/class/power_supply/battery/soh",
-                "/sys/class/power_supply/bms/soh"
-            )?.toIntOrNull()
+                "/sys/class/power_supply/bms/soh",
+                "/sys/class/power_supply/battery/state_of_health",
+                "/sys/class/power_supply/bms/state_of_health",
+                "/sys/class/power_supply/battery/health_pct",
+                "/sys/class/power_supply/battery/asoc",
+                "/sys/class/power_supply/bms/asoc",
+                "/proc/oplus_battery/soh",
+                "/proc/oplus_battery/batt_soh",
+                "/proc/oplus_battery/battery_soh"
+            )?.toIntOrNull()?.takeIf { it in 1..100 }
 
             var isDumpsysFallbackUsed = false
-            // Se né FCC né SOH sono leggibili via sysfs (es. chipset Qualcomm Snapdragon con restrizioni SELinux su OxygenOS),
-            // tentiamo il recupero tramite il servizio Android HAL 'dumpsys battery' e 'dumpsys batterystats'
-            val dumpsysInfo = if (fcc == null && rawSoh == null) {
+
+            // Se rawSoh non è nei percorsi standard di sysfs (es. restrizioni SELinux su OxygenOS),
+            // interroghiamo Settings Provider / Content Provider di ColorOS/OxygenOS (es. Maximum capacity nelle impostazioni)
+            if (rawSoh == null) {
+                rawSoh = readSettingsBatteryHealth()
+                if (rawSoh != null) {
+                    isDumpsysFallbackUsed = true
+                }
+            }
+
+            // Se né FCC né SOH sono ancora completi, tentiamo il recupero tramite il servizio Android HAL 'dumpsys battery' e 'dumpsys batterystats'
+            val dumpsysInfo = if (fcc == null || rawSoh == null) {
                 readDumpsysBatteryInfo().also {
-                    if (it.estimatedCapacityMah != null || it.asocPercent != null || it.voltageMv != null || it.chargeCounterUah != null) {
+                    if (it.asocPercent != null || it.learnedCapacityMah != null || it.estimatedCapacityMah != null || it.voltageMv != null || it.chargeCounterUah != null) {
                         isDumpsysFallbackUsed = true
                     }
                 }
             } else null
 
-            if (fcc == null && dumpsysInfo?.estimatedCapacityMah != null && dumpsysInfo.estimatedCapacityMah > 0) {
-                fcc = dumpsysInfo.estimatedCapacityMah
-            }
             if (rawSoh == null && dumpsysInfo?.asocPercent != null && dumpsysInfo.asocPercent in 1..100) {
                 rawSoh = dumpsysInfo.asocPercent
+            }
+
+            // Controllo finale SOH tramite API Android 14+ BATTERY_PROPERTY_STATE_OF_HEALTH (ID 10)
+            if (rawSoh == null) {
+                try {
+                    val bm = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+                    val bmSoh = bm.getIntProperty(10)
+                    if (bmSoh in 1..100) {
+                        rawSoh = bmSoh
+                    }
+                } catch (_: Exception) {}
+            }
+
+            // FCC da dumpsys: SOLO se proviene da 'learned battery capacity' (reale degradato appreso dal BMS),
+            // MAI da 'Estimated battery capacity' che è il profilo statico teorico di power_profile.xml (es. 6000 mAh su OP13)
+            if (fcc == null && dumpsysInfo?.learnedCapacityMah != null && dumpsysInfo.learnedCapacityMah > 0) {
+                fcc = dumpsysInfo.learnedCapacityMah
             }
 
             // Determinazione della capacità nominale (Rated Capacity IEC 61960):
             // 1. Se l'utente ha impostato una capacità manuale o scelto un preset, usa quel valore
             val userRated = preferences.getCustomRatedCapacity()
+            val detectedPreset = OplusDevicePresets.detectDevicePreset()
+            val presetRated = detectedPreset?.ratedMah
+            val presetTypical = detectedPreset?.typicalMah?.toDouble()
+
             val ratedDesign = if (userRated != null && userRated > 0) {
                 userRated
             } else {
                 // Rilevamento automatico:
                 // a) Verifica se il modello hardware rilevato da Build.MODEL è presente nei preset
-                val detectedPreset = OplusDevicePresets.detectDevicePreset()
-                if (detectedPreset != null) {
-                    detectedPreset.ratedMah
+                if (presetRated != null) {
+                    presetRated
                 } else when {
                     // b) Mappatura euristica basata sul valore registrato in design_capacity dal chip
                     rawDesign != null && rawDesign in 7400.0..7650.0 -> 7290.0 // Oppo Find X9 Pro (tipica 7500 / nominale 7290)
@@ -253,31 +295,59 @@ class BatteryRepository(private val context: Context) {
             }
 
             // Calcolo della salute reale permanente:
-            // SOH = (Capacità reale FCC / Capacità nominale Rated) * 100
-            var effectiveHealth = if (fcc != null && fcc > 0) {
-                val calculatedHealth = Math.round((fcc / ratedDesign) * 100.0).toInt().coerceIn(1, 100)
-                calculatedHealth
-            } else {
-                rawSoh
+            // Priorità ASSOLUTA alla salute certificata dal BMS hardware / Settings OS / ASOC (rawSoh)
+            var isHealthCalculated = false
+            val typicalCalculationBase = userRated ?: presetTypical ?: rawDesign ?: ratedDesign
+            var calculationBaseUsed = ratedDesign
+
+            var effectiveHealth = when {
+                rawSoh != null && rawSoh in 1..100 -> {
+                    isHealthCalculated = false
+                    rawSoh
+                }
+                fcc != null && fcc > 0 -> {
+                    isHealthCalculated = true
+                    // Se non è disponibile il registro hardware normal_batt_soh,
+                    // allineiamo la salute calcolata alla capacità TIPICA commerciale (es. 6000 mAh su OnePlus 13)
+                    // anziché alla capacità nominale IEC 61960 minima di laboratorio (5840 mAh).
+                    // In questo modo (5920 * 100) / 6000 restituisce esattamente il 98% (allineato alle Impostazioni di sistema)
+                    // senza sforare oltre il 100%.
+                    calculationBaseUsed = typicalCalculationBase
+                    ((fcc * 100.0) / typicalCalculationBase).toInt().coerceIn(1, 100)
+                }
+                else -> null
             }
 
-            var effectiveFcc = if (fcc != null && fcc > 0) {
-                fcc
-            } else if (rawSoh != null && rawSoh > 0) {
-                Math.round((ratedDesign * rawSoh / 100.0) * 10.0) / 10.0
-            } else {
-                null
+            var effectiveFcc = when {
+                rawSoh != null && rawSoh in 1..100 && ratedDesign > 0 -> {
+                    // Se disponiamo di SOH certificato dal produttore (es. 98%), usiamo FCC sysfs solo se coerente (entro il 5%) e non palesemente sovrastimato (> ratedDesign)
+                    if (fcc != null && fcc > 0 && Math.abs((fcc / ratedDesign * 100.0) - rawSoh) <= 5.0 && fcc <= ratedDesign * 1.02) {
+                        fcc
+                    } else {
+                        Math.round((ratedDesign * rawSoh / 100.0) * 10.0) / 10.0
+                    }
+                }
+                fcc != null && fcc > 0 -> fcc
+                else -> null
             }
 
             // Stima a saturazione: se a piena carica (100% o status Full), il contatore coulombiano rappresenta l'FCC effettivo
             if (effectiveHealth == null && dumpsysInfo?.chargeCounterUah != null && (batteryLevel == 100 || dumpsysInfo.status == 5)) {
                 val fullCoulomb = dumpsysInfo.chargeCounterUah / 1000.0
                 if (fullCoulomb > 1000.0) {
-                    effectiveHealth = Math.round((fullCoulomb / ratedDesign) * 100.0).toInt().coerceIn(1, 100)
+                    calculationBaseUsed = typicalCalculationBase
+                    effectiveHealth = ((fullCoulomb * 100.0) / typicalCalculationBase).toInt().coerceIn(1, 100)
                     effectiveFcc = fullCoulomb
+                    isHealthCalculated = true
                     if (fcc == null) fcc = fullCoulomb
                 }
             }
+
+            // Capacità di riferimento da mostrare nella UI (designCapacityMah nel BatterySnapshot):
+            // Se la salute è calcolata rispetto alla capacità tipica commerciale (es. 6000 mAh),
+            // mostriamo come denominatore la capacità tipica (es. 5920 mAh su 6000 mAh),
+            // evitando l'anomalia di visualizzare un numeratore superiore al denominatore (5920 su 5840 mAh).
+            val displayDesignCapacity = if (isHealthCalculated) calculationBaseUsed else ratedDesign
 
             // --- 1. Capacità Chimica Assoluta Qmax ---
             val headLine = querySysfs(
@@ -671,14 +741,21 @@ class BatteryRepository(private val context: Context) {
             }
 
             if (effectiveHealth != null || cycles != null || (effectiveFcc ?: fcc) != null || cell0Volt != null || remainingMah != null) {
+                DiagnosticLogger.log(
+                    tag = "SNAPSHOT_DONE",
+                    command = "getBatterySnapshot()",
+                    result = "Health=$effectiveHealth%, FCC=${effectiveFcc ?: fcc} mAh, BaseDesign=$displayDesignCapacity mAh, Cycles=$cycles, Source=$snapshotSource, Calculated=$isHealthCalculated",
+                    isSuccess = true
+                )
                 BatterySnapshot(
                     cycleCount = cycles,
                     healthPercentage = effectiveHealth,
                     currentCapacityMah = effectiveFcc ?: fcc,
-                    designCapacityMah = ratedDesign,
+                    designCapacityMah = displayDesignCapacity,
                     batteryLevelPercentage = batteryLevel,
                     source = snapshotSource,
                     isShizukuUsed = true,
+                    isHealthCalculated = isHealthCalculated,
                     qMaxMah = qMaxMah,
                     isDualBattery = isDual,
                     cell0VoltageMv = cell0Volt,
@@ -761,9 +838,20 @@ class BatteryRepository(private val context: Context) {
 
     private fun querySysfs(vararg paths: String): String? {
         if (paths.isEmpty()) return null
-        val chainedCmd = paths.joinToString(" || ") { "cat $it 2>/dev/null" }
-        val (result, source) = executePrivilegedCommand(chainedCmd, multiLine = false)
-        if (result != null) {
+        val pathListStr = paths.joinToString(" ")
+        val loopCmd = """
+            for p in $pathListStr; do
+                if [ -f "${'$'}p" ]; then
+                    v=${'$'}(cat "${'$'}p" 2>/dev/null)
+                    if [ -n "${'$'}v" ] && [ "${'$'}v" != "0" ] && [ "${'$'}v" != "-1" ] && [ "${'$'}v" != "null" ]; then
+                        echo "${'$'}v"
+                        exit 0
+                    fi
+                fi
+            done
+        """.trimIndent()
+        val (result, source) = executePrivilegedCommand(loopCmd, multiLine = false)
+        if (!result.isNullOrEmpty() && result != "0" && result != "-1") {
             lastPrivilegedSource = source
             return result
         }
@@ -806,9 +894,17 @@ class BatteryRepository(private val context: Context) {
                 if (multiLine) it.readText() else it.readLine()
             }
             process.waitFor()
-            output?.trim()
+            val trimmed = output?.trim()
+            DiagnosticLogger.log(
+                tag = "SHIZUKU",
+                command = cmd,
+                result = trimmed,
+                isSuccess = !trimmed.isNullOrEmpty() && !trimmed.contains("Permission denied", ignoreCase = true)
+            )
+            trimmed
         } catch (e: Exception) {
             Log.e(tag, "Errore esecuzione comando Shizuku: $cmd", e)
+            DiagnosticLogger.log("SHIZUKU", cmd, "Error: ${e.message}", false)
             null
         }
     }
@@ -821,17 +917,76 @@ class BatteryRepository(private val context: Context) {
                 if (multiLine) it.readText() else it.readLine()
             }
             process.waitFor()
-            output?.trim()
+            val trimmed = output?.trim()
+            DiagnosticLogger.log(
+                tag = "ROOT",
+                command = cmd,
+                result = trimmed,
+                isSuccess = !trimmed.isNullOrEmpty() && !trimmed.contains("Permission denied", ignoreCase = true)
+            )
+            trimmed
         } catch (e: Exception) {
             Log.e(tag, "Errore esecuzione comando Root: $cmd", e)
+            DiagnosticLogger.log("ROOT", cmd, "Error: ${e.message}", false)
             null
         }
+    }
+
+    private fun readSettingsBatteryHealth(): Int? {
+        val cmd = """
+            for k in battery_health maximum_capacity battery_maximum_capacity oplus_battery_soh oplus_battery_health oplus_battery_maximum_capacity oplus_customize_battery_soh battery_soh; do
+                for ns in system global secure; do
+                    v=$(settings get ${'$'}ns ${'$'}k 2>/dev/null)
+                    if [ "${'$'}v" != "null" ] && [ -n "${'$'}v" ] && [ "${'$'}v" -ge 1 ] && [ "${'$'}v" -le 100 ] 2>/dev/null; then
+                        echo "${'$'}v"
+                        exit 0
+                    fi
+                done
+            done
+            for uri in content://com.oplus.battery.provider/battery_health content://com.oplus.battery.provider/maximum_capacity content://com.oplus.battery.provider/battery_soh content://com.oplus.battery/battery_health; do
+                res=$(content query --uri ${'$'}uri 2>/dev/null)
+                if [ -n "${'$'}res" ] && [ "${'$'}res" != "No result" ]; then
+                    echo "${'$'}res"
+                    exit 0
+                fi
+            done
+            for ns in system global secure; do
+                res=$(settings list ${'$'}ns 2>/dev/null | grep -iE '^(.*(soh|maximum_capacity|battery_health).*)=' | head -n 1)
+                if [ -n "${'$'}res" ]; then
+                    echo "${'$'}res"
+                    exit 0
+                fi
+            done
+        """.trimIndent()
+
+        val (output, _) = executePrivilegedCommand(cmd, multiLine = false)
+        val resultHealth = if (!output.isNullOrEmpty()) {
+            val directInt = output.toIntOrNull()
+            if (directInt != null && directInt in 1..100) {
+                directInt
+            } else {
+                val match = Regex("""(?:value|health|soh|capacity)=?(\d{1,3})""", RegexOption.IGNORE_CASE).find(output)
+                    ?: Regex("""=(\d{1,3})""").find(output)
+                    ?: Regex("""\b(100|[1-9]\d?)\b""").find(output)
+                val parsed = match?.groupValues?.getOrNull(1)?.toIntOrNull()
+                if (parsed != null && parsed in 1..100) parsed else null
+            }
+        } else null
+
+        DiagnosticLogger.log(
+            tag = "SETTINGS_SOH",
+            command = "readSettingsBatteryHealth()",
+            result = resultHealth?.let { "$it%" } ?: "Not found in settings/providers",
+            isSuccess = resultHealth != null
+        )
+        return resultHealth
     }
 
     private data class DumpsysBatteryInfo(
         val voltageMv: Int? = null,
         val chargeCounterUah: Long? = null,
         val asocPercent: Int? = null,
+        val learnedCapacityMah: Double? = null,
         val estimatedCapacityMah: Double? = null,
         val status: Int? = null,
         val tempTenths: Int? = null
@@ -857,8 +1012,20 @@ class BatteryRepository(private val context: Context) {
                 trimmed.startsWith("Charge counter:", ignoreCase = true) -> {
                     chargeCounter = trimmed.substringAfter(":").trim().toLongOrNull()
                 }
-                trimmed.startsWith("mSavedBatteryAsoc:", ignoreCase = true) -> {
-                    asoc = trimmed.substringAfter(":").trim().toIntOrNull()
+                trimmed.startsWith("mSavedBatteryAsoc:", ignoreCase = true) ||
+                trimmed.startsWith("mBatteryHealth:", ignoreCase = true) ||
+                trimmed.startsWith("mMaximumCapacity:", ignoreCase = true) ||
+                trimmed.startsWith("mBatteryStateOfHealth:", ignoreCase = true) ||
+                trimmed.startsWith("battery_health:", ignoreCase = true) ||
+                trimmed.startsWith("maximum_capacity:", ignoreCase = true) ||
+                trimmed.startsWith("battery_soh:", ignoreCase = true) ||
+                trimmed.startsWith("asoc:", ignoreCase = true) ||
+                trimmed.startsWith("health_percent:", ignoreCase = true) ||
+                trimmed.startsWith("State of Health:", ignoreCase = true) -> {
+                    val v = trimmed.substringAfter(":").trim().toIntOrNull()
+                    if (v != null && v in 1..100) {
+                        asoc = v
+                    }
                 }
                 trimmed.startsWith("status:", ignoreCase = true) -> {
                     status = trimmed.substringAfter(":").trim().toIntOrNull()
@@ -869,30 +1036,43 @@ class BatteryRepository(private val context: Context) {
             }
         }
 
+        var learnedCapacity: Double? = null
         var estimatedCapacity: Double? = null
         try {
+            val (learnedOutput, _) = executePrivilegedCommand("dumpsys batterystats 2>/dev/null | grep -m 1 -i 'learned battery capacity'", multiLine = false)
+            if (!learnedOutput.isNullOrEmpty()) {
+                val match = Regex("""learned battery capacity:\s*(\d+)""", RegexOption.IGNORE_CASE).find(learnedOutput)
+                val rawLearned = match?.groupValues?.getOrNull(1)?.toDoubleOrNull()
+                if (rawLearned != null && rawLearned > 0) {
+                    learnedCapacity = if (rawLearned > 100000) rawLearned / 1000.0 else rawLearned
+                }
+            }
             val (statsOutput, _) = executePrivilegedCommand("dumpsys batterystats 2>/dev/null | grep -m 1 -i 'Estimated battery capacity'", multiLine = false)
             if (!statsOutput.isNullOrEmpty()) {
                 val match = Regex("""Estimated battery capacity:\s*(\d+)""", RegexOption.IGNORE_CASE).find(statsOutput)
-                estimatedCapacity = match?.groupValues?.getOrNull(1)?.toDoubleOrNull()
-            }
-            if (estimatedCapacity == null) {
-                val (learnedOutput, _) = executePrivilegedCommand("dumpsys batterystats 2>/dev/null | grep -m 1 -i 'learned battery capacity'", multiLine = false)
-                if (!learnedOutput.isNullOrEmpty()) {
-                    val match = Regex("""learned battery capacity:\s*(\d+)""", RegexOption.IGNORE_CASE).find(learnedOutput)
-                    estimatedCapacity = match?.groupValues?.getOrNull(1)?.toDoubleOrNull()
+                val rawEst = match?.groupValues?.getOrNull(1)?.toDoubleOrNull()
+                if (rawEst != null && rawEst > 0) {
+                    estimatedCapacity = if (rawEst > 100000) rawEst / 1000.0 else rawEst
                 }
             }
         } catch (_: Exception) {}
 
-        return DumpsysBatteryInfo(
+        val info = DumpsysBatteryInfo(
             voltageMv = voltage,
             chargeCounterUah = chargeCounter,
             asocPercent = asoc,
+            learnedCapacityMah = learnedCapacity,
             estimatedCapacityMah = estimatedCapacity,
             status = status,
             tempTenths = temp
         )
+        DiagnosticLogger.log(
+            tag = "DUMPSYS_INFO",
+            command = "readDumpsysBatteryInfo()",
+            result = "V=${voltage}mV, CC=${chargeCounter}uAh, ASOC=${asoc}%, Learned=${learnedCapacity}mAh, EstProfile=${estimatedCapacity}mAh, Temp=${temp?.let { it / 10.0 }}C",
+            isSuccess = voltage != null || chargeCounter != null || learnedCapacity != null || asoc != null
+        )
+        return info
     }
 
     private fun readFromBatteryManager(batteryLevel: Int?): BatterySnapshot {
@@ -963,23 +1143,36 @@ class BatteryRepository(private val context: Context) {
 
         val userRated = preferences.getCustomRatedCapacity()
         val detectedPreset = OplusDevicePresets.detectDevicePreset()
+        val presetTypical = detectedPreset?.typicalMah?.toDouble()
         val ratedDesign = userRated ?: detectedPreset?.ratedMah
+        val calculationBase = userRated ?: presetTypical ?: ratedDesign
 
         var effectiveHealth = healthPercentage
-        if (effectiveHealth == null && capacityMah != null && capacityMah > 1000.0 && ratedDesign != null && ratedDesign > 0) {
+        var isHealthCalculated = false
+        if (effectiveHealth == null && capacityMah != null && capacityMah > 1000.0 && calculationBase != null && calculationBase > 0) {
             if (batteryLevel == 100 || isFull) {
-                effectiveHealth = Math.round((capacityMah / ratedDesign) * 100.0).toInt().coerceIn(1, 100)
+                effectiveHealth = ((capacityMah * 100.0) / calculationBase).toInt().coerceIn(1, 100)
+                isHealthCalculated = true
             }
         }
+        val displayDesign = if (isHealthCalculated && calculationBase != null) calculationBase else ratedDesign
+
+        DiagnosticLogger.log(
+            tag = "BATTERY_MANAGER",
+            command = "readFromBatteryManager()",
+            result = "Cycles=$cycleCount, Health=$effectiveHealth%, Cap=${capacityMah}mAh, Design=${displayDesign}mAh",
+            isSuccess = true
+        )
 
         return BatterySnapshot(
             cycleCount = cycleCount,
             healthPercentage = effectiveHealth,
             currentCapacityMah = capacityMah,
-            designCapacityMah = ratedDesign,
+            designCapacityMah = displayDesign,
             batteryLevelPercentage = batteryLevel,
             source = "BatteryManager",
             isShizukuUsed = false,
+            isHealthCalculated = isHealthCalculated,
             batteryTemperatureCelsius = tempC,
             isTrueFullCharge = isTrueFull,
             saturationStatus = satStatus,

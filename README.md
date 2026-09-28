@@ -107,6 +107,41 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
   3. **Dark Theme:** Balanced dark tones designed to reduce eye strain in low-light environments.
   4. **AMOLED Pure Black (`#000000`):** Turns off OLED sub-pixels completely, eliminating screen power draw across background regions.
 
+### 💻 Built-in Diagnostic Console & 1-Click Issue Reporting
+- **Real-Time Shell & Kernel Query Logging:** Tracks every sysfs, dumpsys, and settings query executed by the app, showing exact return values, SELinux denials, and fallback paths.
+- **Instant GitHub Report Export:** A dedicated "Copy Report" button formats device specs, build fingerprints, and kernel command outputs into clean Markdown, ready to paste directly into GitHub Issues.
+- **Direct GitHub Issues Integration:** One-tap shortcut opening GitHub Issues in your browser to submit diagnostic findings instantly.
+
+### 🏷️ Understanding SOH Determination & Metric Card Indicators
+
+The application transparently communicates how State of Health (SOH) and capacity metrics are derived on your specific device through indicator labels displayed directly beneath each primary card:
+
+#### 1. SOH Determination Hierarchy:
+- **Priority 1 — Authentic Hardware BMS SOH (`BMS Hardware / OS`):**
+  - **Source:** Read directly from proprietary ColorOS / OxygenOS / Realme UI hardware fuel-gauge kernel registers (`/sys/class/oplus_chg/battery/normal_batt_soh`, `battery_soh`, or Settings Provider).
+  - **Meaning:** Represents the genuine, calibrated electrochemical health tracked by the battery management IC. Matches the official battery health percentage shown in ColorOS/OxygenOS System Settings (*"Maximum Capacity"* / *"Capacità massima"*).
+- **Priority 2 — Scientifically Calculated SOH (`Calculated SOH` / `SOH Calcolato`):**
+  - **Source:** Dynamically derived when device firmware or SELinux policies hide direct hardware SOH registers (or on devices lacking `normal_batt_soh`, such as the OnePlus 13 on current OxygenOS builds).
+  - **Formula:**
+    $$\text{SOH} = \left\lfloor \frac{\text{Full Charge Capacity (FCC)}}{\text{Typical Commercial Capacity}} \times 100 \right\rfloor$$
+  - **Alignment:** Aligned to the typical commercial capacity (e.g., 6000 mAh on OnePlus 13 or Reno 14) so that the calculated health perfectly matches official system expectations without exceeding 100%.
+- **Priority 3 — Standard API Limitation (`Unavailable via API` / `Non disponibile via API`):**
+  - **Source:** Basic non-privileged Android `BatteryManager` fallback.
+  - **Meaning:** Standard Android APIs do not expose physical chemical degradation without Shizuku or Root. A red warning badge prompts the user to activate Shizuku.
+
+#### 2. Metric Card Subtitle Glossary:
+
+| Card | Subtitle Label | Technical Meaning & Telemetry Source |
+| :--- | :--- | :--- |
+| **Health (%)** | **`BMS Hardware / OS`** | Direct read from hardware BMS / ColorOS kernel register (OEM-certified). |
+| **Health (%)** | **`Calculated SOH`** | Computed dynamically from FCC divided by commercial typical capacity. |
+| **Health (%)** | **`Unavailable via API`** | Android public API cannot read degradation; Shizuku or Root required. |
+| **Capacity (mAh)** | **`of XXXX mAh (typical/rated)`** | Reference design capacity used as the calculation denominator. |
+| **Capacity (mAh)** | **`Real FCC capacity`** | Measured electrochemical full charge capacity from fuel gauge. |
+| **Capacity (mAh)** | **`Standard Android estimation`** | Coulomb counter estimate under basic BatteryManager fallback. |
+| **Cycles** | **`Full charge cycles`** | Cumulative 100% equivalent discharge cycles recorded in BMS non-volatile memory. |
+| **Cycles** | **`Unsupported by Android`** | Cycle counter node inaccessible through basic Android HAL without Shizuku/Root. |
+
 ### 🌐 Multilingual
 - Fully localized in **English**, **Italian (Italiano)**, and **Spanish (Español)**.
 
@@ -115,10 +150,13 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 ## 📱 Verified Device Battery Database & Hardware Compatibility
 
 > [!IMPORTANT]
-> **Compatibility & Verification Status:**
+> **Compatibility, Community Testing & Diagnostic Logs:**
 > - 🟢 **Oppo Reno 14 (EU):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (all BMS telemetry, SOH, FCC, cycle counts, voltage, power, and safety registers read with complete accuracy).
-> - 🟡 **Other Devices:** Due to variations in regional firmware, SELinux enforcement (e.g. OnePlus Nord 5 requiring root for direct Qualcomm sysfs access), and vendor driver differences across ColorOS, OxygenOS, and Realme UI, **full hardware compatibility is not yet guaranteed for other models**.
-> - 🤝 **We Need Your Help!** If you own any other OnePlus, Oppo, or Realme device, we warmly invite you to test the app with Shizuku and share your findings via [GitHub Issues](https://github.com/FrancescoMin/batteryhealthtracker/issues). Your feedback, logs, and contributions are essential to expanding certified device support across the community!
+> - 🟡 **Other Devices (`🤝 Help wanted`):** Due to variations in regional firmware, SELinux enforcement (e.g. OnePlus Nord 5 requiring root for direct Qualcomm sysfs access), and vendor driver differences across ColorOS, OxygenOS, and Realme UI, **full hardware compatibility is not yet guaranteed for other models**.
+> - 🧪 **Community Testing & Built-in Diagnostic Console (Critical Phase):** If you own any OnePlus, Oppo, or Realme device from the list, **your testing is crucial!** The app now includes an **Integrated Diagnostic Console** (accessible via the terminal icon `>_` in the top bar, from the hardware diagnostics card, or by tapping the *Data source* pill):
+>   - 📋 **1-Click Markdown Report:** Simply tap **"Copy Report"** in the console to copy your device environment and all raw kernel query outputs to your clipboard.
+>   - 🐛 **Direct GitHub Issues Link:** Tap **"Open GitHub Issues"** to paste your log directly into [GitHub Issues](https://github.com/FrancescoMin/batteryhealthtracker/issues).
+>   - Sharing these logs allows us to map missing sysfs nodes, adapt SELinux fallbacks, and certify new devices for the entire community!
 
 | Manufacturer | Model Series | Battery Architecture | Typical / Rated Capacity | Compatibility Status |
 | :--- | :--- | :--- | :--- | :--- |

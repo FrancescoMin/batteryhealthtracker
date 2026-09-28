@@ -43,6 +43,7 @@
     <string name="dashboard_section_title">Stato Attuale Batteria</string>
     <string name="card_health_title">Salute Batteria</string>
     <string name="card_health_sub">SOH Calcolato</string>
+    <string name="card_health_sub_bms">BMS Hardware / OS</string>
     <string name="card_health_sub_bm">Non disponibile via API</string>
     <string name="card_cycles_title">Cicli Carica</string>
     <string name="card_cycles_sub">Completati</string>
@@ -250,4 +251,17 @@
     <string name="theme_dark_desc">Tonalità scure, riduce l\'affaticamento degli occhi</string>
     <string name="theme_amoled">Nero Puro AMOLED</string>
     <string name="theme_amoled_desc">Pixel neri spenti (#000000) per il massimo risparmio batteria</string>
+
+    <!-- Diagnostic Console -->
+    <string name="action_diagnostic_console">Console Diagnostica</string>
+    <string name="console_title">Console Diagnostica &amp; Log</string>
+    <string name="console_subtitle">Comandi ed esiti grezzi per verifica dispositivi e issue GitHub</string>
+    <string name="console_btn_copy">Copia Report</string>
+    <string name="console_btn_issues">Apri Issues GitHub</string>
+    <string name="console_btn_clear">Cancella</string>
+    <string name="console_copied_toast">Report diagnostico copiato negli appunti!</string>
+    <string name="console_empty_logs">Nessun comando registrato finora.\nTocca Aggiorna nella dashboard per eseguire le interrogazioni hardware.</string>
+    <string name="console_card_title">Console Diagnostica Hardware</string>
+    <string name="console_card_desc">Visualizza i comandi kernel e condividi i log per le issue su GitHub</string>
+    <string name="action_more_options">Altre opzioni</string>
 </resources>

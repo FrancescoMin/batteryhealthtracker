@@ -25,9 +25,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Deselect
@@ -35,12 +37,14 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.filled.Warning
@@ -62,6 +66,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -499,6 +504,15 @@ fun BatteryTrackerDashboardScreen(
         )
     }
 
+    var showDiagnosticConsole by remember { mutableStateOf(false) }
+
+    if (showDiagnosticConsole) {
+        DiagnosticConsoleDialog(
+            snapshot = currentSnapshot,
+            onDismiss = { showDiagnosticConsole = false }
+        )
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -549,6 +563,8 @@ fun BatteryTrackerDashboardScreen(
                     )
                 )
             } else {
+                var showOverflowMenu by remember { mutableStateOf(false) }
+
                 // Barra standard
                 TopAppBar(
                     title = {
@@ -562,40 +578,71 @@ fun BatteryTrackerDashboardScreen(
                                 text = stringResource(R.string.title_dashboard),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                maxLines = 2,
-                                lineHeight = 19.sp
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     },
                     actions = {
-                        // Pulsante Cestino con badge contatore
-                        BadgedBox(
-                            badge = {
-                                if (trashedItems.isNotEmpty()) {
-                                    Badge { Text("${trashedItems.size}") }
-                                }
-                            }
-                        ) {
-                            IconButton(onClick = onNavigateToTrash) {
-                                Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.title_trash))
-                            }
-                        }
-
-                        IconButton(
-                            onClick = {
-                                val defaultFileName = "battery_history_${SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date())}.csv"
-                                exportCsvLauncher.launch(defaultFileName)
-                            }
-                        ) {
-                            Icon(Icons.Default.Download, contentDescription = stringResource(R.string.action_export_csv))
+                        IconButton(onClick = { showDiagnosticConsole = true }) {
+                            Icon(Icons.Default.Terminal, contentDescription = stringResource(R.string.action_diagnostic_console))
                         }
 
                         IconButton(onClick = { viewModel.refreshSnapshot() }) {
                             Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.action_refresh))
                         }
 
-                        IconButton(onClick = onNavigateToSettings) {
-                            Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.action_settings))
+                        Box {
+                            BadgedBox(
+                                badge = {
+                                    if (trashedItems.isNotEmpty()) {
+                                        Badge { Text("${trashedItems.size}") }
+                                    }
+                                }
+                            ) {
+                                IconButton(onClick = { showOverflowMenu = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.MoreVert,
+                                        contentDescription = stringResource(R.string.action_more_options)
+                                    )
+                                }
+                            }
+
+                            DropdownMenu(
+                                expanded = showOverflowMenu,
+                                onDismissRequest = { showOverflowMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.action_export_csv)) },
+                                    leadingIcon = { Icon(Icons.Default.Download, contentDescription = null) },
+                                    onClick = {
+                                        showOverflowMenu = false
+                                        val defaultFileName = "battery_history_${SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date())}.csv"
+                                        exportCsvLauncher.launch(defaultFileName)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (trashedItems.isNotEmpty()) "${stringResource(R.string.title_trash)} (${trashedItems.size})"
+                                            else stringResource(R.string.title_trash)
+                                        )
+                                    },
+                                    leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
+                                    onClick = {
+                                        showOverflowMenu = false
+                                        onNavigateToTrash()
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.action_settings)) },
+                                    leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                                    onClick = {
+                                        showOverflowMenu = false
+                                        onNavigateToSettings()
+                                    }
+                                )
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -678,14 +725,18 @@ fun BatteryTrackerDashboardScreen(
                     snapshot = currentSnapshot,
                     onHealthInfoClick = { showHealthInfoDialog = true },
                     onCyclesInfoClick = { showCyclesInfoDialog = true },
-                    onCapacityInfoClick = { showCapacityFluctuationDialog = true }
+                    onCapacityInfoClick = { showCapacityFluctuationDialog = true },
+                    onOpenConsole = { showDiagnosticConsole = true }
                 )
             }
 
             item(key = "oplus_hardware_card") {
                 Spacer(modifier = Modifier.height(12.dp))
                 // Diagnostica Hardware & BMS Oplus (Punti 1, 2, 3, 4)
-                OplusAdvancedHardwareCard(snapshot = currentSnapshot)
+                OplusAdvancedHardwareCard(
+                    snapshot = currentSnapshot,
+                    onOpenConsole = { showDiagnosticConsole = true }
+                )
             }
 
             item(key = "trend_card") {
@@ -1223,7 +1274,8 @@ fun DashboardCards(
     snapshot: BatterySnapshot?,
     onHealthInfoClick: () -> Unit = {},
     onCyclesInfoClick: () -> Unit = {},
-    onCapacityInfoClick: () -> Unit = {}
+    onCapacityInfoClick: () -> Unit = {},
+    onOpenConsole: () -> Unit = {}
 ) {
     val notAvail = stringResource(R.string.not_available)
     val isBatteryManager = snapshot?.isShizukuUsed != true
@@ -1246,10 +1298,10 @@ fun DashboardCards(
         } ?: stringResource(R.string.card_capacity_sub_fcc)
     }
 
-    val healthSubtitle = if (isHealthInaccurate) {
-        stringResource(R.string.card_health_sub_bm)
-    } else {
-        stringResource(R.string.card_health_sub)
+    val healthSubtitle = when {
+        isHealthInaccurate -> stringResource(R.string.card_health_sub_bm)
+        snapshot?.isHealthCalculated == true -> stringResource(R.string.card_health_sub)
+        else -> stringResource(R.string.card_health_sub_bms)
     }
 
     val cyclesSubtitle = if (isCyclesInaccurate) {
@@ -1311,16 +1363,25 @@ fun DashboardCards(
             )
         }
 
-        // Chip sorgente
+        // Chip sorgente (cliccabile per aprire la Console Diagnostica)
         Surface(
             shape = RoundedCornerShape(8.dp),
             color = MaterialTheme.colorScheme.surfaceVariant,
-            modifier = Modifier.padding(top = 4.dp)
+            modifier = Modifier
+                .padding(top = 4.dp)
+                .clickable { onOpenConsole() }
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Icon(
+                    imageVector = Icons.Default.Terminal,
+                    contentDescription = null,
+                    tint = if (snapshot?.isShizukuUsed == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(13.dp)
+                )
+                Spacer(modifier = Modifier.width(5.dp))
                 Text(
                     text = stringResource(R.string.data_source_prefix),
                     style = MaterialTheme.typography.labelSmall,
@@ -1510,7 +1571,206 @@ private fun DiagnosticHardwareDialog(
 }
 
 @Composable
-fun OplusAdvancedHardwareCard(snapshot: BatterySnapshot?) {
+fun DiagnosticConsoleDialog(
+    snapshot: BatterySnapshot?,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    var logs by remember { mutableStateOf(DiagnosticLogger.getLogs()) }
+
+    AppAlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Terminal,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.console_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 480.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.console_subtitle),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Pulsanti Azione: Copia Report & Apri Issue GitHub
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { DiagnosticLogger.copyReportToClipboard(context, snapshot) },
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.console_btn_copy),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { DiagnosticLogger.openGitHubIssues(context) },
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.BugReport,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.console_btn_issues),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Monospace Terminal Box
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFF141416),
+                    border = BorderStroke(1.dp, Color(0xFF2C2C30)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                ) {
+                    if (logs.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.console_empty_logs),
+                                style = MaterialTheme.typography.bodySmall.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace),
+                                color = Color(0xFF888888),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
+                        ) {
+                            items(logs) { entry ->
+                                Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = "[${entry.formatTime()}]",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                                fontSize = 10.sp
+                                            ),
+                                            color = Color(0xFF757575)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(3.dp),
+                                            color = if (entry.isSuccess) Color(0xFF1B5E20) else Color(0xFFB71C1C)
+                                        ) {
+                                            Text(
+                                                text = if (entry.isSuccess) "OK" else "ERR",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                ),
+                                                color = Color.White,
+                                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = entry.tag,
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = Color(0xFF64B5F6)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "$ ${entry.command}",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                            fontSize = 11.sp
+                                        ),
+                                        color = Color(0xFFECEFF1)
+                                    )
+                                    if (!entry.result.isNullOrEmpty()) {
+                                        Text(
+                                            text = "↳ ${entry.result}",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                                fontSize = 10.sp
+                                            ),
+                                            color = if (entry.isSuccess) Color(0xFF81C784) else Color(0xFFEF9A9A),
+                                            maxLines = 4
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_rm_info_close), fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                DiagnosticLogger.clear()
+                logs = emptyList()
+            }) {
+                Text(stringResource(R.string.console_btn_clear))
+            }
+        }
+    )
+}
+
+@Composable
+fun OplusAdvancedHardwareCard(
+    snapshot: BatterySnapshot?,
+    onOpenConsole: () -> Unit = {}
+) {
     val notAvail = stringResource(R.string.not_available)
     var activeInfoDialog by remember { mutableStateOf<DiagnosticInfoType?>(null) }
 
@@ -2057,6 +2317,51 @@ fun OplusAdvancedHardwareCard(snapshot: BatterySnapshot?) {
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onOpenConsole() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Icon(
+                                imageVector = Icons.Default.Terminal,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.console_card_title),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Text(
+                                    text = stringResource(R.string.console_card_desc),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
+                        Icon(
+                            imageVector = Icons.Default.BugReport,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
                 }
             }
