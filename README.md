@@ -209,6 +209,11 @@ The application employs an intelligent multi-tiered pipeline that dynamically ad
 2. **Shizuku** installed and running:
    - Download Shizuku from [Google Play](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api) or [GitHub Releases](https://github.com/RikkaApps/Shizuku/releases).
    - Start Shizuku via **Wireless Debugging** (no computer required after initial setup) or via **Root** (if rooted).
+3. **Developer Options Adjustments (Oppo & OnePlus specific):**
+   - On certain **Oppo** and **OnePlus** models (ColorOS / OxygenOS), system security guards may restrict ADB shell execution or suspend Shizuku background services.
+   - Navigate to **Settings > System / Additional settings > Developer options** and:
+     - Enable **"Disable permission monitoring"** (or turn off *"Permission monitoring"* / in Italian: *"Disabilita monitoraggio autorizzazioni"*).
+     - Tap or toggle **"Disable system optimization"** (*"Disabilita ottimizzazione di sistema"*) and/or **"Disable background optimization"** (*"Disabilita ottimizzazione in background"*), if available on your firmware version.
 
 ### App Setup
 1. Download the latest `BatteryHealthTracker-v1.3.apk` from the [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases) section.
