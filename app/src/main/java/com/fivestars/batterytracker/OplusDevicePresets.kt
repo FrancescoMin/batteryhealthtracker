@@ -220,6 +220,14 @@ object OplusDevicePresets {
         ),
         DeviceBatteryPreset(
             brand = "Oppo",
+            modelName = "Reno 13",
+            regionVariant = null,
+            typicalMah = 5600,
+            ratedMah = 5450.0,
+            codeNames = listOf("CPH2689", "PKM110")
+        ),
+        DeviceBatteryPreset(
+            brand = "Oppo",
             modelName = "Reno 14",
             regionVariant = "Global/EU",
             typicalMah = 6000,

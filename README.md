@@ -187,6 +187,7 @@ The application transparently communicates how State of Health (SOH) and capacit
 | **Oppo** | Reno 16 (China) | Silicon-Carbon | 6700 mAh / 6490 mAh | 🤝 Help wanted |
 | **Oppo** | Reno 15 / 15 Pro | High-Density Single-Cell | 6200–6500 mAh / 6040–6335 mAh | 🤝 Help wanted |
 | **Oppo** | Reno 14 Pro | High-Density Single-Cell | 6200 mAh / 6060 mAh | 🤝 Help wanted |
+| **Oppo** | Reno 13 | High-Density Single-Cell | 5600 mAh / 5450 mAh | 🤝 Help wanted |
 | **Oppo** | Reno 10 Pro / 11 Pro | Dual-Cell Serial | 4600 mAh / 4440 mAh | 🤝 Help wanted |
 
 *Manual rated capacity override is also supported in Settings for custom or unlisted models.*
