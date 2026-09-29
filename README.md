@@ -242,16 +242,20 @@ The application employs an intelligent multi-tiered pipeline that dynamically ad
 
 ## 📥 Installation & Setup
 
+> [!TIP]
+> **Using an OPPO, Realme, or OnePlus device?**  
+> ColorOS, Realme UI, and OxygenOS feature proprietary security guards that may display *"The permission of ADB is limited"* in Shizuku. Refer to our comprehensive step-by-step guide:  
+> 📖 **[OPLUS_SHIZUKU_GUIDE.md](OPLUS_SHIZUKU_GUIDE.md)**
+
 ### Prerequisites
 1. An **Oppo, OnePlus, or Realme** device running Android 14 or higher (or any Android 14+ device with standard BatteryManager support).
 2. **Shizuku** installed and running:
    - Download Shizuku from [Google Play](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api) or [GitHub Releases](https://github.com/RikkaApps/Shizuku/releases).
    - Start Shizuku via **Wireless Debugging** (no computer required after initial setup) or via **Root** (if rooted).
-3. **Developer Options Adjustments (Oppo & OnePlus specific):**
-   - On certain **Oppo** and **OnePlus** models (ColorOS / OxygenOS), system security guards may restrict ADB shell execution or suspend Shizuku background services.
-   - Navigate to **Settings > System / Additional settings > Developer options** and:
-     - Enable **"Disable permission monitoring"** (or turn off *"Permission monitoring"* / in Italian: *"Disabilita monitoraggio autorizzazioni"*).
-     - Tap or toggle **"Disable system optimization"** (*"Disabilita l'ottimizzazione del sistema"*) and/or **"Disable background optimization"** (*"Disabilita ottimizzazione in background"*), if available on your firmware version.
+3. **Developer Options Adjustments (OPPO, Realme & OnePlus specific):**
+   - On **OPPO**, **Realme**, and **OnePlus** models (ColorOS / Realme UI / OxygenOS), system security guards may restrict ADB shell execution or suspend Shizuku background services.
+   - For complete step-by-step instructions, hidden setting fixes, language workarounds, and PC USB commands, see the dedicated guide:  
+     👉 **[OPLUS_SHIZUKU_GUIDE.md](OPLUS_SHIZUKU_GUIDE.md)**
 
 ### App Setup
 1. Download the latest `BatteryHealthTracker-v1.4.apk` from the [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases) section.
