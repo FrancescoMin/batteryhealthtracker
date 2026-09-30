@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "📖 Oppo / Realme / OnePlus Shizuku Setup Guide"
+    url: "https://github.com/FrancescoMin/batteryhealthtracker/blob/main/OPPO_REALME_ONEPLUS_SHIZUKU_GUIDE.md"
+    about: "Step-by-step instructions to resolve 'The permission of ADB is limited' and ColorOS/Realme UI security locks."
+  - name: "💬 Community Discussions & Questions"
+    url: "https://github.com/FrancescoMin/batteryhealthtracker/discussions"
+    about: "Ask general questions, discuss battery health preservation, or share battery tips."

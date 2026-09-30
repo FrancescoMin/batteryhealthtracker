@@ -28,6 +28,7 @@ object DiagnosticLogger {
     private const val MAX_LOGS = 250
     private val logs = ConcurrentLinkedDeque<DiagnosticLogEntry>()
     const val GITHUB_ISSUES_URL = "https://github.com/FrancescoMin/batteryhealthtracker/issues"
+    const val GITHUB_COMPATIBILITY_FORM_URL = "https://github.com/FrancescoMin/batteryhealthtracker/issues/new?template=device_compatibility.yml"
 
     fun log(tag: String, command: String, result: String?, isSuccess: Boolean = true) {
         val entry = DiagnosticLogEntry(
@@ -108,7 +109,7 @@ object DiagnosticLogger {
 
     fun openGitHubIssues(context: Context) {
         try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_ISSUES_URL)).apply {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_COMPATIBILITY_FORM_URL)).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(intent)

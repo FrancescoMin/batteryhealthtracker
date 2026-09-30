@@ -1,0 +1,32 @@
+name: "💡 Feature Request"
+description: "Suggest a new feature, OEM preset, or enhancement for Battery Health Tracker."
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 💡 Feature Request
+        Have an idea to improve Battery Health Tracker? Share your suggestions, algorithm improvements, or new telemetry requests below!
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: "A clear and concise description of what feature or enhancement you would like."
+      placeholder: "I would like to suggest..."
+    validations:
+      required: true
+  - type: textarea
+    id: problem-or-use-case
+    attributes:
+      label: Use Case or Problem Statement
+      description: "Is your feature request related to a specific problem or need? (e.g. I want to see a live charging curve graph)"
+    validations:
+      required: false
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution / Alternatives Considered
+      description: "Any technical implementation ideas, sysfs nodes, or alternative approaches you've considered."
+    validations:
+      required: false

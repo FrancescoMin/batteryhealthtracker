@@ -1,0 +1,112 @@
+name: "📱 Device Compatibility & Verification Report"
+description: "Share telemetry verification results or report missing BMS registers for an Oppo, OnePlus, Realme, or Android device."
+title: "[Device]: "
+labels: ["compatibility", "device-verification"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 📱 Device Compatibility & Hardware Verification
+        Thank you for helping verify battery telemetry on your device! Your report helps map BMS kernel nodes and expand hardware support for the entire community.
+        
+        💡 **Quick Tip:** In **Battery Health Tracker**, open the **Diagnostic Console** (tap the `>_` terminal icon in the top app bar), tap **"Copy Report"**, and paste the generated Markdown into the Diagnostic Console Output field below.
+        
+        ⚠️ **Privacy Reminder:** Do **NOT** post serial numbers, IMEI, accounts, or personal data.
+  - type: input
+    id: app-version
+    attributes:
+      label: App Version
+      placeholder: "e.g. 1.5 (versionCode 6)"
+    validations:
+      required: true
+  - type: input
+    id: device-model
+    attributes:
+      label: Device Manufacturer & Commercial Model
+      description: "Commercial name and regional variant."
+      placeholder: "e.g. Oppo Reno 14 (EU), Realme GT 7T (EU), OnePlus 13"
+    validations:
+      required: true
+  - type: input
+    id: exact-model-code
+    attributes:
+      label: Exact Model Code & Codename
+      description: "Hardware identifier from Settings > About device."
+      placeholder: "e.g. CPH2737 (OP5F02L1), RMX5085 (RE6090L1), CPH2581"
+    validations:
+      required: true
+  - type: input
+    id: soc-processor
+    attributes:
+      label: SoC / Chipset
+      placeholder: "e.g. MediaTek Dimensity 7300, Snapdragon 8 Gen 3, Dimensity 8400"
+    validations:
+      required: false
+  - type: input
+    id: os-firmware
+    attributes:
+      label: OS Version & Firmware Build Number
+      placeholder: "e.g. ColorOS 15.0.0.301(EX01), OxygenOS 14.1, Realme UI 6.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: privilege-mode
+    attributes:
+      label: Telemetry Access Mode
+      description: "Which privilege mode was active when capturing telemetry?"
+      options:
+        - "Shizuku via Wireless Debugging (UID 2000 shell - Recommended)"
+        - "Shizuku via Root"
+        - "Direct Root (su)"
+        - "Standard Android BatteryManager (No Shizuku / Fallback)"
+    validations:
+      required: true
+  - type: checkboxes
+    id: working-telemetry
+    attributes:
+      label: Verified Working Telemetry Fields
+      description: "Check all fields that display plausible, non-zero hardware values on your device."
+      options:
+        - label: "State of Health (SOH %) - Genuine BMS Hardware (BMS Hardware / OS)"
+        - label: "State of Health (SOH %) - Dynamically Calculated (Calculated SOH)"
+        - label: "Charge Cycle Count (cumulative hardware cycles)"
+        - label: "Effective Full Charge Capacity (FCC in mAh)"
+        - label: "Chemical Maximum Capacity (Qmax in mAh)"
+        - label: "True Full Saturation vs Display 100% (CC vs CV tapering)"
+        - label: "Dual-Cell Serial Voltage Balance (Δ mV between cell0 and cell1)"
+        - label: "Internal Resistance (ESR in mΩ)"
+        - label: "IEC 61960 Thermal Normalized Capacity (at 25°C)"
+        - label: "BMS Hardware Safety Registers (OTP, short-circuit, sub-board temp)"
+        - label: "Live Wattage & Real-time Voltage / Current"
+        - label: "Battery Manufacture Date & First Usage Date"
+  - type: textarea
+    id: diagnostic-report
+    attributes:
+      label: Diagnostic Console Output (Markdown Report)
+      description: "Paste the Markdown report copied from the in-app Diagnostic Console (>_ icon)."
+      placeholder: "Paste Markdown report here..."
+    validations:
+      required: false
+  - type: textarea
+    id: missing-or-unusual
+    attributes:
+      label: Missing, Stuck or Unusual Metrics
+      description: "List any field displaying N/A, 'Unsupported by Android', frozen figures (e.g. SOH frozen at 100%), or values that seem anomalous."
+      placeholder: "e.g. Cycle counter shows N/A; Dual-cell voltage not detected; SOH stuck at 100%..."
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional Notes & OEM Quirks
+      description: "Did you need the language workaround or 'Disable System Optimization' / 'Disable permission monitoring'? Any other observations?"
+      placeholder: "e.g. Needed to toggle 'Disable permission monitoring' in Developer options with English language trick..."
+  - type: checkboxes
+    id: verification-checklist
+    attributes:
+      label: Verification Checklist
+      options:
+        - label: "I verified Shizuku was running and authorization was granted before capturing telemetry."
+          required: true
+        - label: "I removed all sensitive personal information (IMEI, serial numbers, accounts, phone numbers)."
+          required: true
+        - label: "I understand that Battery Health Tracker is an independent diagnostic tool and not an official OEM manufacturer utility."
+          required: true

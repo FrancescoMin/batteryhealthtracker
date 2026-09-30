@@ -29,6 +29,13 @@ On modern Android devices—particularly within the **Oplus ecosystem (Oppo, One
 
 This delivers accurate, real-time electrochemical diagnostic data: true State of Health (SOH), cycle counts, internal cell resistance (ESR), cell temperature, thermal capacity compensation (**IEC 61960**), charging IC safety fault registers, and live wattage.
 
+> [!IMPORTANT]
+> **⚖️ Disclaimer & Accuracy Notice / Dichiarazione di Non Responsabilità:**  
+> Battery Health Tracker is an independent diagnostic utility created for monitoring and personal reference. It is **not an official tool from device manufacturers** (such as Oppo, OnePlus, Realme, or others) and **must not be confused with official manufacturer service tools or warranty inspection software**.  
+> While the app reads low-level BMS nodes and kernel hardware registers via Shizuku, measured values (such as SOH %, estimated capacity, or internal resistance) can fluctuate based on sensor tolerances, thermal conditions, and OEM firmware implementations. As a result, readings may differ from official manufacturer specifications or service center diagnostic benches.
+>
+> *Questa applicazione è uno strumento di terze parti e non va confusa con i tool ufficiali del produttore: i dati forniti possono presentare difformità o stime differenti rispetto alla diagnostica ufficiale di fabbrica.*
+
 ---
 
 ## 📸 Screenshots
@@ -155,9 +162,9 @@ The application transparently communicates how State of Health (SOH) and capacit
 > - 🟢 **Oppo Reno 14 (EU):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (all BMS telemetry, SOH, FCC, cycle counts, voltage, power, and safety registers read with complete accuracy).
 > - 🟢 **Realme GT 7T (EU / RMX5085):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (dynamic fuel-gauge SOH parsing, Qmax 6736 mAh, 259 cycles, dual-cell balance, ESR, production & first use dates).
 > - 🟡 **Other Devices (`🤝 Help wanted`):** Due to variations in regional firmware, SELinux enforcement (e.g. OnePlus Nord 5 requiring root for direct Qualcomm sysfs access), and vendor driver differences across ColorOS, OxygenOS, and Realme UI, **full hardware compatibility is not yet guaranteed for other models**.
-> - 🧪 **Community Testing & Built-in Diagnostic Console (Critical Phase):** If you own any OnePlus, Oppo, or Realme device from the list, **your testing is crucial!** The app now includes an **Integrated Diagnostic Console** (accessible via the terminal icon `>_` in the top bar, from the hardware diagnostics card, or by tapping the *Data source* pill):
 >   - 📋 **1-Click Markdown Report:** Simply tap **"Copy Report"** in the console to copy your device environment and all raw kernel query outputs to your clipboard.
->   - 🐛 **Direct GitHub Issues Link:** Tap **"Open GitHub Issues"** to paste your log directly into [GitHub Issues](https://github.com/FrancescoMin/batteryhealthtracker/issues).
+>   - 🐛 **Standardized Compatibility Form:** Open our dedicated [Device Compatibility Report Form](https://github.com/FrancescoMin/batteryhealthtracker/issues/new?template=device_compatibility.yml) to submit verified metrics with a structured checklist and paste your console logs.
+>   - 📖 **Detailed Matrix & Testing Guide:** See [docs/device-compatibility.md](docs/device-compatibility.md) for in-depth testing procedures and architecture details.
 >   - Sharing these logs allows us to map missing sysfs nodes, adapt SELinux fallbacks, and certify new devices for the entire community!
 
 | Manufacturer | Model Series | Battery Architecture | Typical / Rated Capacity | Compatibility Status |
@@ -319,7 +326,7 @@ Do you own any of the devices marked as **`🤝 Help wanted`** in the [Hardware 
 **Testing the app on your device is warmly encouraged and greatly appreciated!**
 - Install the app and grant access via [Shizuku](https://shizuku.rikka.app/) (no root required for most devices).
 - Verify if real-time hardware telemetry (SOH, capacity, cycle count, temperature, voltage) is extracted accurately.
-- Share your findings or report any anomalies by opening a [GitHub Issue](https://github.com/FrancescoMin/batteryhealthtracker/issues) including your device model, firmware/build version, and screenshots or logs.
+- Share your findings or report any anomalies using our [Device Compatibility Report Form](https://github.com/FrancescoMin/batteryhealthtracker/issues/new?template=device_compatibility.yml) or open a [GitHub Issue](https://github.com/FrancescoMin/batteryhealthtracker/issues).
 
 ### 💻 Code & Preset Contributions
 1. Fork the project.
@@ -327,6 +334,20 @@ Do you own any of the devices marked as **`🤝 Help wanted`** in the [Hardware 
 3. Commit your changes (`git commit -m "Add verified battery preset for Device X"`).
 4. Push to the branch (`git push origin feature/NewDevicePreset`).
 5. Open a Pull Request.
+
+---
+
+## ⚖️ Disclaimer & Accuracy Notice / Note di Accuratezza
+
+**English:**  
+Battery Health Tracker is an independent diagnostic and telemetry utility developed to provide visibility into low-level battery metrics and BMS registers.
+- **Non-Official Application:** This project is not affiliated with, endorsed by, or certified by any original equipment manufacturer (OEM) such as Oppo, OnePlus, Realme, BBK Electronics, or others. It must **never be considered an official manufacturer tool or an authorized service center diagnostic system**.
+- **Telemetry & Sensor Tolerances:** Low-level measurements (including State of Health percentage, Full Charge Capacity, cell resistance, and cycle counts) are derived from exposed kernel sysfs interfaces and hardware fuel-gauge streams. Because vendor drivers, firmware revisions, sensor calibration variances, and ambient operating conditions vary, the values displayed may differ from official manufacturer figures or laboratory equipment. The data is provided for informational and monitoring purposes only.
+
+**Italiano:**  
+Battery Health Tracker è un'applicazione diagnostica indipendente nata per monitorare e comprendere i parametri elettrochimici della batteria e i registri del BMS.
+- **Applicazione non ufficiale:** L'app non è collegata, approvata né certificata da alcun produttore hardware (come Oppo, OnePlus, Realme, BBK Electronics, ecc.). **Non va confusa in alcun modo con i tool ufficiali di assistenza o diagnostica dei produttori.**
+- **Accuratezza e tolleranze dei dati:** I valori mostrati (capacità residua, percentuale di salute della batteria, cicli di ricarica e resistenza interna) provengono da interfacce kernel sysfs e log del fuel-gauge accessibili via Shizuku. A causa di tolleranze fisiche dei sensori, filtri del firmware OEM, condizioni termiche e algoritmi proprietari, i dati potrebbero risultare differenti o non perfettamente coincidenti con le metriche dei tool ufficiali del produttore. Le informazioni vanno intese come strumento di monitoraggio e stima indicativa e non come perizia tecnica o valore ufficiale di garanzia.
 
 ---
 
