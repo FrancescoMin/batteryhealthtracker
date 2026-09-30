@@ -16,6 +16,7 @@
   <img src="https://img.shields.io/badge/Theme-AMOLED%20Pure%20Black-black?style=flat-square" alt="AMOLED Pure Black" />
   <img src="https://img.shields.io/badge/License-Apache%202.0-orange?style=flat-square" alt="License" />
   <img src="https://img.shields.io/badge/PRs-Welcome-brightgreen?style=flat-square" alt="PRs Welcome" />
+  <img src="https://img.shields.io/github/downloads/FrancescoMin/batteryhealthtracker/total")
 </p>
 
 ---
