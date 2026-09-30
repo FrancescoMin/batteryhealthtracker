@@ -174,7 +174,7 @@ The application transparently communicates how State of Health (SOH) and capacit
 | **Realme** | GT 8 Pro | Dual-Cell Serial | 7000 mAh (2×3500) / 6850 mAh (2×3425) | 🤝 Help wanted |
 | **Realme** | GT 7 Pro (Global/EU/CN) | Dual-Cell Serial | 6500 mAh (2×3250) / 6310 mAh (2×3155) | 🤝 Help wanted |
 | **Realme** | GT 7 Pro (India) | Dual-Cell Serial | 5800 mAh / 5660 mAh | 🤝 Help wanted |
-| **Realme** | GT 7 / 7T | Dual-Cell Serial | 7000 mAh (2x3500) / 6850 mAh (2x3425) | 🤝 Help wanted | 
+| **Realme** | GT 7 / 7T | Dual-Cell Serial | 7000 mAh (2x3500) / 6850 mAh (2x3425) | 🧪 Testing in progress / 🤝 Help wanted | 
 | **Realme** | GT 6 / GT 6T / GT 5 Pro | Dual-Cell Serial | 5400–5500 mAh / 5260–5360 mAh | 🤝 Help wanted |
 | **Realme** | 14 Pro+ | Silicon-Carbon Single-Cell | 6000 mAh / 5850 mAh | 🤝 Help wanted |
 | **Realme** | 13 Pro+ | High-Density Single-Cell | 5200 mAh / 5050 mAh | 🤝 Help wanted |
