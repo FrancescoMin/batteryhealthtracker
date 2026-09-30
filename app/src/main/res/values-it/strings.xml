@@ -270,4 +270,18 @@
     <string name="trend_usage_ratio">Rapporto: %1$.2f giorni/ciclo (%2$.2f cicli/giorno)</string>
     <string name="dialog_usage_stats_title">Statistiche dal Primo Avvio</string>
     <string name="dialog_usage_stats_desc" formatted="false">Come vengono calcolate le statistiche di utilizzo?\n\n• Giorni dal primo avvio:\nIl tempo effettivo trascorso dal momento in cui lo smartphone è stato inizializzato e avviato per la prima volta.\n\n• Rapporto di utilizzo (Giorni per Ciclo):\nMisura quanti giorni trascorrono in media tra una ricarica completa e l\'altra (giorni totali / cicli totali).\n\n• Valutazione abitudini:\nUn valore superiore a 1,0 giorno per ciclo (meno di 1 ciclo completo al giorno) indica un\'abitudine di ricarica ottimale, ideale per preservare la salute chimica della cella nel lungo termine.</string>
+ 
+    <!-- Updates -->
+    <string name="settings_section_updates">Aggiornamenti</string>
+    <string name="settings_check_updates_title">Verifica aggiornamenti</string>
+    <string name="settings_check_updates_desc">Versione attuale: v%s • Verifica su GitHub</string>
+    <string name="update_dialog_available_title">Nuova versione disponibile (%s)</string>
+    <string name="update_dialog_available_subtitle">Una nuova release è disponibile su GitHub.</string>
+    <string name="update_dialog_current_vs_latest">Installata: v%1$s  •  Nuova: %2$s</string>
+    <string name="update_dialog_changelog_label">Novità e Changelog:</string>
+    <string name="update_dialog_btn_download">Scarica</string>
+    <string name="update_dialog_uptodate_title">App aggiornata</string>
+    <string name="update_dialog_uptodate_desc">Stai già utilizzando la versione più recente (v%s).</string>
+    <string name="update_dialog_error_title">Verifica non riuscita</string>
+    <string name="update_dialog_error_desc">Impossibile connettersi a GitHub. Verifica la connessione internet e riprova.</string>
 </resources>

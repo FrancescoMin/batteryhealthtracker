@@ -1,15 +1,20 @@
 package com.fivestars.batterytracker
 
 import android.app.LocaleManager
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.LocaleList
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -39,6 +44,8 @@ fun SettingsScreen(
     val isShizukuGranted by viewModel.isShizukuPermissionGranted.collectAsState()
     val currentLang by viewModel.appLanguage.collectAsState()
     val currentTheme by viewModel.appThemeMode.collectAsState()
+    val updateResult by viewModel.updateCheckResult.collectAsState()
+    val isCheckingUpdate by viewModel.isCheckingUpdate.collectAsState()
 
     var showEditDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
@@ -54,6 +61,90 @@ fun SettingsScreen(
     }
 
     BackHandler(onBack = onNavigateBack)
+
+    updateResult?.let { result ->
+        when (result) {
+            is UpdateCheckResult.UpdateAvailable -> {
+                UpdateAvailableDialog(
+                    result = result,
+                    onDismiss = { viewModel.dismissUpdateResult() },
+                    onDownload = { url ->
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Log.e("SettingsScreen", "Cannot open update URL", e)
+                        }
+                        viewModel.dismissUpdateResult()
+                    }
+                )
+            }
+            is UpdateCheckResult.UpToDate -> {
+                AppAlertDialog(
+                    onDismissRequest = { viewModel.dismissUpdateResult() },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    },
+                    title = {
+                        Text(
+                            text = stringResource(R.string.update_dialog_uptodate_title),
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    text = {
+                        Text(stringResource(R.string.update_dialog_uptodate_desc, result.currentVersion))
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.dismissUpdateResult() }) {
+                            Text("OK")
+                        }
+                    }
+                )
+            }
+            is UpdateCheckResult.Error -> {
+                AppAlertDialog(
+                    onDismissRequest = { viewModel.dismissUpdateResult() },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    },
+                    title = {
+                        Text(
+                            text = stringResource(R.string.update_dialog_error_title),
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    text = {
+                        Column {
+                            Text(stringResource(R.string.update_dialog_error_desc))
+                            if (result.message.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = result.message,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.dismissUpdateResult() }) {
+                            Text("OK")
+                        }
+                    }
+                )
+            }
+        }
+    }
 
     if (showThemeDialog) {
         ThemeDialog(
@@ -336,6 +427,79 @@ fun SettingsScreen(
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary
                             )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Sezione Aggiornamenti
+                Text(
+                    text = stringResource(R.string.settings_section_updates),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = !isCheckingUpdate) {
+                            viewModel.checkForUpdates(appVersionName)
+                        },
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                            modifier = Modifier.size(44.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.SystemUpdate,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.settings_check_updates_title),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.settings_check_updates_desc, appVersionName),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        if (isCheckingUpdate) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.5.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            IconButton(onClick = { viewModel.checkForUpdates(appVersionName) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = stringResource(R.string.settings_check_updates_title),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 }
@@ -763,4 +927,95 @@ fun EditCapacityDialog(
             }
         }
     }
+}
+
+@Composable
+fun UpdateAvailableDialog(
+    result: UpdateCheckResult.UpdateAvailable,
+    onDismiss: () -> Unit,
+    onDownload: (String) -> Unit
+) {
+    AppAlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Default.SystemUpdate,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp)
+            )
+        },
+        title = {
+            Text(
+                text = stringResource(R.string.update_dialog_available_title, result.release.versionName),
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = stringResource(
+                        R.string.update_dialog_current_vs_latest,
+                        result.currentVersion,
+                        result.release.versionName
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                if (result.release.changelog.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.update_dialog_changelog_label),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 240.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            Text(
+                                text = result.release.changelog,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val downloadTarget = result.release.apkDownloadUrl ?: result.release.releaseUrl
+                    onDownload(downloadTarget)
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Download,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(stringResource(R.string.update_dialog_btn_download))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    )
 }

@@ -270,4 +270,18 @@
     <string name="trend_usage_ratio">Relación: %1$.2f días/ciclo (%2$.2f ciclos/día)</string>
     <string name="dialog_usage_stats_title">Estadísticas desde el Primer Uso</string>
     <string name="dialog_usage_stats_desc" formatted="false">¿Cómo se calculan las estadísticas de uso?\n\n• Días desde el primer encendido:\nTiempo transcurrido desde que se inició el dispositivo por primera vez.\n\n• Relación de uso (Días por Ciclo):\nPromedio de días transcurridos entre cada ciclo completo de carga (días totales / ciclos totales).\n\n• Referencia de uso saludable:\nUn ratio superior a 1,0 día por ciclo (menos de 1 ciclo diario) indica un hábito de carga óptimo, ideal para preservar la vida útil de la batería.</string>
+ 
+    <!-- Updates -->
+    <string name="settings_section_updates">Actualizaciones</string>
+    <string name="settings_check_updates_title">Buscar actualizaciones</string>
+    <string name="settings_check_updates_desc">Versión actual: v%s • Comprobar en GitHub</string>
+    <string name="update_dialog_available_title">Nueva versión disponible (%s)</string>
+    <string name="update_dialog_available_subtitle">Hay una nueva versión disponible en GitHub.</string>
+    <string name="update_dialog_current_vs_latest">Instalada: v%1$s  •  Nueva: %2$s</string>
+    <string name="update_dialog_changelog_label">Novedades y Registro de cambios:</string>
+    <string name="update_dialog_btn_download">Descargar</string>
+    <string name="update_dialog_uptodate_title">App actualizada</string>
+    <string name="update_dialog_uptodate_desc">Ya estás utilizando la versión más reciente (v%s).</string>
+    <string name="update_dialog_error_title">Fallo en la comprobación</string>
+    <string name="update_dialog_error_desc">No se pudo conectar con GitHub. Comprueba tu conexión a internet e inténtalo de nuevo.</string>
 </resources>

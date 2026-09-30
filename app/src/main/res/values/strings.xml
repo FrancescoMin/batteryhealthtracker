@@ -270,4 +270,18 @@
     <string name="trend_usage_ratio">Ratio: %1$.2f days/cycle (%2$.2f cycles/day)</string>
     <string name="dialog_usage_stats_title">Usage Stats since First Boot</string>
     <string name="dialog_usage_stats_desc" formatted="false">How are usage statistics calculated?\n\n• Days Since First Boot:\nThe actual time elapsed since the device was first powered on and initialized.\n\n• Usage Ratio (Days per Cycle):\nCompares total active calendar days against cumulative full charge cycles (days / cycles).\n\n• Healthy Benchmark:\nA ratio above 1.0 day per cycle (less than 1 full charge cycle per day) indicates light-to-moderate charging habits, greatly optimizing long-term battery lifespan.</string>
+ 
+    <!-- Updates -->
+    <string name="settings_section_updates">Updates</string>
+    <string name="settings_check_updates_title">Check for Updates</string>
+    <string name="settings_check_updates_desc">Current: v%s • Check GitHub releases</string>
+    <string name="update_dialog_available_title">Update Available (%s)</string>
+    <string name="update_dialog_available_subtitle">A new release is available on GitHub.</string>
+    <string name="update_dialog_current_vs_latest">Installed: v%1$s  •  Latest: %2$s</string>
+    <string name="update_dialog_changelog_label">Changelog &amp; Notes:</string>
+    <string name="update_dialog_btn_download">Download</string>
+    <string name="update_dialog_uptodate_title">App is Up to Date</string>
+    <string name="update_dialog_uptodate_desc">You are already running the latest version (v%s).</string>
+    <string name="update_dialog_error_title">Update Check Failed</string>
+    <string name="update_dialog_error_desc">Could not connect to GitHub. Please check your internet connection and try again.</string>
 </resources>

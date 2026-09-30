@@ -67,6 +67,12 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
+    private val _updateCheckResult = MutableStateFlow<UpdateCheckResult?>(null)
+    val updateCheckResult: StateFlow<UpdateCheckResult?> = _updateCheckResult.asStateFlow()
+
+    private val _isCheckingUpdate = MutableStateFlow(false)
+    val isCheckingUpdate: StateFlow<Boolean> = _isCheckingUpdate.asStateFlow()
+
     val nextWorkScheduleTime: Flow<Long?> = workManager
         .getWorkInfosForUniqueWorkFlow("DailyBatteryCheck")
         .map { workInfos ->
@@ -269,6 +275,20 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
         val remaining = (healthRemainingTo80 * cyclesPerPercentLoss).toInt().coerceIn(50, 8000)
         val total = currentCycles + remaining
         return BatteryProjection(remaining, total)
+    }
+
+    fun checkForUpdates(currentVersion: String) {
+        if (_isCheckingUpdate.value) return
+        viewModelScope.launch {
+            _isCheckingUpdate.value = true
+            val result = UpdateChecker.checkLatestRelease(currentVersion)
+            _updateCheckResult.value = result
+            _isCheckingUpdate.value = false
+        }
+    }
+
+    fun dismissUpdateResult() {
+        _updateCheckResult.value = null
     }
 
     companion object {

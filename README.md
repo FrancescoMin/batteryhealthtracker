@@ -36,6 +36,11 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 >
 > *Questa applicazione è uno strumento di terze parti e non va confusa con i tool ufficiali del produttore: i dati forniti possono presentare difformità o stime differenti rispetto alla diagnostica ufficiale di fabbrica.*
 
+> [!NOTE]
+> **🚀 Repository Development Status / Stato di Sviluppo della Repository:**  
+> The codebase in the `main` branch may be ahead of the latest tagged GitHub Release (`BatteryHealthTracker-v1.5.apk`). New features, hardware presets, and optimizations currently undergoing testing in the repository will be bundled and published in future release APKs.  
+> *Il codice presente nella repository (`main`) potrebbe risultare più avanzato rispetto all'ultima release ufficiale scaricabile, poiché alcune nuove funzioni o migliorie sono ancora in fase di testing e confluiranno nelle release successive.*
+
 ---
 
 ## 📸 Screenshots
@@ -309,7 +314,7 @@ The application employs an intelligent multi-tiered pipeline that dynamically ad
 
 ## 🔒 Privacy, Security & Permissions
 
-- **100% Offline:** The app does not request or declare `android.permission.INTERNET`. Zero network calls, zero outbound packets, zero data leaves your device.
+- **Transparent Network Usage (`android.permission.INTERNET`):** Used exclusively for the manual in-app update check against official public GitHub Releases (`api.github.com`). Zero background analytics, zero telemetry trackers, zero personal data leaves your device.
 - **Transparent Notifications (`POST_NOTIFICATIONS`):** Used strictly for local on-device sampling receipts (manual captures, 24h background sampling, and 100% unplug events) and critical battery overheat alarms (> 42°C). Never used for marketing or background telemetry.
 - **Zero Trackers / Telemetry:** No Google Analytics, Firebase, Crashlytics, or third-party advertising SDKs.
 - **Local Storage Only:** Historical measurements are stored in a local on-device SQLite database via Android Room.
