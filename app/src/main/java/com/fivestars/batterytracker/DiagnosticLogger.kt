@@ -51,10 +51,20 @@ object DiagnosticLogger {
         logs.clear()
     }
 
-    fun buildMarkdownReport(snapshot: BatterySnapshot?): String {
+    fun buildMarkdownReport(snapshot: BatterySnapshot?, context: Context? = null): String {
         val sb = StringBuilder()
+        val appVersion = if (context != null) {
+            try {
+                val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                "v${pInfo.versionName} (${pInfo.longVersionCode})"
+            } catch (_: Exception) {
+                "v1.5"
+            }
+        } else "v1.5"
+
         sb.append("### 📱 Battery Health Tracker - Device Diagnostic Report\n\n")
         sb.append("#### ⚙️ Device Environment\n")
+        sb.append("- **App Version:** `$appVersion`\n")
         sb.append("- **Manufacturer:** `${Build.MANUFACTURER}`\n")
         sb.append("- **Model:** `${Build.MODEL}`\n")
         sb.append("- **Device / Product:** `${Build.DEVICE}` / `${Build.PRODUCT}`\n")
@@ -78,7 +88,13 @@ object DiagnosticLogger {
         sb.append("- **Voltage:** `${snapshot?.cell0VoltageMv ?: "N/A"} mV`\n")
         sb.append("- **Temperature:** `${snapshot?.batteryTemperatureCelsius ?: "N/A"} °C`\n")
         sb.append("- **Raw RM (Remaining):** `${snapshot?.remainingCapacityMah ?: "N/A"} mAh`\n")
-        sb.append("- **Charging Power:** `${snapshot?.chargingPowerWatts ?: "N/A"} W (${snapshot?.chargingProtocol ?: "N/A"})`\n\n")
+        sb.append("- **Charging Power:** `${snapshot?.chargingPowerWatts ?: "N/A"} W (${snapshot?.chargingProtocol ?: "N/A"})`\n")
+        sb.append("- **Internal Resistance (ESR):** `${snapshot?.internalResistanceMohm?.let { "$it mΩ" } ?: "N/A"}`\n")
+        sb.append("- **Cell Balance:** `${snapshot?.cellBalanceStatus ?: "N/A"}${snapshot?.cellBalanceDeltaMv?.let { " (Δ $it mV)" } ?: ""}`\n")
+        sb.append("- **BMS Sync / Drift:** `${snapshot?.bmsSyncStatus ?: "N/A"}${snapshot?.cyclesSinceLastCalibration?.let { " ($it cycles since 100%)" } ?: ""}`\n")
+        sb.append("- **True Saturation:** `${snapshot?.saturationStatus ?: "N/A"} (Chip SOC: ${snapshot?.chipSoc ?: "N/A"}%)`\n")
+        sb.append("- **Temp-Compensated Capacity (25°C):** `${snapshot?.tempCompensatedCapacityMah?.let { "$it mAh" } ?: "N/A"}`\n")
+        sb.append("- **BMS Hardware Integrity:** `${if (snapshot?.isHardwareSafe == true) "SAFE (All circuits OK)" else "ALERT: ${snapshot?.safetyFaultDetails}"}`\n\n")
 
         sb.append("#### 📜 Executed Commands & Log Output\n")
         sb.append("```\n")
@@ -89,7 +105,7 @@ object DiagnosticLogger {
             currentLogs.forEach { entry ->
                 val status = if (entry.isSuccess) "OK" else "FAIL"
                 val res = entry.result?.let {
-                    if (it.length > 300) it.take(300) + "... [truncated]" else it
+                    if (it.length > 1200) it.take(1200) + "... [truncated]" else it
                 } ?: "null"
                 sb.append("[${entry.formatTime()}] [${entry.tag}] [$status] ${entry.command}\n")
                 sb.append("  ↳ OUTPUT: $res\n")
@@ -100,7 +116,7 @@ object DiagnosticLogger {
     }
 
     fun copyReportToClipboard(context: Context, snapshot: BatterySnapshot?) {
-        val report = buildMarkdownReport(snapshot)
+        val report = buildMarkdownReport(snapshot, context)
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("BatteryHealthTracker Diagnostic Report", report)
         clipboard.setPrimaryClip(clip)

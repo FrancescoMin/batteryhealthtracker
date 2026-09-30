@@ -158,36 +158,32 @@ class DevicePresetsAndHealthTest {
         val headLine = ",batt_temp,shell_temp,vbat_mv,vbat_min_mv,ibat_ma,batt_soc,ui_soc,wired_online,charge_type,notify_code,wired_ibus_ma,wired_vbus_mv,smooth_soc,led_on,fv_mv,fcc_ma,wired_icl_ma,otg_switch,cool_down,bcc_current,normal_cool_down,chg_cycle,mmi_chg,usb_status,cc_detect,batt_full,rechging,pd_svooc,prop_status,batt_qmax,batt_soh,gauge_car_c,batt_rm,batt_fcc,vooc_online,vooc_started,vooc_charging,vooc_online_keep,vooc_sid,adapter_id"
         val contentLine = ",346,340,4047,4044,-137,61,63,1,1,0,412,4893,63,1,4455,600,500,0,7,11500,7,0,1,0,2,0,0,0,1,6736,99,0,3774,6236,0,0,0,0,0,0"
 
-        val heads = headLine.split(',').map { it.trim() }
-        val values = contentLine.split(',').map { it.trim() }
-        val logMap = heads.zip(values).filter { it.first.isNotEmpty() }.toMap()
-
-        val logSoh = logMap["batt_soh"]?.toIntOrNull()
-        val logQmax = logMap["batt_qmax"]?.toDoubleOrNull()
-        val logRm = logMap["batt_rm"]?.toDoubleOrNull()
+        val logMap = BatteryTelemetryParser.parseFuelGaugeLog(headLine, contentLine)
+        val logSoh = BatteryTelemetryParser.extractLogSoh(logMap)
+        val logQmax = BatteryTelemetryParser.extractLogQmax(logMap)
+        val logRm = BatteryTelemetryParser.extractLogRm(logMap)
 
         // Nel sysfs standard, battery_soh riporta erroneamente 100% statico e normal_batt_fcc 7000 mAh
         val sysfsSoh = 100
         val sysfsFcc = 7000.0
 
-        // Risoluzione SOH dinamica: minOf(logSoh, sysfsSoh) o priorità logSoh
-        val rawSoh = minOf(logSoh ?: sysfsSoh, sysfsSoh)
+        // Risoluzione SOH dinamica: minOf(logSoh, sysfsSoh) tramite parser
+        val rawSoh = BatteryTelemetryParser.resolveRawSoh(logSoh, sysfsSoh)
         assertEquals(99, rawSoh)
 
         // Risoluzione FCC: sovrastima 7000 > logQmax (6736) con rawSoh < 100 viene corretta con logQmax
-        var fcc = sysfsFcc
-        if (logQmax != null && rawSoh < 100 && fcc > logQmax) {
-            fcc = logQmax
-        }
-        assertEquals(6736.0, fcc, 0.01)
+        val fcc = BatteryTelemetryParser.resolveAdjustedFcc(sysfsFcc, logQmax, rawSoh)
+        assertEquals(6736.0, fcc ?: 0.0, 0.01)
 
-        // Verifica coerenza effectiveFcc
-        val effectiveFcc = if (Math.abs((fcc / ratedDesign * 100.0) - rawSoh) <= 5.0 && fcc <= ratedDesign * 1.02) {
-            fcc
-        } else {
-            Math.round((ratedDesign * rawSoh / 100.0) * 10.0) / 10.0
-        }
-        assertEquals(6736.0, effectiveFcc, 0.01)
+        // Verifica coerenza effectiveFcc e derivazione salute
+        val healthDerivation = BatteryTelemetryParser.resolveHealthAndFcc(
+            rawSoh = rawSoh,
+            fcc = fcc,
+            ratedDesign = ratedDesign,
+            typicalCalculationBase = 7000.0
+        )
+        assertEquals(6736.0, healthDerivation.effectiveFcc ?: 0.0, 0.01)
+        assertEquals(99, healthDerivation.effectiveHealth)
         assertEquals(3774.0, logRm ?: 0.0, 0.01)
     }
 
@@ -226,14 +222,16 @@ class DevicePresetsAndHealthTest {
     @Test
     fun testMicroAmpNormalization() {
         // Valori da chip Qualcomm in microampere-ora (e.g. 6800000 uAh)
-        val rawVal = 6800000.0
-        val normalized = if (rawVal > 100000) rawVal / 1000.0 else rawVal
-        assertEquals(6800.0, normalized, 0.01)
+        val normalized = BatteryTelemetryParser.normalizeCapacity(6800000.0)
+        assertEquals(6800.0, normalized ?: 0.0, 0.01)
 
         // Valori già in mAh (e.g. 5500.0)
-        val rawMah = 5500.0
-        val normalizedMah = if (rawMah > 100000) rawMah / 1000.0 else rawMah
-        assertEquals(5500.0, normalizedMah, 0.01)
+        val normalizedMah = BatteryTelemetryParser.normalizeCapacity(5500.0)
+        assertEquals(5500.0, normalizedMah ?: 0.0, 0.01)
+
+        // Test string parsing
+        assertEquals(6800.0, BatteryTelemetryParser.parseCapacity("6800000") ?: 0.0, 0.01)
+        assertEquals(5500.0, BatteryTelemetryParser.parseCapacity("5500.0") ?: 0.0, 0.01)
     }
 
     @Test
@@ -331,5 +329,508 @@ class DevicePresetsAndHealthTest {
         assertEquals(0.82051, cyclesPerDay, 0.001)
         assertTrue(daysPerCycle > 1.0)
         assertTrue(cyclesPerDay < 1.0)
+    }
+
+    // --- 5. TEST RESISTENZA INTERNA (ESR), VALIDAZIONE OCV E LOG RENO 13 ---
+
+    @Test
+    fun testOppoReno13PresetAndTelemetryMatching() {
+        // Oppo Reno 13 (CPH2689 / CPH2689IN / OP5E9EL1)
+        val preset = OplusDevicePresets.detectDevicePreset("CPH2689")
+        assertNotNull("Oppo Reno 13 (CPH2689) deve essere riconosciuto", preset)
+        assertEquals("Oppo", preset?.brand)
+        assertEquals("Reno 13", preset?.modelName)
+        assertEquals(5600, preset?.typicalMah)
+        assertEquals(5450.0, preset?.ratedMah ?: 0.0, 0.01)
+
+        // Dati reali dal report dell'utente su issue #3 (338 cicli):
+        val sysfsFcc = 5421.0
+        val ratedDesign = preset?.ratedMah ?: 5450.0
+        val retentionRate = (sysfsFcc / ratedDesign) * 100.0
+        assertEquals(99.467, retentionRate, 0.01)
+        // La batteria è al 99.5% di capacità utile dopo 338 cicli: salute eccellente!
+        assertTrue(retentionRate >= 98.0)
+    }
+
+    @Test
+    fun testStaticOcvCutoffRejectionPreventsFakeHighResistance() {
+        // Scenario segnalato su Reno 13 MediaTek (Issue #3):
+        // A batteria scarica/parziale (66% SoC, 3932 mV, assorbimento 734 mA),
+        // il driver /sys/class/power_supply/battery/voltage_ocv riporta 4540 mV fissi (tensione massima di cutoff CV).
+        val batteryLevel = 66
+        val normOcv = 4540
+        val normVnow = 3932
+        val currentMa = 734
+        val isDual = false
+
+        // La vecchia logica avrebbe calcolato una resistenza fasulla enorme (> 800 mOhm)
+        val oldDeltaV = Math.abs(normOcv - normVnow)
+        val oldFakeEsr = (oldDeltaV.toDouble() / currentMa.toDouble()) * 1000.0
+        assertTrue(oldFakeEsr > 800.0)
+
+        // La logica pura del parser identifica e respinge il valore statico di cutoff restituendo null
+        val ocvEsr = BatteryTelemetryParser.calculateOcvEsr(
+            voltageOcvMv = normOcv,
+            vNowMv = normVnow,
+            currentMa = currentMa,
+            batteryLevel = batteryLevel,
+            isDual = isDual
+        )
+        assertNull("Il cutoff statico a 4540 mV su 66% SoC deve essere respinto", ocvEsr)
+    }
+
+    @Test
+    fun testDynamicDeltaVDeltaIStepEsrCalculation() {
+        // Campione 1: Uso leggero (I1 = -300 mA, V1 = 3920 mV)
+        // Campione 2: Carico attivo/avvio app (I2 = -800 mA, V2 = 3880 mV)
+        val stepEsr = BatteryTelemetryParser.calculateDynamicStepEsr(
+            v1Mv = 3920,
+            i1Ma = -300,
+            v2Mv = 3880,
+            i2Ma = -800,
+            elapsedMs = 2000L,
+            isDual = false
+        )
+        assertNotNull(stepEsr)
+        assertEquals(80.0, stepEsr ?: 0.0, 0.01)
+        assertTrue("80 mOhm è perfettamente nell'intervallo di salute ottimale (40-180 mOhm)", (stepEsr ?: 0.0) in 40.0..180.0)
+
+        // Se intervallo temporale fuori range (< 500 ms o > 45000 ms)
+        assertNull(BatteryTelemetryParser.calculateDynamicStepEsr(3920, -300, 3880, -800, 200L, false))
+        assertNull(BatteryTelemetryParser.calculateDynamicStepEsr(3920, -300, 3880, -800, 50000L, false))
+
+        // Se gradino di corrente troppo piccolo (< 150 mA)
+        assertNull(BatteryTelemetryParser.calculateDynamicStepEsr(3920, -300, 3915, -400, 2000L, false))
+    }
+
+    @Test
+    fun testHardwareResistanceMicroOhmNormalization() {
+        // Driver kernel Linux power supply ABI che restituisce micro-ohm (85000 uOhm)
+        val normalized = BatteryTelemetryParser.normalizeInternalResistance(85000.0, false)
+        assertEquals(85.0, normalized ?: 0.0, 0.01)
+
+        // Driver che restituisce direttamente milli-ohm (75.0 mOhm)
+        val direct = BatteryTelemetryParser.normalizeInternalResistance(75.0, false)
+        assertEquals(75.0, direct ?: 0.0, 0.01)
+
+        // Valori fuori limite (> 550 mOhm su cella singola o <= 0)
+        assertNull(BatteryTelemetryParser.normalizeInternalResistance(650.0, false))
+        assertNull(BatteryTelemetryParser.normalizeInternalResistance(0.0, false))
+        assertNull(BatteryTelemetryParser.normalizeInternalResistance(-50.0, false))
+    }
+
+    // --- 6. SUITE DI TEST UNITARI PURA SUI PARSER KERNEL/SYSFS (ISPIRATA AD aBATTERY ISSUE #2) ---
+
+    @Test
+    fun testCycleCountParsingSentinelsAndEdgeCases() {
+        // Valori validi
+        assertEquals(259, BatteryTelemetryParser.parseCycleCount("259"))
+        assertEquals(338, BatteryTelemetryParser.parseCycleCount(" 338 \n"))
+        assertEquals(0, BatteryTelemetryParser.parseCycleCount("0"))
+
+        // Sentinelle kernel di errore (-1 o negativi)
+        assertNull(BatteryTelemetryParser.parseCycleCount("-1"))
+        assertNull(BatteryTelemetryParser.parseCycleCount("-999"))
+
+        // Stringhe malformate o vuote
+        assertNull(BatteryTelemetryParser.parseCycleCount(""))
+        assertNull(BatteryTelemetryParser.parseCycleCount("   "))
+        assertNull(BatteryTelemetryParser.parseCycleCount("null"))
+        assertNull(BatteryTelemetryParser.parseCycleCount("N/A"))
+        assertNull(BatteryTelemetryParser.parseCycleCount(null))
+    }
+
+    @Test
+    fun testCapacityParsingAndNormalizationEdgeCases() {
+        // Microampere-ora (Qualcomm / HAL)
+        assertEquals(5840.0, BatteryTelemetryParser.normalizeCapacity(5840000.0) ?: 0.0, 0.01)
+        assertEquals(6500.0, BatteryTelemetryParser.parseCapacity("6500000") ?: 0.0, 0.01)
+
+        // Milliampere-ora (MediaTek / driver standard)
+        assertEquals(5450.0, BatteryTelemetryParser.normalizeCapacity(5450.0) ?: 0.0, 0.01)
+        assertEquals(7000.0, BatteryTelemetryParser.parseCapacity("7000") ?: 0.0, 0.01)
+
+        // Sentinelle zero, negative, NaN, Infinite
+        assertNull(BatteryTelemetryParser.normalizeCapacity(0.0))
+        assertNull(BatteryTelemetryParser.normalizeCapacity(-1.0))
+        assertNull(BatteryTelemetryParser.normalizeCapacity(Double.NaN))
+        assertNull(BatteryTelemetryParser.normalizeCapacity(Double.POSITIVE_INFINITY))
+        assertNull(BatteryTelemetryParser.parseCapacity("0"))
+        assertNull(BatteryTelemetryParser.parseCapacity("-5000"))
+        assertNull(BatteryTelemetryParser.parseCapacity("invalid"))
+        assertNull(BatteryTelemetryParser.parseCapacity(null))
+    }
+
+    @Test
+    fun testVoltageParsingAndNormalizationEdgeCases() {
+        // Microvolt (HAL standard Linux)
+        assertEquals(3920, BatteryTelemetryParser.normalizeVoltage(3920000))
+        assertEquals(4050, BatteryTelemetryParser.parseVoltage("4050000"))
+
+        // Millivolt (BMS fuel-gauge)
+        assertEquals(3920, BatteryTelemetryParser.normalizeVoltage(3920))
+        assertEquals(4050, BatteryTelemetryParser.parseVoltage("4050"))
+
+        // Sentinelle
+        assertNull(BatteryTelemetryParser.normalizeVoltage(0))
+        assertNull(BatteryTelemetryParser.normalizeVoltage(-1))
+        assertNull(BatteryTelemetryParser.parseVoltage("0"))
+        assertNull(BatteryTelemetryParser.parseVoltage("-1"))
+        assertNull(BatteryTelemetryParser.parseVoltage(""))
+        assertNull(BatteryTelemetryParser.parseVoltage(null))
+    }
+
+    @Test
+    fun testFuelGaugeLogParsingMismatchedColumnsAndRobustness() {
+        // Log troncato o non allineato
+        val headLine = "batt_temp,vbat_mv,batt_soc,batt_soh"
+        val contentLine = "340,4050,60" // Manca batt_soh
+
+        val map = BatteryTelemetryParser.parseFuelGaugeLog(headLine, contentLine)
+        assertEquals(3, map.size)
+        assertEquals("340", map["batt_temp"])
+        assertEquals("4050", map["vbat_mv"])
+        assertEquals("60", map["batt_soc"])
+        assertNull(map["batt_soh"])
+        assertNull(BatteryTelemetryParser.extractLogSoh(map))
+
+        // Log con valori extra rispetto all'header
+        val headShort = "batt_soc,batt_soh"
+        val contentLong = "80,98,extra1,extra2"
+        val mapShort = BatteryTelemetryParser.parseFuelGaugeLog(headShort, contentLong)
+        assertEquals(2, mapShort.size)
+        assertEquals("80", mapShort["batt_soc"])
+        assertEquals(98, BatteryTelemetryParser.extractLogSoh(mapShort))
+
+        // Log nullo o vuoto
+        assertTrue(BatteryTelemetryParser.parseFuelGaugeLog(null, null).isEmpty())
+        assertTrue(BatteryTelemetryParser.parseFuelGaugeLog("", "").isEmpty())
+        assertTrue(BatteryTelemetryParser.parseFuelGaugeLog("a,b", null).isEmpty())
+    }
+
+    @Test
+    fun testBccParametersParsingWithCorruptedTokens() {
+        // Stringa valida (da Realme GT 7T):
+        val validBcc = "0, 0, 0, 0, 0, 0, 4025, 0, -137, 0, 0, 4024, 0, 0"
+        val parsed = BatteryTelemetryParser.parseBccParameters(validBcc)
+        assertEquals(4025, parsed.cell0VoltMv)
+        assertEquals(-137, parsed.currentMa)
+        assertEquals(4024, parsed.cell1VoltMv)
+
+        // Stringa con tensioni in microvolt (> 100000)
+        val uVoltBcc = "0, 0, 0, 0, 0, 0, 4025000, 0, 1500, 0, 0, 4024000"
+        val parsedUv = BatteryTelemetryParser.parseBccParameters(uVoltBcc)
+        assertEquals(4025, parsedUv.cell0VoltMv)
+        assertEquals(1500, parsedUv.currentMa)
+        assertEquals(4024, parsedUv.cell1VoltMv)
+
+        // Stringa corta / troncata (< 12 elementi) - non deve lanciare eccezioni
+        val shortBcc = "0, 0, 0, 0, 0, 0, 3950"
+        val parsedShort = BatteryTelemetryParser.parseBccParameters(shortBcc)
+        assertEquals(3950, parsedShort.cell0VoltMv)
+        assertNull(parsedShort.currentMa)
+        assertNull(parsedShort.cell1VoltMv)
+
+        // Null o vuota
+        val emptyBcc = BatteryTelemetryParser.parseBccParameters(null)
+        assertNull(emptyBcc.cell0VoltMv)
+        assertNull(emptyBcc.currentMa)
+        assertNull(emptyBcc.cell1VoltMv)
+    }
+
+    @Test
+    fun testDualCellArchitectureParsingFromAgingFfcData() {
+        // Realme GT 7T dual cell (2S series)
+        val dualAging = "0,2,0,0,259,0,0,0,0,0,0,0,0"
+        assertEquals(true, BatteryTelemetryParser.parseDualCellArchitecture(dualAging))
+
+        // Oppo Reno 13 single cell (1S)
+        val singleAging = "0,1,0,0,338,0,0,0,0,0,0,0,0"
+        assertEquals(false, BatteryTelemetryParser.parseDualCellArchitecture(singleAging))
+
+        // Dati assenti o sconosciuti
+        assertNull(BatteryTelemetryParser.parseDualCellArchitecture("0,0,0,0"))
+        assertNull(BatteryTelemetryParser.parseDualCellArchitecture("corrupted"))
+        assertNull(BatteryTelemetryParser.parseDualCellArchitecture(null))
+    }
+
+    @Test
+    fun testCurrentNormalizationAndConventions() {
+        // In carica (isPlugged = true): la corrente deve essere sempre > 0
+        assertEquals(1500, BatteryTelemetryParser.normalizeCurrent(-1500, isPlugged = true))
+        assertEquals(2000, BatteryTelemetryParser.normalizeCurrent(2000, isPlugged = true))
+        // In microampere (-2500000 uA -> 2500 mA)
+        assertEquals(2500, BatteryTelemetryParser.normalizeCurrent(-2500000, isPlugged = true))
+
+        // In scarica (isPlugged = false): la corrente deve essere < 0
+        assertEquals(-450, BatteryTelemetryParser.normalizeCurrent(450, isPlugged = false))
+        assertEquals(-450, BatteryTelemetryParser.normalizeCurrent(-450, isPlugged = false))
+        // In microampere (600000 uA -> -600 mA)
+        assertEquals(-600, BatteryTelemetryParser.normalizeCurrent(600000, isPlugged = false))
+
+        // Corrente zero o nulla
+        assertNull(BatteryTelemetryParser.normalizeCurrent(0, isPlugged = true))
+        assertNull(BatteryTelemetryParser.normalizeCurrent(null, isPlugged = false))
+    }
+
+    @Test
+    fun testTemperatureParsingAndNormalization() {
+        // Deci-Celsius da sysfs (346 -> 34.6°C)
+        assertEquals(34.6, BatteryTelemetryParser.parseTemperature("346") ?: 0.0, 0.01)
+        // Temperatura già in Celsius (28.5)
+        assertEquals(28.5, BatteryTelemetryParser.parseTemperature("28.5") ?: 0.0, 0.01)
+        // Temperatura sotto zero
+        assertEquals(-4.0, BatteryTelemetryParser.normalizeTemperature(-4.0) ?: 0.0, 0.01)
+        // Null o vuota
+        assertNull(BatteryTelemetryParser.parseTemperature(""))
+        assertNull(BatteryTelemetryParser.parseTemperature(null))
+    }
+
+    @Test
+    fun testQmaxNormalizationScaleGuard() {
+        // Valore su scala errata 10x (58400 con FCC di riferimento 5840)
+        assertEquals(5840, BatteryTelemetryParser.normalizeQmax(58400, 5840))
+
+        // Valore su scala errata 100x (584000)
+        assertEquals(5840, BatteryTelemetryParser.normalizeQmax(584000, 5840))
+
+        // Valore corretto (5815 con FCC 5525)
+        assertEquals(5815, BatteryTelemetryParser.normalizeQmax(5815, 5525))
+    }
+
+    @Test
+    fun testCellBalanceEvaluationRanges() {
+        // Ottimale (< 15 mV)
+        val optimal = BatteryTelemetryParser.evaluateCellBalance(4025, 4024, isDual = true)
+        assertEquals(1, optimal.deltaMv)
+        assertEquals("Optimal", optimal.status)
+
+        // Normale (15..40 mV)
+        val normal = BatteryTelemetryParser.evaluateCellBalance(4050, 4025, isDual = true)
+        assertEquals(25, normal.deltaMv)
+        assertEquals("Normal", normal.status)
+
+        // Sbilanciato (> 40 mV)
+        val imbalanced = BatteryTelemetryParser.evaluateCellBalance(4100, 4020, isDual = true)
+        assertEquals(80, imbalanced.deltaMv)
+        assertEquals("Imbalanced", imbalanced.status)
+
+        // Singola cella
+        val single = BatteryTelemetryParser.evaluateCellBalance(3950, null, isDual = false)
+        assertEquals(0, single.deltaMv)
+        assertEquals("SingleCell", single.status)
+    }
+
+    @Test
+    fun testThermalCompensatedCapacityIec61960() {
+        val capacity = 5840.0
+        // A 25°C: deltaT = 0, capacità identica
+        assertEquals(5840.0, BatteryTelemetryParser.calculateTempCompensatedCapacity(capacity, 25.0) ?: 0.0, 0.01)
+
+        // A 35°C (caldo): capacità compensata inferiore (5509.4 mAh)
+        val warmComp = BatteryTelemetryParser.calculateTempCompensatedCapacity(capacity, 35.0)
+        assertNotNull(warmComp)
+        assertTrue(warmComp!! < capacity)
+        assertEquals(5509.4, warmComp, 0.1)
+
+        // A 15°C (freddo): capacità compensata superiore (6212.8 mAh)
+        val coldComp = BatteryTelemetryParser.calculateTempCompensatedCapacity(capacity, 15.0)
+        assertNotNull(coldComp)
+        assertTrue(coldComp!! > capacity)
+        assertEquals(6212.8, coldComp, 0.1)
+
+        // Null o valori non validi
+        assertNull(BatteryTelemetryParser.calculateTempCompensatedCapacity(null, 25.0))
+        assertNull(BatteryTelemetryParser.calculateTempCompensatedCapacity(5000.0, null))
+    }
+
+    @Test
+    fun testHardwareSafetyFaultsEvaluation() {
+        // Nessun guasto
+        val (safeOk, detailsOk) = BatteryTelemetryParser.evaluateHardwareSafety(0, 0, 0)
+        assertTrue(safeOk)
+        assertEquals("OK", detailsOk)
+
+        // Cortocircuito
+        val (safeSc, detailsSc) = BatteryTelemetryParser.evaluateHardwareSafety(1, 0, 0)
+        org.junit.Assert.assertFalse(safeSc)
+        assertEquals("ShortCircuit(1)", detailsSc)
+
+        // Guasti multipli
+        val (safeMulti, detailsMulti) = BatteryTelemetryParser.evaluateHardwareSafety(2, 1, 3)
+        org.junit.Assert.assertFalse(safeMulti)
+        assertTrue(detailsMulti.contains("ShortCircuit(2)"))
+        assertTrue(detailsMulti.contains("OTP_OverHeat(1)"))
+        assertTrue(detailsMulti.contains("SubboardTempErr(3)"))
+    }
+
+    @Test
+    fun testDumpsysBatteryTextParsing() {
+        val sampleDumpsys = """
+            Current Battery Service state:
+              AC powered: false
+              USB powered: true
+              status: 2
+              health: 2
+              present: true
+              level: 66
+              scale: 100
+              voltage: 3950
+              temperature: 320
+              technology: Li-ion
+              Charge counter: 3500000
+              mSavedBatteryAsoc: 98
+        """.trimIndent()
+
+        val parsed = BatteryTelemetryParser.parseDumpsysBatteryText(sampleDumpsys)
+        assertEquals(3950, parsed.voltageMv)
+        assertEquals(3500000L, parsed.chargeCounterUah)
+        assertEquals(98, parsed.asocPercent)
+        assertEquals(2, parsed.status)
+        assertEquals(320, parsed.tempTenths)
+    }
+
+    @Test
+    fun testDumpsysLearnedAndEstimatedCapacityParsing() {
+        val statsOutput = """
+          Learned battery capacity: 5920 mAh
+          Estimated battery capacity: 6000 mAh
+        """.trimIndent()
+
+        val learned = BatteryTelemetryParser.parseDumpsysLearnedCapacity(statsOutput)
+        val estimated = BatteryTelemetryParser.parseDumpsysEstimatedCapacity(statsOutput)
+
+        assertEquals(5920.0, learned ?: 0.0, 0.01)
+        assertEquals(6000.0, estimated ?: 0.0, 0.01)
+
+        assertNull(BatteryTelemetryParser.parseDumpsysLearnedCapacity("no match"))
+        assertNull(BatteryTelemetryParser.parseDumpsysEstimatedCapacity(null))
+    }
+
+    @Test
+    fun testSettingsBatteryHealthParsing() {
+        // Valore intero diretto (es. da settings get system maximum_capacity)
+        assertEquals(98, BatteryTelemetryParser.parseSettingsBatteryHealth("98"))
+        assertEquals(95, BatteryTelemetryParser.parseSettingsBatteryHealth("  95 \n"))
+
+        // Formato chiave-valore
+        assertEquals(97, BatteryTelemetryParser.parseSettingsBatteryHealth("maximum_capacity=97"))
+        assertEquals(94, BatteryTelemetryParser.parseSettingsBatteryHealth("battery_health:94"))
+
+        // Risposta da content provider
+        assertEquals(99, BatteryTelemetryParser.parseSettingsBatteryHealth("Row: 0 value=99"))
+
+        // Fuori intervallo o non valido
+        assertNull(BatteryTelemetryParser.parseSettingsBatteryHealth("150"))
+        assertNull(BatteryTelemetryParser.parseSettingsBatteryHealth("-1"))
+        assertNull(BatteryTelemetryParser.parseSettingsBatteryHealth("null"))
+        assertNull(BatteryTelemetryParser.parseSettingsBatteryHealth(null))
+    }
+
+    @Test
+    fun testDerivedRatedCapacityMappingLadder() {
+        assertEquals(7290.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(7500.0), 0.01)
+        assertEquals(7150.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(7300.0), 0.01)
+        assertEquals(6840.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(7000.0), 0.01)
+        assertEquals(6490.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(6700.0), 0.01)
+        assertEquals(6310.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(6500.0), 0.01)
+        assertEquals(6060.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(6200.0), 0.01)
+        assertEquals(5840.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(6000.0), 0.01)
+        assertEquals(5660.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(5800.0), 0.01)
+        assertEquals(5490.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(5630.0), 0.01)
+        assertEquals(5360.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(5500.0), 0.01)
+        assertEquals(5050.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(5200.0), 0.01)
+        assertEquals(4880.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(5000.0), 0.01)
+        assertEquals(4440.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(4600.0), 0.01)
+        assertEquals(4190.0, BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(4300.0), 0.01)
+    }
+
+    @Test
+    fun testBatteryAuthenticityParsing() {
+        assertTrue(BatteryTelemetryParser.parseBatteryAuthenticity("1"))
+        assertTrue(BatteryTelemetryParser.parseBatteryAuthenticity("true"))
+        assertTrue(BatteryTelemetryParser.parseBatteryAuthenticity("TRUE"))
+        assertTrue(BatteryTelemetryParser.parseBatteryAuthenticity(" 1 \n"))
+
+        org.junit.Assert.assertFalse(BatteryTelemetryParser.parseBatteryAuthenticity("0"))
+        org.junit.Assert.assertFalse(BatteryTelemetryParser.parseBatteryAuthenticity("false"))
+        org.junit.Assert.assertFalse(BatteryTelemetryParser.parseBatteryAuthenticity("null"))
+        org.junit.Assert.assertFalse(BatteryTelemetryParser.parseBatteryAuthenticity(""))
+        org.junit.Assert.assertFalse(BatteryTelemetryParser.parseBatteryAuthenticity(null))
+    }
+
+    @Test
+    fun testUsageDatesParsing() {
+        // Data di produzione fissa: 2025-01-01
+        // Timestamp simulato: 2025-07-01 (181 giorni dopo, ~5.94 mesi -> 5 mesi)
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).apply {
+            timeZone = java.util.TimeZone.getTimeZone("UTC")
+        }
+        val fixedNow = sdf.parse("2025-07-01")!!.time
+        val (months, days) = BatteryTelemetryParser.parseUsageDates("2025-01-01", null, fixedNow)
+        assertEquals(5, months)
+        assertEquals(181, days)
+
+        // Data malformata o futura
+        val (badMonths, badDays) = BatteryTelemetryParser.parseUsageDates("corrupted-date", null, fixedNow)
+        assertNull(badMonths)
+        assertNull(badDays)
+
+        val (nullMonths, nullDays) = BatteryTelemetryParser.parseUsageDates(null, null, fixedNow)
+        assertNull(nullMonths)
+        assertNull(nullDays)
+    }
+
+    @Test
+    fun testChargingPowerAndProtocolEvaluation() {
+        // 4000 mV, 2000 mA -> 8.0 W
+        val watts = BatteryTelemetryParser.calculateChargingPowerWatts(4000, 2000)
+        assertEquals(8.0, watts ?: 0.0, 0.01)
+
+        // Protocolli
+        val vooc = BatteryTelemetryParser.determineChargingProtocol(
+            isPlugged = true,
+            currentMa = 5000,
+            voocIng = "1",
+            fastChgType = null,
+            ppsIng = null
+        )
+        assertEquals("SuperVOOC", vooc)
+
+        val pd = BatteryTelemetryParser.determineChargingProtocol(
+            isPlugged = true,
+            currentMa = 2500,
+            voocIng = "0",
+            fastChgType = null,
+            ppsIng = "1"
+        )
+        assertEquals("USB-PD / PPS", pd)
+
+        val standard = BatteryTelemetryParser.determineChargingProtocol(
+            isPlugged = true,
+            currentMa = 1000,
+            voocIng = "0",
+            fastChgType = null,
+            ppsIng = "0"
+        )
+        assertEquals("STANDARD", standard)
+
+        val discharging = BatteryTelemetryParser.determineChargingProtocol(
+            isPlugged = false,
+            currentMa = -500,
+            voocIng = null,
+            fastChgType = null,
+            ppsIng = null
+        )
+        assertEquals("DISCHARGING", discharging)
+
+        val standby = BatteryTelemetryParser.determineChargingProtocol(
+            isPlugged = false,
+            currentMa = -5,
+            voocIng = null,
+            fastChgType = null,
+            ppsIng = null
+        )
+        assertEquals("STANDBY", standby)
     }
 }
