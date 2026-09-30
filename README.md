@@ -152,6 +152,7 @@ The application transparently communicates how State of Health (SOH) and capacit
 > [!IMPORTANT]
 > **Compatibility, Community Testing & Diagnostic Logs:**
 > - 🟢 **Oppo Reno 14 (EU):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (all BMS telemetry, SOH, FCC, cycle counts, voltage, power, and safety registers read with complete accuracy).
+> - 🟢 **Realme GT 7T (EU / RMX5085):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (dynamic fuel-gauge SOH parsing, Qmax 6736 mAh, 259 cycles, dual-cell balance, ESR, production & first use dates).
 > - 🟡 **Other Devices (`🤝 Help wanted`):** Due to variations in regional firmware, SELinux enforcement (e.g. OnePlus Nord 5 requiring root for direct Qualcomm sysfs access), and vendor driver differences across ColorOS, OxygenOS, and Realme UI, **full hardware compatibility is not yet guaranteed for other models**.
 > - 🧪 **Community Testing & Built-in Diagnostic Console (Critical Phase):** If you own any OnePlus, Oppo, or Realme device from the list, **your testing is crucial!** The app now includes an **Integrated Diagnostic Console** (accessible via the terminal icon `>_` in the top bar, from the hardware diagnostics card, or by tapping the *Data source* pill):
 >   - 📋 **1-Click Markdown Report:** Simply tap **"Copy Report"** in the console to copy your device environment and all raw kernel query outputs to your clipboard.
@@ -161,6 +162,7 @@ The application transparently communicates how State of Health (SOH) and capacit
 | Manufacturer | Model Series | Battery Architecture | Typical / Rated Capacity | Compatibility Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **Oppo** | **Reno 14 (EU)** | High-Density Single-Cell | 6000 mAh / 5840 mAh | ✅ **100% Verified (Shizuku)** |
+| **Realme** | **GT 7T (EU)** | Dual-Cell Serial | 7000 mAh (2×3500) / 6850 mAh (2×3425) | ✅ **100% Verified (Shizuku)** |
 | **OnePlus** | OnePlus 13 | Silicon-Carbon Dual-Cell | 6000 mAh / 5840 mAh | 🧪 Testing in progress / 🤝 Help wanted |
 | **OnePlus** | OnePlus 13R | Silicon-Carbon Dual-Cell | 6000 mAh / 5840 mAh | 🤝 Help wanted |
 | **OnePlus** | OnePlus 15 | Serial Dual-Cell | 7300 mAh (2×3650) / 7150 mAh (2×3575) | 🤝 Help wanted |
@@ -174,7 +176,7 @@ The application transparently communicates how State of Health (SOH) and capacit
 | **Realme** | GT 8 Pro | Dual-Cell Serial | 7000 mAh (2×3500) / 6850 mAh (2×3425) | 🤝 Help wanted |
 | **Realme** | GT 7 Pro (Global/EU/CN) | Dual-Cell Serial | 6500 mAh (2×3250) / 6310 mAh (2×3155) | 🤝 Help wanted |
 | **Realme** | GT 7 Pro (India) | Dual-Cell Serial | 5800 mAh / 5660 mAh | 🤝 Help wanted |
-| **Realme** | GT 7 / 7T | Dual-Cell Serial | 7000 mAh (2x3500) / 6850 mAh (2x3425) | 🧪 Testing in progress / 🤝 Help wanted | 
+| **Realme** | GT 7 | Dual-Cell Serial | 7000 mAh (2×3500) / 6850 mAh (2×3425) | 🤝 Help wanted |
 | **Realme** | GT 6 / GT 6T / GT 5 Pro | Dual-Cell Serial | 5400–5500 mAh / 5260–5360 mAh | 🤝 Help wanted |
 | **Realme** | 14 Pro+ | Silicon-Carbon Single-Cell | 6000 mAh / 5850 mAh | 🤝 Help wanted |
 | **Realme** | 13 Pro+ | High-Density Single-Cell | 5200 mAh / 5050 mAh | 🤝 Help wanted |
@@ -246,7 +248,7 @@ The application employs an intelligent multi-tiered pipeline that dynamically ad
 > [!TIP]
 > **Using an OPPO, Realme, or OnePlus device?**  
 > ColorOS, Realme UI, and OxygenOS feature proprietary security guards that may display *"The permission of ADB is limited"* in Shizuku. Refer to our comprehensive step-by-step guide:  
-> 📖 **[OPLUS_SHIZUKU_GUIDE.md](OPLUS_SHIZUKU_GUIDE.md)**
+> 📖 **[OPPO_REALME_ONEPLUS_SHIZUKU_GUIDE.md](OPPO_REALME_ONEPLUS_SHIZUKU_GUIDE.md)**
 
 ### Prerequisites
 1. An **Oppo, OnePlus, or Realme** device running Android 14 or higher (or any Android 14+ device with standard BatteryManager support).
@@ -256,7 +258,7 @@ The application employs an intelligent multi-tiered pipeline that dynamically ad
 3. **Developer Options Adjustments (OPPO, Realme & OnePlus specific):**
    - On **OPPO**, **Realme**, and **OnePlus** models (ColorOS / Realme UI / OxygenOS), system security guards may restrict ADB shell execution or suspend Shizuku background services.
    - For complete step-by-step instructions, hidden setting fixes, language workarounds, and PC USB commands, see the dedicated guide:  
-     👉 **[OPLUS_SHIZUKU_GUIDE.md](OPLUS_SHIZUKU_GUIDE.md)**
+     👉 **[OPPO_REALME_ONEPLUS_SHIZUKU_GUIDE.md](OPPO_REALME_ONEPLUS_SHIZUKU_GUIDE.md)**
 
 ### App Setup
 1. Download the latest `BatteryHealthTracker-v1.4.apk` from the [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases) section.

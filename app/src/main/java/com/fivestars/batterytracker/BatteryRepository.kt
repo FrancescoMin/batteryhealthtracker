@@ -149,6 +149,26 @@ class BatteryRepository(private val context: Context) {
 
     private fun readFromOplusSysfs(batteryLevel: Int?): BatterySnapshot? {
         return try {
+            // Decodifica dinamica della telemetria live del fuel-gauge BMS (batt_soh, batt_qmax, batt_rm, batt_fcc)
+            // Questo registro è comune a tutti i dispositivi Realme, Oppo e OnePlus (modulo oplus_chg_battery).
+            val headLine = querySysfs(
+                "/sys/class/oplus_chg/battery/battery_log_head",
+                "/sys/class/power_supply/battery/battery_log_head"
+            )
+            val contentLine = querySysfs(
+                "/sys/class/oplus_chg/battery/battery_log_content",
+                "/sys/class/power_supply/battery/battery_log_content"
+            )
+            val oplusLogMap = if (!headLine.isNullOrEmpty() && !contentLine.isNullOrEmpty()) {
+                val heads = headLine.split(',').map { it.trim() }
+                val values = contentLine.split(',').map { it.trim() }
+                heads.zip(values).filter { it.first.isNotEmpty() }.toMap()
+            } else emptyMap()
+
+            val logSoh = oplusLogMap["batt_soh"]?.toIntOrNull()?.takeIf { it in 1..100 }
+            val logQmax = oplusLogMap["batt_qmax"]?.toDoubleOrNull()?.takeIf { it > 1000.0 }
+            val logRm = oplusLogMap["batt_rm"]?.toDoubleOrNull()?.takeIf { it > 0.0 }
+
             val rawFccVal = querySysfs(
                 "/sys/class/oplus_chg/battery/normal_batt_fcc",
                 "/sys/class/oplus_chg/battery/sub_batt_fcc",
@@ -200,7 +220,7 @@ class BatteryRepository(private val context: Context) {
                 }
             }
 
-            var rawSoh = querySysfs(
+            val sysfsSoh = querySysfs(
                 "/sys/class/oplus_chg/battery/normal_batt_soh",
                 "/sys/class/oplus_chg/battery/sub_batt_soh",
                 "/sys/class/oplus_chg/battery/batt_soh",
@@ -218,6 +238,19 @@ class BatteryRepository(private val context: Context) {
                 "/proc/oplus_battery/batt_soh",
                 "/proc/oplus_battery/battery_soh"
             )?.toIntOrNull()?.takeIf { it in 1..100 }
+
+            var rawSoh = when {
+                logSoh != null && sysfsSoh != null -> minOf(logSoh, sysfsSoh)
+                logSoh != null -> logSoh
+                else -> sysfsSoh
+            }
+
+            // Se logQmax è disponibile e fcc è assente o un valore teorico sovrastimato (> logQmax a fronte di degrado), usiamo logQmax come reale FCC
+            if (logQmax != null) {
+                if (fcc == null || (rawSoh != null && rawSoh < 100 && fcc > logQmax)) {
+                    fcc = logQmax
+                }
+            }
 
             var isDumpsysFallbackUsed = false
 
@@ -351,22 +384,15 @@ class BatteryRepository(private val context: Context) {
             val displayDesignCapacity = if (isHealthCalculated) calculationBaseUsed else ratedDesign
 
             // --- 1. Capacità Chimica Assoluta Qmax ---
-            val headLine = querySysfs(
-                "/sys/class/oplus_chg/battery/battery_log_head",
-                "/sys/class/power_supply/battery/battery_log_head"
-            )
-            val contentLine = querySysfs(
-                "/sys/class/oplus_chg/battery/battery_log_content",
-                "/sys/class/power_supply/battery/battery_log_content"
-            )
-            val qMaxMah = if (!headLine.isNullOrEmpty() && !contentLine.isNullOrEmpty()) {
-                val heads = headLine.split(',')
-                val values = contentLine.split(',')
-                val qIdx = heads.indexOf("batt_qmax")
-                if (qIdx != -1 && qIdx < values.size) {
-                    values[qIdx].trim().toIntOrNull()?.let { normalizeQmax(it, (effectiveFcc ?: fcc)?.toInt()) }
+            val qMaxMah = logQmax?.toInt()?.let { normalizeQmax(it, (effectiveFcc ?: fcc)?.toInt()) }
+                ?: if (!headLine.isNullOrEmpty() && !contentLine.isNullOrEmpty()) {
+                    val heads = headLine.split(',')
+                    val values = contentLine.split(',')
+                    val qIdx = heads.indexOf("batt_qmax")
+                    if (qIdx != -1 && qIdx < values.size) {
+                        values[qIdx].trim().toIntOrNull()?.let { normalizeQmax(it, (effectiveFcc ?: fcc)?.toInt()) }
+                    } else null
                 } else null
-            } else null
 
             // --- 2. Rilevamento Doppia Cella (SuperVOOC) e Voltaggi Singole Celle ---
             val agingData = querySysfs(
@@ -517,6 +543,9 @@ class BatteryRepository(private val context: Context) {
                 "/sys/class/power_supply/bms/charge_now"
             )?.toDoubleOrNull()
             var remainingMah = if (rmRaw != null && rmRaw > 100000) rmRaw / 1000.0 else rmRaw
+            if (remainingMah == null && logRm != null) {
+                remainingMah = logRm
+            }
             if (remainingMah == null && dumpsysInfo?.chargeCounterUah != null) {
                 val dumpsysRm = dumpsysInfo.chargeCounterUah / 1000.0
                 if (dumpsysRm > 0) remainingMah = dumpsysRm

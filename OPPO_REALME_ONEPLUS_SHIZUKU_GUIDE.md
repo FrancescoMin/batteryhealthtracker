@@ -39,21 +39,24 @@ In Developer Options, there are two distinct settings that sound similar but do 
 3. Look for **"Disable permission monitoring"** (*Disabilita monitoraggio autorizzazioni*) and toggle it **ON**.
 4. *Variant on newer ColorOS 14/15 / Realme UI 5/6:* If not found under that name, look for **"Disable system optimization"** (*Disattiva ottimizzazione di sistema*).
 
-#### Step 2: The Language Trick (For European EEA Firmware)
-On many European firmware builds (e.g., Realme GT 7T `RMX5085EEA` or Reno 14 EU):
-- If the system language is set to **Italian** or other non-English languages, the "Disable permission monitoring" toggle is frequently **hidden by the manufacturer's localized UI layout**.
-- **Fix:**
-  1. Go to **Settings > System settings > Language & region**.
-  2. Temporarily switch the primary language to **English (United States)**.
-  3. Reopen **Developer options** and scroll to the bottom: the **"Disable permission monitoring"** switch will now be visible.
-  4. Toggle it **ON**.
-  5. You can now safely switch your language back to Italian.
+#### Step 2: The Language Trick (Crucial for Regional Firmware Builds)
+On many regional firmware builds (especially **Realme UI 5.0 / 6.0** on Realme GT 7T `RMX5085EEA`, GT 6/7 series, and ColorOS 14/15):
+- If the system language is set to any non-English language (e.g., Italian, Spanish, French, German, etc.), the toggle is frequently **hidden from Developer Options** due to OEM localization glitches.
+- **Step-by-step Fix:**
+  1. Open **Settings** > **Additional settings / System settings** > **Language & region**.
+  2. Set **English (United States)** as the first / primary language.
+  3. Go back to **Settings** > **Additional settings / System settings** > **Developer options**.
+  4. Scroll all the way down to the bottom (below *Autofill*): the toggle **"Disable System Optimization"** (or on some firmware, **"Disable permission monitoring"**) will now be visible!
+  5. Toggle it **ON** (a warning dialog will pop up: tap **Turn On / OK**).
+  6. *(Optional)* You can now safely switch your system language back to your desired language; the setting will remain permanently enabled.
 
-#### Step 3: Refresh ADB & Apply Settings
-Changes to permission monitoring often do not take effect dynamically until ADB restarts:
-1. In Developer Options, toggle **USB Debugging** (and **Wireless Debugging**) **OFF** and then **ON** again.
-2. If Shizuku still shows the warning, perform a **quick reboot** of the phone.
-3. Open Shizuku and tap **Start** under Wireless Debugging.
+#### Step 3: Start Shizuku & Authorize Battery Health Tracker
+1. If using **Wireless Debugging**:
+   - In Developer Options, toggle **Wireless Debugging** OFF and ON once.
+   - Open **Shizuku** and tap **Start**. Shizuku will now start successfully under `UID 2000 (shell)` without the *"permission of ADB is limited"* warning!
+2. Open **Shizuku** > tap **Authorized applications** (*Applicazioni autorizzate*).
+3. Ensure the toggle next to **Battery Health Tracker** is switched **ON**.
+4. Open **Battery Health Tracker**: it will immediately connect to Shizuku and display live BMS hardware telemetry!
 
 ---
 

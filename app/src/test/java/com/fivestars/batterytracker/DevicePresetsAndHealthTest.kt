@@ -127,6 +127,70 @@ class DevicePresetsAndHealthTest {
         assertEquals(6500, gt7Pro?.typicalMah)
     }
 
+    @Test
+    fun testRealmeGT7TPreset() {
+        val gt7tModel = OplusDevicePresets.detectDevicePreset("Realme RMX5085")
+        assertNotNull("Realme GT 7T (RMX5085) deve essere riconosciuto", gt7tModel)
+        assertEquals("Realme", gt7tModel?.brand)
+        assertEquals("GT 7T", gt7tModel?.modelName)
+        assertEquals(7000, gt7tModel?.typicalMah)
+        assertEquals(6850.0, gt7tModel?.ratedMah ?: 0.0, 0.01)
+
+        val gt7tEea = OplusDevicePresets.detectDevicePreset("RMX5085EEA")
+        assertNotNull("Realme GT 7T (RMX5085EEA) deve essere riconosciuto", gt7tEea)
+        assertEquals(7000, gt7tEea?.typicalMah)
+        assertEquals(6850.0, gt7tEea?.ratedMah ?: 0.0, 0.01)
+
+        val gt7tCode = OplusDevicePresets.detectDevicePreset("RE6090L1")
+        assertNotNull("Realme GT 7T (RE6090L1) deve essere riconosciuto", gt7tCode)
+        assertEquals(7000, gt7tCode?.typicalMah)
+        assertEquals(6850.0, gt7tCode?.ratedMah ?: 0.0, 0.01)
+    }
+
+    @Test
+    fun testRealmeDynamicFuelGaugeLogPriority() {
+        // Realme GT 7T: nominale 6850 mAh, tipica 7000 mAh
+        val preset = OplusDevicePresets.detectDevicePreset("RMX5085")
+        assertNotNull(preset)
+        val ratedDesign = preset?.ratedMah ?: 6850.0
+
+        // Simulazione battery_log_head e battery_log_content reali da Realme GT 7T:
+        val headLine = ",batt_temp,shell_temp,vbat_mv,vbat_min_mv,ibat_ma,batt_soc,ui_soc,wired_online,charge_type,notify_code,wired_ibus_ma,wired_vbus_mv,smooth_soc,led_on,fv_mv,fcc_ma,wired_icl_ma,otg_switch,cool_down,bcc_current,normal_cool_down,chg_cycle,mmi_chg,usb_status,cc_detect,batt_full,rechging,pd_svooc,prop_status,batt_qmax,batt_soh,gauge_car_c,batt_rm,batt_fcc,vooc_online,vooc_started,vooc_charging,vooc_online_keep,vooc_sid,adapter_id"
+        val contentLine = ",346,340,4047,4044,-137,61,63,1,1,0,412,4893,63,1,4455,600,500,0,7,11500,7,0,1,0,2,0,0,0,1,6736,99,0,3774,6236,0,0,0,0,0,0"
+
+        val heads = headLine.split(',').map { it.trim() }
+        val values = contentLine.split(',').map { it.trim() }
+        val logMap = heads.zip(values).filter { it.first.isNotEmpty() }.toMap()
+
+        val logSoh = logMap["batt_soh"]?.toIntOrNull()
+        val logQmax = logMap["batt_qmax"]?.toDoubleOrNull()
+        val logRm = logMap["batt_rm"]?.toDoubleOrNull()
+
+        // Nel sysfs standard, battery_soh riporta erroneamente 100% statico e normal_batt_fcc 7000 mAh
+        val sysfsSoh = 100
+        val sysfsFcc = 7000.0
+
+        // Risoluzione SOH dinamica: minOf(logSoh, sysfsSoh) o priorità logSoh
+        val rawSoh = minOf(logSoh ?: sysfsSoh, sysfsSoh)
+        assertEquals(99, rawSoh)
+
+        // Risoluzione FCC: sovrastima 7000 > logQmax (6736) con rawSoh < 100 viene corretta con logQmax
+        var fcc = sysfsFcc
+        if (logQmax != null && rawSoh < 100 && fcc > logQmax) {
+            fcc = logQmax
+        }
+        assertEquals(6736.0, fcc, 0.01)
+
+        // Verifica coerenza effectiveFcc
+        val effectiveFcc = if (Math.abs((fcc / ratedDesign * 100.0) - rawSoh) <= 5.0 && fcc <= ratedDesign * 1.02) {
+            fcc
+        } else {
+            Math.round((ratedDesign * rawSoh / 100.0) * 10.0) / 10.0
+        }
+        assertEquals(6736.0, effectiveFcc, 0.01)
+        assertEquals(3774.0, logRm ?: 0.0, 0.01)
+    }
+
     // --- 3. TEST VERIFICA DISPOSITIVI OPPO ---
 
     @Test

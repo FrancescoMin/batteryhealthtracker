@@ -366,6 +366,14 @@ object OplusDevicePresets {
         ),
         DeviceBatteryPreset(
             brand = "Realme",
+            modelName = "GT 7T",
+            regionVariant = null,
+            typicalMah = 7000,
+            ratedMah = 6850.0,
+            codeNames = listOf("RMX5085", "RE6090L1")
+        ),
+        DeviceBatteryPreset(
+            brand = "Realme",
             modelName = "GT 8 Pro",
             regionVariant = "Global & Cina",
             typicalMah = 7000,
