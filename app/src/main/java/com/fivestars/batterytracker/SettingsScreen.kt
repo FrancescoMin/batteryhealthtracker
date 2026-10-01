@@ -54,9 +54,9 @@ fun SettingsScreen(
     val appVersionName = remember(context) {
         try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            pInfo.versionName ?: "1.5"
+            pInfo.versionName ?: "1.6"
         } catch (_: Exception) {
-            "1.5"
+            "1.6"
         }
     }
 

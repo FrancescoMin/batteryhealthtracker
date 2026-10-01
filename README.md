@@ -31,7 +31,7 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 
 > [!NOTE]
 > **🚀 Repository Development Status / Stato di Sviluppo della Repository:**  
-> The codebase in the `main` branch may be ahead of the latest tagged GitHub Release (`BatteryHealthTracker-v1.5.apk`). New features, hardware presets, and optimizations currently undergoing testing in the repository will be bundled and published in future release APKs.  
+> The codebase in the `main` branch may be ahead of the latest tagged GitHub Release (`BatteryHealthTracker-v1.6.apk`). New features, hardware presets, and optimizations currently undergoing testing in the repository will be bundled and published in future release APKs.  
 > *Il codice presente nella repository (`main`) potrebbe risultare più avanzato rispetto all'ultima release ufficiale scaricabile, poiché alcune nuove funzioni o migliorie sono ancora in fase di testing e confluiranno nelle release successive.*
 
 ---
@@ -210,7 +210,7 @@ flowchart TD
 2. **Shizuku:** Installed from [Google Play](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api) or [GitHub Releases](https://github.com/RikkaApps/Shizuku/releases) and running via **Wireless Debugging** or **Root**.
 
 ### App Setup
-1. Download and install `BatteryHealthTracker-v1.5.apk` from [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases).
+1. Download and install `BatteryHealthTracker-v1.6.apk` from [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases).
 2. Open the app and grant the **Notification Permission** (required for background snapshot receipts and > 42°C overheat alerts).
 3. Tap **"Authorize Shizuku"** and allow access when prompted.
 4. Telemetry, health metrics, and hardware registers will populate immediately!
