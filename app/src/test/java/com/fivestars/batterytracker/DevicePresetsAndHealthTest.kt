@@ -199,6 +199,21 @@ class DevicePresetsAndHealthTest {
         assertEquals(5840.0, preset?.ratedMah ?: 0.0, 0.01)
     }
 
+    @Test
+    fun testOppoFindX9UltraPreset() {
+        val preset = OplusDevicePresets.detectDevicePreset("PMD110")
+        assertNotNull(preset)
+        assertEquals("Oppo", preset?.brand)
+        assertEquals("Find X9 Ultra", preset?.modelName)
+        assertEquals(7050, preset?.typicalMah)
+        assertEquals(6890.0, preset?.ratedMah ?: 0.0, 0.01)
+
+        val presetByName = OplusDevicePresets.detectDevicePreset("Oppo Find X9 Ultra")
+        assertNotNull(presetByName)
+        assertEquals(7050, presetByName?.typicalMah)
+        assertEquals(6890.0, presetByName?.ratedMah ?: 0.0, 0.01)
+    }
+
     // --- 4. TEST CALCOLO SALUTE (SOH) E CAPACITA' INCROCIATA ---
 
     @Test

@@ -184,6 +184,14 @@ object OplusDevicePresets {
             ratedMah = 7290.0,
             codeNames = listOf("PMC110", "CPH2759")
         ),
+        DeviceBatteryPreset(
+            brand = "Oppo",
+            modelName = "Find X9 Ultra",
+            regionVariant = "Global & Cina",
+            typicalMah = 7050,
+            ratedMah = 6890.0,
+            codeNames = listOf("PMD110", "CPH2755", "Find X9 Ultra")
+        ),
 
         // --- OPPO RENO SERIES ---
         DeviceBatteryPreset(

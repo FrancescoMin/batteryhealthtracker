@@ -29,13 +29,6 @@ On modern Android devices—particularly within the **Oplus ecosystem (Oppo, One
 
 This delivers accurate, real-time electrochemical diagnostic data: true State of Health (SOH), cycle counts, internal cell resistance (ESR), cell temperature, thermal capacity compensation (**IEC 61960**), charging IC safety fault registers, and live wattage.
 
-> [!IMPORTANT]
-> **⚖️ Disclaimer & Accuracy Notice / Dichiarazione di Non Responsabilità:**  
-> Battery Health Tracker is an independent diagnostic utility created for monitoring and personal reference. It is **not an official tool from device manufacturers** (such as Oppo, OnePlus, Realme, or others) and **must not be confused with official manufacturer service tools or warranty inspection software**.  
-> While the app reads low-level BMS nodes and kernel hardware registers via Shizuku, measured values (such as SOH %, estimated capacity, or internal resistance) can fluctuate based on sensor tolerances, thermal conditions, and OEM firmware implementations. As a result, readings may differ from official manufacturer specifications or service center diagnostic benches.
->
-> *Questa applicazione è uno strumento di terze parti e non va confusa con i tool ufficiali del produttore: i dati forniti possono presentare difformità o stime differenti rispetto alla diagnostica ufficiale di fabbrica.*
-
 > [!NOTE]
 > **🚀 Repository Development Status / Stato di Sviluppo della Repository:**  
 > The codebase in the `main` branch may be ahead of the latest tagged GitHub Release (`BatteryHealthTracker-v1.5.apk`). New features, hardware presets, and optimizations currently undergoing testing in the repository will be bundled and published in future release APKs.  
@@ -73,87 +66,46 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 ## ✨ Key Features
 
 ### 🔬 Low-Level BMS & Kernel Telemetry (via Shizuku)
-- **Direct Fuel Gauge Interrogation:** Reads physical register values directly from `/sys/class/oplus_chg/battery/` and `/sys/class/power_supply/battery/`.
-- **True State of Health (SOH):** Real electrochemical capacity measured against calibrated nominal factory design capacity.
-- **Accurate Cycle Counter:** Reads cumulative charge cycles tracked by the physical fuel gauge IC rather than software battery stats resets.
-- **Coulomb Counter Integration & BMS Drift Detection:** Tracks synchronization health between the battery management IC and open-circuit voltage (OCV) curves to guide calibration when partial charges cause measurement drift.
+- **Direct Fuel Gauge Queries:** Reads physical registers directly from `/sys/class/oplus_chg/battery/` and `/sys/class/power_supply/battery/`.
+- **True State of Health (SOH):** Real electrochemical capacity evaluated against nominal factory design capacity.
+- **Hardware Cycle Counter:** Reads non-volatile cycles tracked by the physical fuel gauge IC (immune to OS battery stat wipes).
+- **Dual-Cell SuperVOOC Monitoring:** Individual cell voltages (`cell0Volt`, `cell1Volt`) and series balance $\Delta\text{ mV}$.
 
 ### ⚡ True Full Charge vs Display 100%
-- **Constant Current (CC) vs Constant Voltage (CV) Tracking:** Detects whether Android's display "100%" is merely the end of the CC phase (~88%–92% chemical saturation) or whether the battery has reached **True Full Saturation** through CV tapering ($I_{\text{now}} \le 80\text{ mA}$).
-- Direct raw monitoring of the `/sys/class/oplus_chg/battery/chip_soc` register.
+- **CC/CV Saturation Tracking:** Distinguishes between the display "100%" (often end of Constant Current at ~90% saturation) and **True Full Charge** when Constant Voltage current tapers below cutoff ($I \le 80\text{ mA}$).
 
 ### 🌡️ IEC 61960 Thermal Compensation
-- **Normalized Capacity at 25°C:** Normalizes measured full-charge capacity against ambient and battery temperature variations using the international electrochemical standard:
+- **Normalized Capacity at 25°C:** Eliminates seasonal capacity swings (winter vs summer) using the electrochemical standard formula:
   $$C_{25^\circ\text{C}} = \frac{C_{\text{fcc}}}{1.0 + 0.006 \times (T_{\text{batt}} - 25.0)}$$
-- Eliminates seasonal fluctuations (e.g., apparent lower capacity in winter at 15°C vs higher in summer at 35°C), providing an objective indicator of true molecular cell wear.
 
-### 🛡️ BMS Safety & Hardware Protection Registers
-- **Silicon-Level Health Monitoring:** Inspects physical protection flags in real time:
-  - `short_c_hw_status`: Short-circuit detection across power stages.
-  - `short_ic_otp_status`: Hardware over-temperature protection (OTP) of the charge controller.
-  - `subboard_temp_err`: Integrity and health of the USB-C sub-board thermal sensors.
-- Displays an instant security badge (**SAFE** vs **ALERT**) to verify charging subsystem integrity.
+### 🛡️ Silicon Safety & Protection Registers
+- **Hardware Fault Monitoring:** Inspects physical protection flags in real time (`short_c_hw_status`, `short_ic_otp_status`, `subboard_temp_err`) with an instant **SAFE / ALERT** indicator.
 
-### 📈 Internal Resistance (ESR) & Cell Impedance
-- Estimates real-time internal resistance ($\text{m}\Omega$) based on instantaneous $\frac{\Delta V}{I}$ under active discharge and charge loads.
-- Educates the user regarding normal electrochemical polarization overpotentials during high-speed SuperVOOC charging.
+### 📈 Internal Resistance (ESR)
+- **Dynamic Impedance Calculation:** Estimates real-time internal resistance ($\text{m}\Omega$) using active $\frac{\Delta V}{\Delta I}$ load steps, helping identify aging and degradation.
 
-### 📊 Health History, Projection & Charts
-- **Smooth Canvas Trend Visualization:** Interactive linear chart tracking SOH over time with reference lines at 100%, 90%, and the critical 80% industrial battery replacement threshold.
-- **Cycle Life Projection:** Estimates remaining charge cycles before reaching 80% capacity based on the user's historical degradation rate.
-- **Safe History Management:** Multi-selection deletion, persistent Trash bin, full restoration, and JSON/CSV export.
+### 📊 Health Trends & Projections
+- **Interactive SOH Chart:** Visual canvas trend with 100%, 90%, and 80% industrial replacement threshold lines.
+- **Cycle Life Projection:** Estimates remaining cycles before reaching 80% capacity based on historical wear rate.
+- **Safe History Management:** Multi-select deletion, persistent Trash bin, full restore, and CSV/JSON export.
 
-### 🔔 Smart Snapshot Notifications & Thermal Safety Alerts
-- **Sampling Confirmation Notifications:** Provides instant on-device notification cards whenever a measurement is captured:
-  - **Manual Snapshots:** Direct feedback confirming newly saved records via the in-app *"Save Snapshot"* action.
-  - **Automatic Periodic Sampling:** Background logging executed every 24 hours via Android `WorkManager`.
-  - **100% Full-Charge Disconnect:** Automatic sampling triggered immediately when the charger is unplugged after reaching full saturation.
-  - Each notification neatly summarizes updated SOH %, cumulative charge cycles, residual capacity (mAh), and the active telemetry data source.
-- **Hardware Overheat Protection Alert:** High-priority warning triggered if the battery cell temperature exceeds the critical safety threshold (> 42°C) during high-speed SuperVOOC charging or heavy sustained workloads, advising the user to cool the device down and safeguarding battery chemistry against accelerated degradation.
+### 🔔 Smart Notifications & Thermal Protection
+- **Snapshot Receipts:** Confirmation cards for manual saves, 24h background logs (`WorkManager`), and 100% charger unplug events.
+- **Overheat Alarm:** High-priority alert when battery temperature exceeds 42°C during high-speed charging or heavy workloads.
 
-### 🚀 120 Hz Native Fluidity & Battery-Saving Design
-- **Ultra-Fluid UI:** Fully optimized for high-refresh-rate displays (120 Hz) with zero-allocation composables, stable keys, and strict 8.33 ms frame budget compliance.
-- **Color-Matched System Bars:** Status bar and navigation bar seamlessly blend with the application header banner for a professional, unified aesthetic.
-- **Four Display Theme Modes:**
-  1. **System Default:** Follows OS-level light/dark configuration.
-  2. **Light Theme:** Classic, clean Material 3 design.
-  3. **Dark Theme:** Balanced dark tones designed to reduce eye strain in low-light environments.
-  4. **AMOLED Pure Black (`#000000`):** Turns off OLED sub-pixels completely, eliminating screen power draw across background regions.
+### 🚀 120 Hz UI & Themes
+- **Fluid Performance:** Zero-allocation Composables locked to 120 Hz (8.33 ms frame budget).
+- **4 Themes:** System Default, Light, Dark, and AMOLED Pure Black (`#000000`) for zero OLED sub-pixel power draw.
 
-### 💻 Built-in Diagnostic Console & 1-Click Issue Reporting
-- **Real-Time Shell & Kernel Query Logging:** Tracks every sysfs, dumpsys, and settings query executed by the app, showing exact return values, SELinux denials, and fallback paths.
-- **Instant GitHub Report Export:** A dedicated "Copy Report" button formats device specs, build fingerprints, and kernel command outputs into clean Markdown, ready to paste directly into GitHub Issues.
-- **Direct GitHub Issues Integration:** One-tap shortcut opening GitHub Issues in your browser to submit diagnostic findings instantly.
+### 💻 Built-in Diagnostic Console
+- **Real-Time Shell Inspector:** Live log of every sysfs, dumpsys, and settings query with exit codes and fallback paths.
+- **1-Click Bug Reporting:** Instant Markdown generation ready to paste into GitHub Issues.
 
-### 🏷️ Understanding SOH Determination & Metric Card Indicators
-
-The application transparently communicates how State of Health (SOH) and capacity metrics are derived on your specific device through indicator labels displayed directly beneath each primary card:
-
-#### 1. SOH Determination Hierarchy:
-- **Priority 1 — Authentic Hardware BMS SOH (`BMS Hardware / OS`):**
-  - **Source:** Read directly from proprietary ColorOS / OxygenOS / Realme UI hardware fuel-gauge kernel registers (`/sys/class/oplus_chg/battery/normal_batt_soh`, `battery_soh`, or Settings Provider).
-  - **Meaning:** Represents the genuine, calibrated electrochemical health tracked by the battery management IC. Matches the official battery health percentage shown in ColorOS/OxygenOS System Settings (*"Maximum Capacity"* / *"Capacità massima"*).
-- **Priority 2 — Scientifically Calculated SOH (`Calculated SOH` / `SOH Calcolato`):**
-  - **Source:** Dynamically derived when device firmware or SELinux policies hide direct hardware SOH registers (or on devices lacking `normal_batt_soh`, such as the OnePlus 13 on current OxygenOS builds).
-  - **Formula:**
-    $$\text{SOH} = \left\lfloor \frac{\text{Full Charge Capacity (FCC)}}{\text{Typical Commercial Capacity}} \times 100 \right\rfloor$$
-  - **Alignment:** Aligned to the typical commercial capacity (e.g., 6000 mAh on OnePlus 13 or Reno 14) so that the calculated health perfectly matches official system expectations without exceeding 100%.
-- **Priority 3 — Standard API Limitation (`Unavailable via API` / `Non disponibile via API`):**
-  - **Source:** Basic non-privileged Android `BatteryManager` fallback.
-  - **Meaning:** Standard Android APIs do not expose physical chemical degradation without Shizuku or Root. A red warning badge prompts the user to activate Shizuku.
-
-#### 2. Metric Card Subtitle Glossary:
-
-| Card | Subtitle Label | Technical Meaning & Telemetry Source |
-| :--- | :--- | :--- |
-| **Health (%)** | **`BMS Hardware / OS`** | Direct read from hardware BMS / ColorOS kernel register (OEM-certified). |
-| **Health (%)** | **`Calculated SOH`** | Computed dynamically from FCC divided by commercial typical capacity. |
-| **Health (%)** | **`Unavailable via API`** | Android public API cannot read degradation; Shizuku or Root required. |
-| **Capacity (mAh)** | **`of XXXX mAh (typical/rated)`** | Reference design capacity used as the calculation denominator. |
-| **Capacity (mAh)** | **`Real FCC capacity`** | Measured electrochemical full charge capacity from fuel gauge. |
-| **Capacity (mAh)** | **`Standard Android estimation`** | Coulomb counter estimate under basic BatteryManager fallback. |
-| **Cycles** | **`Full charge cycles`** | Cumulative 100% equivalent discharge cycles recorded in BMS non-volatile memory. |
-| **Cycles** | **`Unsupported by Android`** | Cycle counter node inaccessible through basic Android HAL without Shizuku/Root. |
+### 🏷️ SOH Determination Hierarchy
+The app clearly indicates how SOH is sourced on your device:
+1. **`BMS Hardware / OS`:** Direct read from OEM kernel fuel-gauge registers (ColorOS / OxygenOS / Realme UI certified).
+2. **`Calculated SOH`:** Dynamically computed ($\text{FCC} / \text{Typical Capacity} \times 100$) when vendor firmware restricts direct SOH registers.
+3. **`Unavailable via API`:** Fallback indicator when running without Shizuku permissions.
 
 ### 🌐 Multilingual
 - Fully localized in **English**, **Italian (Italiano)**, and **Spanish (Español)**.
@@ -194,6 +146,7 @@ The application transparently communicates how State of Health (SOH) and capacit
 | **Realme** | 14 Pro+ | Silicon-Carbon Single-Cell | 6000 mAh / 5850 mAh | 🤝 Help wanted |
 | **Realme** | 13 Pro+ | High-Density Single-Cell | 5200 mAh / 5050 mAh | 🤝 Help wanted |
 | **Realme** | 12 Pro+ | High-Density Single-Cell | 5000 mAh / 4880 mAh | 🤝 Help wanted |
+| **Oppo** | Find X9 Ultra | High-Density Single-Cell | 7050 mAh / 6890 mAh | 🤝 Help wanted |
 | **Oppo** | Find X9 Pro | Silicon-Carbon Dual-Cell | 7500 mAh / 7290 mAh (28.13 Wh / 27.34 Wh) | 🤝 Help wanted |
 | **Oppo** | Find X9 | Silicon-Carbon Dual-Cell | 7025 mAh / 6840 mAh (26.35 Wh / 25.65 Wh) | 🤝 Help wanted |
 | **Oppo** | Find X8 / X8 Pro | Silicon-Carbon Dual-Cell | 5630–5910 mAh (Typical) | 🤝 Help wanted |
@@ -234,53 +187,33 @@ flowchart TD
     C -->|Sampling & Safety Alerts| G[NotificationHelper]
 ```
 
-### Multi-Tiered Hardware Resolution & Fallback Strategy
+### Multi-Tiered Hardware Resolution Pipeline
 
-The application employs an intelligent multi-tiered pipeline that dynamically adapts to device vendors, kernel architectures, and processor families:
-
-1. **Tier 1: Direct OPlus Kernel Sysfs (Oppo, OnePlus, Realme via Shizuku)**
-   - **Processor Family Adaptation (Qualcomm Snapdragon vs. MediaTek Dimensity):**
-     - On **MediaTek** platforms (e.g. Dimensity 7300/8300/9400), cumulative charge cycles are registered under `/sys/class/oplus_chg/battery/battery_cc`.
-     - On **Qualcomm Snapdragon** platforms (e.g. Snapdragon 7+ Gen 3, 8 Gen 2/3/4), the kernel exposes cycle counts and power metrics under `battery_cycle`, `cycle_count`, `/sys/class/power_supply/battery/`, or `/sys/class/power_supply/bms/`.
-     - A chained, low-overhead shell transaction (`querySysfs`) queries these candidates in priority order within a single Binder transaction, eliminating latency.
-   - **Microampere ($\mu\text{Ah}$) Normalization:** Automatically recognizes and scales raw Qualcomm PMIC registers reporting in $\mu\text{Ah}$ ($> 100,000$) to standard milliampere-hours ($\text{mAh}$).
-   - **Bidirectional SOH & FCC Inference:** If a custom firmware exposes the physical State of Health (SOH) register (e.g., 98%) but restricts the raw Full Charge Capacity node, the app mathematically deduces true residual capacity against the verified factory IEC rating ($\text{Rated} \times \frac{\text{SOH}}{100}$), and vice versa.
-
+1. **Tier 1: Direct OPlus Kernel Sysfs (via Shizuku)**
+   - Automatically adapts between **MediaTek** (`battery_cc`) and **Qualcomm Snapdragon** (`battery_cycle`, `/power_supply/bms/`) nodes within a single low-overhead Binder transaction.
+   - Normalizes microampere ($\mu\text{Ah}$) PMIC registers to $\text{mAh}$ and performs bidirectional SOH/FCC inference when nodes are partially restricted.
 2. **Tier 2: Android 14+ Hardware HAL Fallback**
-   - If low-level sysfs cycle count nodes are modified or restricted by manufacturer SELinux policies across minor firmware updates, the app automatically queries Android 14's hardware HAL (`BatteryManager.getIntProperty(7)`).
-   - This ensures charge cycle counters remain fully operational on modern Android 14/15/16 devices even when custom sysfs files are unavailable.
-
-3. **Tier 3: Universal Android BatteryManager Fallback (Samsung, Google Pixel, Xiaomi, etc.)**
-   - When running on non-OPlus hardware or if Shizuku permissions are not granted, the app gracefully falls back to the standard Android `BatteryManager` API.
-   - **Reliability Badges & Scientific Transparency:** Standard Android APIs only expose `BATTERY_PROPERTY_CHARGE_COUNTER`, which reflects the **instantaneous Coulomb counter** (current charge present in the cell based on SoC), not the degraded chemical maximum capacity. In fallback mode, the app displays prominent **red warning badges** and explanatory dialogs to ensure users are never misled into confusing instantaneous charge with battery wear.
+   - Automatically queries `BatteryManager.getIntProperty(7)` if vendor SELinux updates isolate custom sysfs cycle nodes.
+3. **Tier 3: Universal Android Fallback (Non-OPlus devices)**
+   - Graceful fallback for generic hardware with explicit warning badges to ensure instantaneous charge (`CHARGE_COUNTER`) is never confused with chemical health.
 
 ---
 
 ## 📥 Installation & Setup
 
 > [!TIP]
-> **Using an OPPO, Realme, or OnePlus device?**  
-> ColorOS, Realme UI, and OxygenOS feature proprietary security guards that may display *"The permission of ADB is limited"* in Shizuku. Refer to our comprehensive step-by-step guide:  
-> 📖 **[OPPO_REALME_ONEPLUS_SHIZUKU_GUIDE.md](OPPO_REALME_ONEPLUS_SHIZUKU_GUIDE.md)**
+> **OPPO, Realme & OnePlus Users:** ColorOS, Realme UI, and OxygenOS require a one-time toggle in Developer Options to allow Shizuku shell access (*"The permission of ADB is limited"*).  
+> 👉 **Follow our step-by-step fix & language workaround:** [OPPO_REALME_ONEPLUS_SHIZUKU_GUIDE.md](OPPO_REALME_ONEPLUS_SHIZUKU_GUIDE.md)
 
 ### Prerequisites
-1. An **Oppo, OnePlus, or Realme** device running Android 14 or higher (or any Android 14+ device with standard BatteryManager support).
-2. **Shizuku** installed and running:
-   - Download Shizuku from [Google Play](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api) or [GitHub Releases](https://github.com/RikkaApps/Shizuku/releases).
-   - Start Shizuku via **Wireless Debugging** (no computer required after initial setup) or via **Root** (if rooted).
-3. **Developer Options Adjustments (OPPO, Realme & OnePlus specific):**
-   - On **OPPO**, **Realme**, and **OnePlus** models (ColorOS / Realme UI / OxygenOS), system security guards may restrict ADB shell execution or suspend Shizuku background services.
-   - For complete step-by-step instructions, hidden setting fixes, language workarounds, and PC USB commands, see the dedicated guide:  
-     👉 **[OPPO_REALME_ONEPLUS_SHIZUKU_GUIDE.md](OPPO_REALME_ONEPLUS_SHIZUKU_GUIDE.md)**
+1. **Device:** Oppo, OnePlus, Realme (Android 14+), or any Android 14+ device.
+2. **Shizuku:** Installed from [Google Play](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api) or [GitHub Releases](https://github.com/RikkaApps/Shizuku/releases) and running via **Wireless Debugging** or **Root**.
 
 ### App Setup
-1. Download the latest `BatteryHealthTracker-v1.5.apk` from the [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases) section.
-2. Install the APK on your device.
-3. Open **Battery Health Tracker**.
-4. When prompted on Android 13+, allow the **Notification Permission** (`POST_NOTIFICATIONS`):
-   - **Why it is requested:** Enables status receipts for manual snapshots and automated background logging (24-hour periodic cycles and 100% charger disconnects), as well as real-time overheat alerts (> 42°C).
-5. Tap **"Authorize Shizuku"** and allow permission in the Shizuku prompt.
-6. All hardware telemetry, health metrics, and BMS registers will immediately populate!
+1. Download and install `BatteryHealthTracker-v1.5.apk` from [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases).
+2. Open the app and grant the **Notification Permission** (required for background snapshot receipts and > 42°C overheat alerts).
+3. Tap **"Authorize Shizuku"** and allow access when prompted.
+4. Telemetry, health metrics, and hardware registers will populate immediately!
 
 ---
 
@@ -342,17 +275,11 @@ Do you own any of the devices marked as **`🤝 Help wanted`** in the [Hardware 
 
 ---
 
-## ⚖️ Disclaimer & Accuracy Notice / Note di Accuratezza
+## ⚖️ Disclaimer & Accuracy Notice
 
-**English:**  
-Battery Health Tracker is an independent diagnostic and telemetry utility developed to provide visibility into low-level battery metrics and BMS registers.
-- **Non-Official Application:** This project is not affiliated with, endorsed by, or certified by any original equipment manufacturer (OEM) such as Oppo, OnePlus, Realme, BBK Electronics, or others. It must **never be considered an official manufacturer tool or an authorized service center diagnostic system**.
-- **Telemetry & Sensor Tolerances:** Low-level measurements (including State of Health percentage, Full Charge Capacity, cell resistance, and cycle counts) are derived from exposed kernel sysfs interfaces and hardware fuel-gauge streams. Because vendor drivers, firmware revisions, sensor calibration variances, and ambient operating conditions vary, the values displayed may differ from official manufacturer figures or laboratory equipment. The data is provided for informational and monitoring purposes only.
-
-**Italiano:**  
-Battery Health Tracker è un'applicazione diagnostica indipendente nata per monitorare e comprendere i parametri elettrochimici della batteria e i registri del BMS.
-- **Applicazione non ufficiale:** L'app non è collegata, approvata né certificata da alcun produttore hardware (come Oppo, OnePlus, Realme, BBK Electronics, ecc.). **Non va confusa in alcun modo con i tool ufficiali di assistenza o diagnostica dei produttori.**
-- **Accuratezza e tolleranze dei dati:** I valori mostrati (capacità residua, percentuale di salute della batteria, cicli di ricarica e resistenza interna) provengono da interfacce kernel sysfs e log del fuel-gauge accessibili via Shizuku. A causa di tolleranze fisiche dei sensori, filtri del firmware OEM, condizioni termiche e algoritmi proprietari, i dati potrebbero risultare differenti o non perfettamente coincidenti con le metriche dei tool ufficiali del produttore. Le informazioni vanno intese come strumento di monitoraggio e stima indicativa e non come perizia tecnica o valore ufficiale di garanzia.
+Battery Health Tracker is an independent diagnostic utility for monitoring and personal reference.
+- **Non-Official:** This project is not affiliated with, endorsed by, or certified by Oppo, OnePlus, Realme, or BBK Electronics. It must not be confused with official manufacturer service tools or warranty inspection software.
+- **Sensor & Firmware Tolerances:** Telemetry is read directly from kernel sysfs nodes and fuel-gauge registers via Shizuku. Reported metrics (SOH %, capacity, cell resistance) may fluctuate depending on operating temperature, OEM firmware revisions, and sensor calibration.
 
 ---
 
