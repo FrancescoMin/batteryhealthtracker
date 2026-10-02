@@ -91,6 +91,10 @@
     <string name="trend_card_title">Health Trend &amp; Projection</string>
     <string name="trend_projection_text">Estimated lifespan: ~%1$d cycles remaining before reaching 80%% (estimated total: ~%2$d cycles, current: %3$s).</string>
     <string name="trend_empty_prompt">Save at least 2 snapshots in history to view the health degradation curve.</string>
+    <string name="trend_stat_initial">Initial</string>
+    <string name="trend_stat_current">Current</string>
+    <string name="trend_stat_change">Change</string>
+    <string name="trend_touch_hint">Touch or drag the chart to inspect snapshots</string>
 
     <!-- History List -->
     <string name="history_title">Measurement History (%d)</string>

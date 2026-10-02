@@ -91,6 +91,10 @@
     <string name="trend_card_title">Tendencia de Salud y Proyección</string>
     <string name="trend_projection_text">Vida útil estimada: ~%1$d ciclos restantes antes del 80%% (total estimado: ~%2$d ciclos, actuales: %3$s).</string>
     <string name="trend_empty_prompt">Guarda al menos 2 registros en el historial para ver la curva de degradación de salud.</string>
+    <string name="trend_stat_initial">Inicial</string>
+    <string name="trend_stat_current">Actual</string>
+    <string name="trend_stat_change">Variación</string>
+    <string name="trend_touch_hint">Toca o arrastra sobre el gráfico para explorar las mediciones</string>
 
     <!-- History List -->
     <string name="history_title">Historial de Mediciones (%d)</string>

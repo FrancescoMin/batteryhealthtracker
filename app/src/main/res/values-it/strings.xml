@@ -91,6 +91,10 @@
     <string name="trend_card_title">Andamento Salute &amp; Proiezione</string>
     <string name="trend_projection_text">Stima vita utile: ~%1$d cicli rimanenti prima dell\'80%% (totale stimato: ~%2$d cicli, attuali: %3$s).</string>
     <string name="trend_empty_prompt">Salva almeno 2 campionamenti nello storico per visualizzare il grafico della curva di salute nel tempo.</string>
+    <string name="trend_stat_initial">Iniziale</string>
+    <string name="trend_stat_current">Attuale</string>
+    <string name="trend_stat_change">Variazione</string>
+    <string name="trend_touch_hint">Tocca o trascina sul grafico per esplorare i campionamenti</string>
 
     <!-- History List -->
     <string name="history_title">Storico Misurazioni (%d)</string>
