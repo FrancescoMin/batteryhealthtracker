@@ -786,6 +786,12 @@ class DevicePresetsAndHealthTest {
         assertEquals(5, months)
         assertEquals(181, days)
 
+        // Scenario reale Oppo Reno 14: Produzione 2025-06-07 (15 mesi fa) e 1° Avvio 2025-09-04 (393 giorni fa)
+        val nowOct2026 = sdf.parse("2026-10-02")!!.time
+        val (renoMonths, renoDays) = BatteryTelemetryParser.parseUsageDates("2025-06-07", "2025-09-04", nowOct2026)
+        assertEquals(15, renoMonths) // 15 mesi = 1 anno e 3 mesi (età del componente chimico)
+        assertEquals(393, renoDays)  // 393 giorni dal 1° avvio (tempo di funzionamento dispositivo)
+
         // Data malformata o futura
         val (badMonths, badDays) = BatteryTelemetryParser.parseUsageDates("corrupted-date", null, fixedNow)
         assertNull(badMonths)
@@ -794,6 +800,30 @@ class DevicePresetsAndHealthTest {
         val (nullMonths, nullDays) = BatteryTelemetryParser.parseUsageDates(null, null, fixedNow)
         assertNull(nullMonths)
         assertNull(nullDays)
+
+        // Rifiuto date antecedenti al 2018 (es. Unix epoch 1970 o fine 2017)
+        val (epochMonths, epochDays) = BatteryTelemetryParser.parseUsageDates("1970-01-01", null, fixedNow)
+        assertNull(epochMonths)
+        assertNull(epochDays)
+
+        val (pre2018Months, pre2018Days) = BatteryTelemetryParser.parseUsageDates("2017-12-31", null, fixedNow)
+        assertNull(pre2018Months)
+        assertNull(pre2018Days)
+
+        // Test deriveUsageFromTimestamp: rifiuto 0L, 1L o valori antecedenti al 2018
+        assertNull(BatteryTelemetryParser.deriveUsageFromTimestamp(0L, fixedNow).second)
+        assertNull(BatteryTelemetryParser.deriveUsageFromTimestamp(1L, fixedNow).second)
+        assertNull(BatteryTelemetryParser.deriveUsageFromTimestamp(1000L, fixedNow).second)
+        assertNull(BatteryTelemetryParser.deriveUsageFromTimestamp(1514764799999L, fixedNow).second) // 2017-12-31 23:59:59.999 UTC
+
+        // Test deriveUsageFromTimestamp: timestamp valido (es. 2025-01-01)
+        val bootTime2025 = sdf.parse("2025-01-01")!!.time
+        val (validMonths, validDays) = BatteryTelemetryParser.deriveUsageFromTimestamp(bootTime2025, fixedNow)
+        assertEquals(5, validMonths)
+        assertEquals(181, validDays)
+
+        // Test deriveUsageFromTimestamp: timestamp futuro
+        assertNull(BatteryTelemetryParser.deriveUsageFromTimestamp(fixedNow + 100_000L, fixedNow).second)
     }
 
     @Test

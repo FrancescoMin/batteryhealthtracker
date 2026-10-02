@@ -124,39 +124,39 @@ The app clearly indicates how SOH is sourced on your device:
 >   - 📖 **Detailed Matrix & Testing Guide:** See [docs/device-compatibility.md](docs/device-compatibility.md) for in-depth testing procedures and architecture details.
 >   - Sharing these logs allows us to map missing sysfs nodes, adapt SELinux fallbacks, and certify new devices for the entire community!
 
-| Manufacturer | Model Series | Battery Architecture | Typical / Rated Capacity | Compatibility Status |
-| :--- | :--- | :--- | :--- | :--- |
-| **Oppo** | **Reno 14 (EU)** | High-Density Single-Cell | 6000 mAh / 5840 mAh | ✅ **100% Verified (Shizuku)** |
-| **Realme** | **GT 7T (EU)** | Dual-Cell Serial | 7000 mAh (2×3500) / 6850 mAh (2×3425) | ✅ **100% Verified (Shizuku)** |
-| **OnePlus** | OnePlus 13 | Silicon-Carbon Dual-Cell | 6000 mAh / 5840 mAh | 🧪 Testing in progress / 🤝 Help wanted |
-| **OnePlus** | OnePlus 13R | Silicon-Carbon Dual-Cell | 6000 mAh / 5840 mAh | 🤝 Help wanted |
-| **OnePlus** | OnePlus 15 | Serial Dual-Cell | 7300 mAh (2×3650) / 7150 mAh (2×3575) | 🤝 Help wanted |
-| **OnePlus** | OnePlus 12 / 12R | Dual-Cell Serial | 5400–5500 mAh / 5260–5360 mAh | 🤝 Help wanted |
-| **OnePlus** | OnePlus 11 / 10 Pro | Dual-Cell Serial | 5000 mAh / 4880 mAh | 🤝 Help wanted |
-| **OnePlus** | Nord 5 (Global & India)* | High-Capacity Dual-Cell | 6800 mAh / 6650 mAh | ⚠️ Requires Root (SELinux) |
-| **OnePlus** | Nord 5 (EU/UK)* | Dual-Cell Serial | 5200 mAh / 5200 mAh | 🤝 Help wanted |
-| **OnePlus** | Nord 4 / CE 4 / CE 4 Lite | Dual-Cell Serial | 5500 mAh / 5360 mAh | 🤝 Help wanted |
-| **OnePlus** | Nord 3 | Dual-Cell Serial | 5000 mAh / 4880 mAh | 🤝 Help wanted |
-| **OnePlus** | OnePlus Open | Dual-Cell Foldable | 4805 mAh / 4680 mAh | 🤝 Help wanted |
-| **Realme** | GT 8 Pro | Dual-Cell Serial | 7000 mAh (2×3500) / 6850 mAh (2×3425) | 🤝 Help wanted |
-| **Realme** | GT 7 Pro (Global/EU/CN) | Dual-Cell Serial | 6500 mAh (2×3250) / 6310 mAh (2×3155) | 🤝 Help wanted |
-| **Realme** | GT 7 Pro (India) | Dual-Cell Serial | 5800 mAh / 5660 mAh | 🤝 Help wanted |
-| **Realme** | GT 7 | Dual-Cell Serial | 7000 mAh (2×3500) / 6850 mAh (2×3425) | 🤝 Help wanted |
-| **Realme** | GT 6 / GT 6T / GT 5 Pro | Dual-Cell Serial | 5400–5500 mAh / 5260–5360 mAh | 🤝 Help wanted |
-| **Realme** | 14 Pro+ | Silicon-Carbon Single-Cell | 6000 mAh / 5850 mAh | 🤝 Help wanted |
-| **Realme** | 13 Pro+ | High-Density Single-Cell | 5200 mAh / 5050 mAh | 🤝 Help wanted |
-| **Realme** | 12 Pro+ | High-Density Single-Cell | 5000 mAh / 4880 mAh | 🤝 Help wanted |
-| **Oppo** | Find X9 Ultra | High-Density Single-Cell | 7050 mAh / 6890 mAh | 🤝 Help wanted |
-| **Oppo** | Find X9 Pro | Silicon-Carbon Dual-Cell | 7500 mAh / 7290 mAh (28.13 Wh / 27.34 Wh) | 🤝 Help wanted |
-| **Oppo** | Find X9 | Silicon-Carbon Dual-Cell | 7025 mAh / 6840 mAh (26.35 Wh / 25.65 Wh) | 🤝 Help wanted |
-| **Oppo** | Find X8 / X8 Pro | Silicon-Carbon Dual-Cell | 5630–5910 mAh (Typical) | 🤝 Help wanted |
-| **Oppo** | Find X7 / X7 Ultra | Dual-Cell Serial | 5000 mAh / 4860–4880 mAh | 🤝 Help wanted |
-| **Oppo** | Reno 16 (Global/EU) | High-Density Single-Cell | 6000 mAh / 5820 mAh (22.5 Wh / 21.83 Wh) | 🤝 Help wanted |
-| **Oppo** | Reno 16 (China) | Silicon-Carbon | 6700 mAh / 6490 mAh | 🤝 Help wanted |
-| **Oppo** | Reno 15 / 15 Pro | High-Density Single-Cell | 6200–6500 mAh / 6040–6335 mAh | 🤝 Help wanted |
-| **Oppo** | Reno 14 Pro | High-Density Single-Cell | 6200 mAh / 6060 mAh | 🤝 Help wanted |
-| **Oppo** | Reno 13 | High-Density Single-Cell | 5600 mAh / 5450 mAh | 🤝 Help wanted |
-| **Oppo** | Reno 10 Pro / 11 Pro | Dual-Cell Serial | 4600 mAh / 4440 mAh | 🤝 Help wanted |
+| Manufacturer | Model Series | Battery Architecture | Typical / Rated Capacity (mAh) | Compatibility Status | SoC |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Oppo** | **Reno 14 (EU)** | High-Density Single-Cell | 6000 / 5840 | ✅ **100% Verified (Shizuku)** | MediaTek |
+| **Realme** | **GT 7T (EU)** | Dual-Cell Serial | 7000 (2×3500) / 6850 (2×3425) | ✅ **100% Verified (Shizuku)** | MediaTek |
+| **OnePlus** | OnePlus 13 | Silicon-Carbon Dual-Cell | 6000 / 5840 | 🧪 Testing / 🤝 Help wanted | Snapdragon |
+| **OnePlus** | OnePlus 13R | Silicon-Carbon Dual-Cell | 6000 / 5840 | 🤝 Help wanted | Snapdragon |
+| **OnePlus** | OnePlus 15 | Serial Dual-Cell | 7300 (2×3650) / 7150 (2×3575) | 🤝 Help wanted | Snapdragon |
+| **OnePlus** | OnePlus 12 / 12R | Dual-Cell Serial | 5400–5500 / 5260–5360 | 🤝 Help wanted | Snapdragon |
+| **OnePlus** | OnePlus 11 / 10 Pro | Dual-Cell Serial | 5000 / 4880 | 🤝 Help wanted | Snapdragon |
+| **OnePlus** | Nord 5 (Global & India)* | High-Capacity Dual-Cell | 6800 / 6650 | ⚠️ Requires Root (SELinux) | Snapdragon |
+| **OnePlus** | Nord 5 (EU/UK)* | Dual-Cell Serial | 5200 / 5200 | 🤝 Help wanted | Snapdragon |
+| **OnePlus** | Nord 4 / CE 4 / CE 4 Lite | Dual-Cell Serial | 5500 / 5360 | 🤝 Help wanted | Snapdragon |
+| **OnePlus** | Nord 3 | Dual-Cell Serial | 5000 / 4880 | 🤝 Help wanted | MediaTek |
+| **OnePlus** | OnePlus Open | Dual-Cell Foldable | 4805 / 4680 | 🤝 Help wanted | Snapdragon |
+| **Realme** | GT 8 Pro | Dual-Cell Serial | 7000 (2×3500) / 6850 (2×3425) | 🤝 Help wanted | Snapdragon |
+| **Realme** | GT 7 Pro (Global/EU/CN) | Dual-Cell Serial | 6500 (2×3250) / 6310 (2×3155) | 🤝 Help wanted | Snapdragon |
+| **Realme** | GT 7 Pro (India) | Dual-Cell Serial | 5800 / 5660 | 🤝 Help wanted |  Snapdragon |
+| **Realme** | GT 7 | Dual-Cell Serial | 7000 (2×3500) / 6850 (2×3425) | 🤝 Help wanted | Mediatek |
+| **Realme** | GT 6 / GT 6T / GT 5 Pro | Dual-Cell Serial | 5400–5500 / 5260–5360 | 🤝 Help wanted | Snapdragon |
+| **Realme** | 14 Pro+ | Silicon-Carbon Single-Cell | 6000 / 5850 | 🤝 Help wanted | Snapdragon |
+| **Realme** | 13 Pro+ | High-Density Single-Cell | 5200 / 5050 | 🤝 Help wanted | Snapdragon |
+| **Realme** | 12 Pro+ | High-Density Single-Cell | 5000 / 4880 | 🤝 Help wanted | Snapdragon |
+| **Oppo** | Find X9 Ultra | High-Density Single-Cell | 7050 / 6890 | 🤝 Help wanted | MediaTek |
+| **Oppo** | Find X9 Pro | Silicon-Carbon Dual-Cell | 7500 / 7290 | 🤝 Help wanted | MediaTek |
+| **Oppo** | Find X9 | Silicon-Carbon Dual-Cell | 7025 / 6840 | 🤝 Help wanted | MediaTek |
+| **Oppo** | Find X8 / X8 Pro | Silicon-Carbon Dual-Cell | 5630–5910 (Typical) | 🤝 Help wanted | MediaTek |
+| **Oppo** | Find X7 / X7 Ultra | Dual-Cell Serial | 5000 / 4860–4880 | 🤝 Help wanted | MediaTek |
+| **Oppo** | Reno 16 (Global/EU) | High-Density Single-Cell | 6000 / 5820 | 🤝 Help wanted | Snapdragon |
+| **Oppo** | Reno 16 (China) | Silicon-Carbon | 6700 / 6490 | 🤝 Help wanted | MediaTek |
+| **Oppo** | Reno 15 / 15 Pro | High-Density Single-Cell | 6200–6500 / 6040–6335 | 🤝 Help wanted | MediaTek |
+| **Oppo** | Reno 14 Pro | High-Density Single-Cell | 6200 / 6060 | 🤝 Help wanted | MediaTek |
+| **Oppo** | Reno 13 | High-Density Single-Cell | 5600 / 5450 | 🤝 Help wanted | MediaTek |
+| **Oppo** | Reno 10 Pro / 11 Pro | Dual-Cell Serial | 4600 / 4440 | 🤝 Help wanted | MediaTek |
 
 *Manual rated capacity override is also supported in Settings for custom or unlisted models.*
 
@@ -214,6 +214,11 @@ flowchart TD
 2. Open the app and grant the **Notification Permission** (required for background snapshot receipts and > 42°C overheat alerts).
 3. Tap **"Authorize Shizuku"** and allow access when prompted.
 4. Telemetry, health metrics, and hardware registers will populate immediately!
+
+> [!TIP]
+> **Keep Background Sampling Active & Avoid Shizuku Reconnections:**  
+> If you want automatic periodic measurements (24h background snapshots and 100% full-charge disconnect triggers) to run continuously and want to avoid having to reconnect Shizuku on every app launch, make sure Android does not terminate either process in the background. Exclude **both Battery Health Tracker and Shizuku** from battery optimization (set Battery usage to **"Unrestricted"** / *Senza restrizioni* and allow background activity / auto-launch).  
+> *(Per garantire le misurazioni automatiche ed evitare di dover ricollegare Shizuku a ogni accesso, impedisci ad Android di killare i processi in background disattivando l'ottimizzazione batteria sia per l'app sia per Shizuku).*
 
 ---
 

@@ -272,35 +272,81 @@ object BatteryTelemetryParser {
         return trimmed == "1" || trimmed.equals("true", ignoreCase = true)
     }
 
+    // Timestamp minimo accettabile: 1° gennaio 2018 00:00:00 UTC (1514764800000L)
+    const val MIN_VALID_BOOT_TIMESTAMP_MS = 1514764800000L
+    const val MAX_VALID_BOOT_DAYS = 4000
+
     /**
-     * Parses manufacturing or first usage date (yyyy-MM-dd) and derives age in months and days.
+     * Parses manufacturing date (yyyy-MM-dd) and first usage date.
+     * Computes:
+     * - component age in months (prioritizing manuDate for physical cell age, fallback to firstUsageDate)
+     * - days since first usage (prioritizing firstUsageDate for device runtime, fallback to manuDate)
+     * Enforces strict sanity checks: rejects dates prior to 2018-01-01 or in the future.
      */
     fun parseUsageDates(
         manuDate: String?,
         firstUsageDate: String?,
         nowMs: Long = System.currentTimeMillis()
     ): Pair<Int?, Int?> {
-        val refDateStr = firstUsageDate?.takeIf { it.isNotBlank() }
-            ?: manuDate?.takeIf { it.isNotBlank() }
-            ?: return Pair(null, null)
-
-        return try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
-                timeZone = java.util.TimeZone.getTimeZone("UTC")
-                isLenient = false
-            }
-            val parsed = sdf.parse(refDateStr)
-            if (parsed != null) {
-                val diffMs = nowMs - parsed.time
-                if (diffMs > 0) {
-                    val months = (diffMs / (1000L * 60 * 60 * 24 * 30.4375)).toInt()
-                    val days = (diffMs / (1000L * 60 * 60 * 24L)).toInt()
-                    Pair(months, days)
-                } else Pair(null, null)
-            } else Pair(null, null)
-        } catch (_: Exception) {
-            Pair(null, null)
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
+            timeZone = java.util.TimeZone.getTimeZone("UTC")
+            isLenient = false
         }
+
+        fun parseDate(str: String?): Long? {
+            if (str.isNullOrBlank()) return null
+            return try {
+                val parsed = sdf.parse(str)
+                if (parsed != null && parsed.time in MIN_VALID_BOOT_TIMESTAMP_MS..nowMs) {
+                    parsed.time
+                } else null
+            } catch (_: Exception) {
+                null
+            }
+        }
+
+        val manuTime = parseDate(manuDate)
+        val usageTime = parseDate(firstUsageDate)
+
+        // Età effettiva del componente: la cella chimica esiste dalla sua produzione
+        val compTime = manuTime ?: usageTime
+        val ageMonths = compTime?.let {
+            val diffMs = nowMs - it
+            if (diffMs > 0) {
+                (diffMs / (1000L * 60 * 60 * 24 * 30.4375)).toInt()
+            } else null
+        }
+
+        // Giorni dal 1° avvio del dispositivo
+        val activeTime = usageTime ?: manuTime
+        val usageDays = activeTime?.let {
+            val diffMs = nowMs - it
+            if (diffMs > 0) {
+                val days = (diffMs / (1000L * 60 * 60 * 24L)).toInt()
+                if (days in 0..MAX_VALID_BOOT_DAYS) days else null
+            } else null
+        }
+
+        return Pair(ageMonths, usageDays)
+    }
+
+    /**
+     * Derives usage age in months and days from a millisecond timestamp (e.g. ro.runtime.firstboot or firstInstallTime).
+     * Rejects timestamps before 2018-01-01, in the future, or durations exceeding MAX_VALID_BOOT_DAYS.
+     */
+    fun deriveUsageFromTimestamp(
+        bootMs: Long?,
+        nowMs: Long = System.currentTimeMillis()
+    ): Pair<Int?, Int?> {
+        if (bootMs == null || bootMs < MIN_VALID_BOOT_TIMESTAMP_MS || bootMs > nowMs) {
+            return Pair(null, null)
+        }
+        val diffMs = nowMs - bootMs
+        if (diffMs <= 0) return Pair(null, null)
+        val days = (diffMs / (1000L * 60 * 60 * 24L)).toInt()
+        if (days !in 0..MAX_VALID_BOOT_DAYS) return Pair(null, null)
+        val months = (diffMs / (1000L * 60 * 60 * 24 * 30.4375)).toInt()
+        return Pair(months, days)
     }
 
     /**

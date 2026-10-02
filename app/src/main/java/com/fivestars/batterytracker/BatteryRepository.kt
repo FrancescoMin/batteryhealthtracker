@@ -163,6 +163,9 @@ class BatteryRepository(private val context: Context) {
 
     private fun readFromOplusSysfs(batteryLevel: Int?): BatterySnapshot? {
         return try {
+            // Esegue scansione esplorativa hardware dei nodi kernel per la diagnostica
+            performSysfsExplorationProbe()
+
             // Decodifica dinamica della telemetria live del fuel-gauge BMS (batt_soh, batt_qmax, batt_rm, batt_fcc)
             // Questo registro è comune a tutti i dispositivi Realme, Oppo e OnePlus (modulo oplus_chg_battery).
             val headLine = querySysfs(
@@ -436,17 +439,24 @@ class BatteryRepository(private val context: Context) {
             var daysSinceFirstUsage = parsedDays
 
             if (daysSinceFirstUsage == null) {
+                // Fallback 1: ro.runtime.firstboot (timestamp ms della prima accensione/setup post-fabbrica)
+                val firstBootProp = executePrivilegedCommand("getprop ro.runtime.firstboot", multiLine = false).first?.trim()?.toLongOrNull()
+                    ?: readSystemProperty("ro.runtime.firstboot")?.trim()?.toLongOrNull()
+                val (propMonths, propDays) = BatteryTelemetryParser.deriveUsageFromTimestamp(firstBootProp)
+                if (propDays != null) {
+                    daysSinceFirstUsage = propDays
+                    if (batteryAgeMonths == null) batteryAgeMonths = propMonths
+                }
+            }
+
+            if (daysSinceFirstUsage == null) {
+                // Fallback 2: firstInstallTime da PackageManager con validazione temporale rigorosa (>= 2018)
                 try {
                     val pInfo = context.packageManager.getPackageInfo("android", 0)
-                    val firstBootMs = pInfo.firstInstallTime
-                    if (firstBootMs > 0) {
-                        val diffMs = System.currentTimeMillis() - firstBootMs
-                        if (diffMs > 0) {
-                            daysSinceFirstUsage = (diffMs / (1000L * 60 * 60 * 24L)).toInt()
-                            if (batteryAgeMonths == null) {
-                                batteryAgeMonths = (diffMs / (1000L * 60 * 60 * 24 * 30.4375)).toInt()
-                            }
-                        }
+                    val (pkgMonths, pkgDays) = BatteryTelemetryParser.deriveUsageFromTimestamp(pInfo.firstInstallTime)
+                    if (pkgDays != null) {
+                        daysSinceFirstUsage = pkgDays
+                        if (batteryAgeMonths == null) batteryAgeMonths = pkgMonths
                     }
                 } catch (_: Exception) {}
             }
@@ -875,12 +885,21 @@ class BatteryRepository(private val context: Context) {
             val output = BufferedReader(InputStreamReader(process.inputStream)).use {
                 if (multiLine) it.readText() else it.readLine()
             }
+            val errOutput = if (output.isNullOrBlank()) {
+                try {
+                    BufferedReader(InputStreamReader(process.errorStream)).use {
+                        if (multiLine) it.readText() else it.readLine()
+                    }
+                } catch (_: Exception) { null }
+            } else null
             process.waitFor()
             val trimmed = output?.trim()
+            val trimmedErr = errOutput?.trim()
+            val logResult = if (!trimmed.isNullOrEmpty()) trimmed else trimmedErr?.let { "STDERR: $it" }
             DiagnosticLogger.log(
                 tag = "SHIZUKU",
                 command = cmd,
-                result = trimmed,
+                result = logResult,
                 isSuccess = !trimmed.isNullOrEmpty() && !trimmed.contains("Permission denied", ignoreCase = true)
             )
             trimmed
@@ -898,18 +917,69 @@ class BatteryRepository(private val context: Context) {
             val output = BufferedReader(InputStreamReader(process.inputStream)).use {
                 if (multiLine) it.readText() else it.readLine()
             }
+            val errOutput = if (output.isNullOrBlank()) {
+                try {
+                    BufferedReader(InputStreamReader(process.errorStream)).use {
+                        if (multiLine) it.readText() else it.readLine()
+                    }
+                } catch (_: Exception) { null }
+            } else null
             process.waitFor()
             val trimmed = output?.trim()
+            val trimmedErr = errOutput?.trim()
+            val logResult = if (!trimmed.isNullOrEmpty()) trimmed else trimmedErr?.let { "STDERR: $it" }
             DiagnosticLogger.log(
                 tag = "ROOT",
                 command = cmd,
-                result = trimmed,
+                result = logResult,
                 isSuccess = !trimmed.isNullOrEmpty() && !trimmed.contains("Permission denied", ignoreCase = true)
             )
             trimmed
         } catch (e: Exception) {
             Log.e(tag, "Errore esecuzione comando Root: $cmd", e)
             DiagnosticLogger.log("ROOT", cmd, "Error: ${e.message}", false)
+            null
+        }
+    }
+
+    private var isProbeCompleted = false
+
+    fun resetProbe() {
+        isProbeCompleted = false
+    }
+
+    private fun performSysfsExplorationProbe() {
+        if (isProbeCompleted) return
+        isProbeCompleted = true
+
+        val probeCmds = listOf(
+            "ls -d /sys/class/oplus_chg /sys/class/oplus_chg/* /sys/class/power_supply /sys/class/power_supply/* /sys/class/oplus_battery /sys/class/oplus_battery/* 2>&1",
+            "ls -la /sys/class/oplus_chg/battery/ 2>&1 | head -n 15",
+            "ls -la /sys/class/power_supply/battery/ 2>&1 | head -n 15",
+            "cat /sys/class/power_supply/battery/voltage_now 2>&1 | head -n 1",
+            "cat /sys/class/oplus_chg/battery/batt_volt 2>&1 | head -n 1",
+            "ls -d /sys/devices/platform/soc/*battery* /sys/devices/platform/soc/*bms* /sys/devices/platform/soc/*chg* 2>&1 | head -n 10",
+            "getenforce 2>&1; getprop ro.build.version.oplusrom 2>&1; getprop ro.boot.hardware 2>&1"
+        )
+
+        for (cmd in probeCmds) {
+            val (res, _) = executePrivilegedCommand(cmd, multiLine = true)
+            DiagnosticLogger.log(
+                tag = "SYSFS_PROBE",
+                command = cmd,
+                result = res ?: "null",
+                isSuccess = res != null && !res.contains("Permission denied", ignoreCase = true) && !res.contains("No such file", ignoreCase = true)
+            )
+        }
+    }
+
+    private fun readSystemProperty(key: String): String? {
+        return try {
+            val c = Class.forName("android.os.SystemProperties")
+            val m = c.getMethod("get", String::class.java)
+            val v = m.invoke(null, key) as? String
+            v?.takeIf { it.isNotBlank() }
+        } catch (_: Throwable) {
             null
         }
     }
@@ -1087,12 +1157,14 @@ class BatteryRepository(private val context: Context) {
         )
 
         val bmDaysSinceFirstUsage = try {
-            val pInfo = context.packageManager.getPackageInfo("android", 0)
-            val firstBootMs = pInfo.firstInstallTime
-            if (firstBootMs > 0) {
-                val diffMs = System.currentTimeMillis() - firstBootMs
-                if (diffMs > 0) (diffMs / (1000L * 60 * 60 * 24L)).toInt() else null
-            } else null
+            val firstBootProp = readSystemProperty("ro.runtime.firstboot")?.trim()?.toLongOrNull()
+            val (_, propDays) = BatteryTelemetryParser.deriveUsageFromTimestamp(firstBootProp)
+            if (propDays != null) {
+                propDays
+            } else {
+                val pInfo = context.packageManager.getPackageInfo("android", 0)
+                BatteryTelemetryParser.deriveUsageFromTimestamp(pInfo.firstInstallTime).second
+            }
         } catch (_: Exception) { null }
 
         return BatterySnapshot(

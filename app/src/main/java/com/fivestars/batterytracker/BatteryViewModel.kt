@@ -9,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -141,9 +143,18 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun refreshSnapshot() {
-        viewModelScope.launch {
+    private var refreshJob: Job? = null
+
+    fun refreshSnapshot(resetProbe: Boolean = false) {
+        if (refreshJob?.isActive == true) {
+            Log.d(tag, "refreshSnapshot() già in corso, salto esecuzione concorrente")
+            return
+        }
+        refreshJob = viewModelScope.launch {
             _isRefreshing.value = true
+            if (resetProbe) {
+                repository.resetProbe()
+            }
             checkShizukuStatus()
             val snapshot = repository.getBatterySnapshot()
             _currentSnapshot.value = snapshot
@@ -153,6 +164,7 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
 
     fun saveCurrentMeasurement() {
         viewModelScope.launch {
+            refreshJob?.cancelAndJoin()
             _isRefreshing.value = true
             val snapshot = repository.getBatterySnapshot()
             _currentSnapshot.value = snapshot
