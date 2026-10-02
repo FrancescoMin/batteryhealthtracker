@@ -15,8 +15,8 @@
   <img src="https://img.shields.io/badge/Display-120%20Hz%20Fluid-brightgreen?style=flat-square" alt="120 Hz Fluid" />
   <img src="https://img.shields.io/badge/Theme-AMOLED%20Pure%20Black-black?style=flat-square" alt="AMOLED Pure Black" />
   <img src="https://img.shields.io/badge/License-Apache%202.0-orange?style=flat-square" alt="License" />
-  <img src="https://img.shields.io/badge/PRs-Welcome-brightgreen?style=flat-square" alt="PRs Welcome" />
-  <img src="https://img.shields.io/github/downloads/FrancescoMin/batteryhealthtracker/total")
+  <a href="https://github.com/FrancescoMin/batteryhealthtracker/actions/workflows/android.yml"><img src="https://img.shields.io/github/actions/workflow/status/FrancescoMin/batteryhealthtracker/android.yml?branch=main&style=flat-square&logo=githubactions" alt="Build Status" /></a>
+  <a href="https://github.com/FrancescoMin/batteryhealthtracker/releases"><img src="https://img.shields.io/github/downloads/FrancescoMin/batteryhealthtracker/total?style=flat-square" alt="GitHub Downloads" /></a>
 </p>
 
 ---
@@ -31,7 +31,7 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 
 > [!NOTE]
 > **🚀 Repository Development Status / Stato di Sviluppo della Repository:**  
-> The codebase in the `main` branch may be ahead of the latest tagged GitHub Release (`BatteryHealthTracker-v1.6.apk`). New features, hardware presets, and optimizations currently undergoing testing in the repository will be bundled and published in future release APKs.  
+> The codebase in the `main` branch may be ahead of the latest tagged GitHub Release (`BatteryHealthTracker-v1.7.apk`). New features, hardware presets, and optimizations currently undergoing testing in the repository will be bundled and published in future release APKs.  
 > *Il codice presente nella repository (`main`) potrebbe risultare più avanzato rispetto all'ultima release ufficiale scaricabile, poiché alcune nuove funzioni o migliorie sono ancora in fase di testing e confluiranno nelle release successive.*
 
 ---
@@ -51,13 +51,23 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
   </tr>
   <tr>
     <td align="center" width="33%"><b>Health Trend & Projection</b></td>
+    <td align="center" width="33%"><b>Diagnostic Console</b></td>
     <td align="center" width="33%"><b>Device Presets & Rated mAh</b></td>
-    <td align="center" width="33%"><b>Theme Settings</b></td>
   </tr>
   <tr>
     <td><img src="docs/screenshots/health_trend_chart.png" width="100%" alt="Health Trend Chart" /></td>
+    <td><img src="docs/screenshots/diagnostic_console.png" width="100%" alt="Diagnostic Console" /></td>
     <td><img src="docs/screenshots/device_preset_dialog.png" width="100%" alt="Device Presets Dialog" /></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><b>Settings & Updates</b></td>
+    <td align="center" width="33%"><b>Theme Settings</b></td>
+    <td align="center" width="33%"><b>Trash & Snapshot Bin</b></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/settings_screen.png" width="100%" alt="Settings Screen" /></td>
     <td><img src="docs/screenshots/theme_selection_dialog.png" width="100%" alt="Theme Dialog" /></td>
+    <td><img src="docs/screenshots/trash_bin.png" width="100%" alt="Trash Bin" /></td>
   </tr>
 </table>
 
@@ -210,7 +220,7 @@ flowchart TD
 2. **Shizuku:** Installed from [Google Play](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api) or [GitHub Releases](https://github.com/RikkaApps/Shizuku/releases) and running via **Wireless Debugging** or **Root**.
 
 ### App Setup
-1. Download and install `BatteryHealthTracker-v1.6.apk` from [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases).
+1. Download and install `BatteryHealthTracker-v1.7.apk` from [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases).
 2. Open the app and grant the **Notification Permission** (required for background snapshot receipts and > 42°C overheat alerts).
 3. Tap **"Authorize Shizuku"** and allow access when prompted.
 4. Telemetry, health metrics, and hardware registers will populate immediately!

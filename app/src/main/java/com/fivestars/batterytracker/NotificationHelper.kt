@@ -15,12 +15,7 @@ import java.util.Locale
 object NotificationHelper {
 
     const val CHANNEL_ID = "battery_sampling_channel"
-    private const val CHANNEL_NAME = "Monitoraggio Batteria"
-    private const val CHANNEL_DESC = "Notifiche per campionamento manuale e automatico dello stato della batteria"
-
     const val CHANNEL_OVERHEAT_ID = "battery_overheat_channel"
-    private const val CHANNEL_OVERHEAT_NAME = "Allarme Temperatura Batteria"
-    private const val CHANNEL_OVERHEAT_DESC = "Avvisi di sicurezza per surriscaldamento della batteria durante la ricarica rapida o uso intenso"
 
     private const val NOTIFICATION_ID = 1001
     private const val NOTIFICATION_OVERHEAT_ID = 1002
@@ -30,18 +25,18 @@ object NotificationHelper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val samplingChannel = NotificationChannel(
                 CHANNEL_ID,
-                CHANNEL_NAME,
+                context.getString(R.string.notif_channel_sampling_name),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = CHANNEL_DESC
+                description = context.getString(R.string.notif_channel_sampling_desc)
             }
 
             val overheatChannel = NotificationChannel(
                 CHANNEL_OVERHEAT_ID,
-                CHANNEL_OVERHEAT_NAME,
+                context.getString(R.string.notif_channel_overheat_name),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = CHANNEL_OVERHEAT_DESC
+                description = context.getString(R.string.notif_channel_overheat_desc)
                 enableVibration(true)
             }
 
@@ -70,8 +65,9 @@ object NotificationHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val title = "⚠️ Allarme Temperatura Batteria: ${String.format(Locale.US, "%.1f°C", tempCelsius)}"
-        val text = "La temperatura ha superato la soglia di sicurezza (42°C). Rimuovi la cover o scollega temporaneamente la ricarica SuperVOOC per preservare la salute della cella."
+        val formattedTemp = String.format(Locale.US, "%.1f°C", tempCelsius)
+        val title = context.getString(R.string.notif_overheat_title, formattedTemp)
+        val text = context.getString(R.string.notif_overheat_text)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_OVERHEAT_ID)
             .setSmallIcon(R.drawable.ic_notification)
@@ -111,23 +107,24 @@ object NotificationHelper {
         )
 
         val title = when {
-            isFullChargeTrigger -> "Ricarica 100% Completata • Campionamento Eseguito"
-            isManual -> "Campionamento Manuale Eseguito"
-            else -> "Campionamento Automatico (24h)"
+            isFullChargeTrigger -> context.getString(R.string.notif_sampling_full_title)
+            isManual -> context.getString(R.string.notif_sampling_manual_title)
+            else -> context.getString(R.string.notif_sampling_auto_title)
         }
 
         val triggerReason = when {
-            isFullChargeTrigger -> "Campionamento automatico al distacco del caricatore con batteria al 100%"
-            isManual -> "Rilevazione manuale avviata tramite pulsante nell'app"
-            else -> "Rilevazione periodica automatica programmata (ogni 24h)"
+            isFullChargeTrigger -> context.getString(R.string.notif_sampling_full_reason)
+            isManual -> context.getString(R.string.notif_sampling_manual_reason)
+            else -> context.getString(R.string.notif_sampling_auto_reason)
         }
 
-        val healthStr = snapshot.healthPercentage?.let { "$it%" } ?: "N/D"
-        val cyclesStr = snapshot.cycleCount?.let { "$it" } ?: "N/D"
-        val capStr = snapshot.currentCapacityMah?.let { String.format(Locale.US, "%.0f mAh", it) } ?: "N/D"
+        val notAvailable = context.getString(R.string.not_available)
+        val healthStr = snapshot.healthPercentage?.let { "$it%" } ?: notAvailable
+        val cyclesStr = snapshot.cycleCount?.let { "$it" } ?: notAvailable
+        val capStr = snapshot.currentCapacityMah?.let { String.format(Locale.US, "%.0f mAh", it) } ?: notAvailable
 
-        val summaryText = "Salute: $healthStr | Cicli: $cyclesStr | $capStr"
-        val expandedText = "$triggerReason.\n\n• Salute SOH: $healthStr\n• Cicli di carica: $cyclesStr\n• Capacità residua: $capStr\n• Sorgente dati: ${snapshot.source}"
+        val summaryText = context.getString(R.string.notif_sampling_summary, healthStr, cyclesStr, capStr)
+        val expandedText = context.getString(R.string.notif_sampling_expanded, triggerReason, healthStr, cyclesStr, capStr, snapshot.source)
 
         val notifId = if (isFullChargeTrigger) NOTIFICATION_FULL_CHARGE_ID else NOTIFICATION_ID
 

@@ -181,7 +181,6 @@ fun SettingsScreen(
         EditCapacityDialog(
             initialMah = activeMah,
             initialPresetLabel = configState.presetLabel,
-            isAuto = configState.isAutoDetection,
             onDismiss = { showEditDialog = false },
             onSave = { newMah, label ->
                 viewModel.setCustomRatedCapacity(newMah, label)
@@ -671,7 +670,6 @@ private fun InfoRow(label: String, value: String) {
 fun EditCapacityDialog(
     initialMah: Double,
     initialPresetLabel: String,
-    isAuto: Boolean,
     onDismiss: () -> Unit,
     onSave: (Double, String) -> Unit,
     onResetAuto: () -> Unit

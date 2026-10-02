@@ -161,6 +161,10 @@
     <string name="btn_auto_detect">Auto Detect</string>
 
     <!-- Notifications -->
+    <string name="notif_channel_sampling_name">Battery Monitoring</string>
+    <string name="notif_channel_sampling_desc">Notifications for manual and automated battery health sampling</string>
+    <string name="notif_channel_overheat_name">Battery Temperature Alarm</string>
+    <string name="notif_channel_overheat_desc">Safety alerts for battery overheating during high-speed charging or heavy load</string>
     <string name="notif_overheat_title">⚠️ High Battery Temperature: %s</string>
     <string name="notif_overheat_text">Temperature exceeded safe threshold (42°C). Remove the phone case or temporarily disconnect SuperVOOC charging to preserve battery life.</string>
     <string name="notif_sampling_manual_title">Manual Snapshot Completed</string>
@@ -169,6 +173,8 @@
     <string name="notif_sampling_manual_reason">Manual reading initiated via app button</string>
     <string name="notif_sampling_auto_reason">Scheduled automatic periodic reading (every 24h)</string>
     <string name="notif_sampling_full_reason" formatted="false">Automatic snapshot taken upon unplugging with battery at 100%</string>
+    <string name="notif_sampling_summary">Health: %1$s | Cycles: %2$s | %3$s</string>
+    <string name="notif_sampling_expanded" formatted="false">%1$s.\n\n• Health SOH: %2$s\n• Charge Cycles: %3$s\n• Remaining Capacity: %4$s\n• Data Source: %5$s</string>
 
     <!-- RM Info Dialog -->
     <string name="dialog_rm_info_title">Chemical Remaining (RM)</string>

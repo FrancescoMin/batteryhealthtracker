@@ -161,6 +161,10 @@
     <string name="btn_auto_detect">Detección Auto</string>
 
     <!-- Notifications -->
+    <string name="notif_channel_sampling_name">Monitoreo de Batería</string>
+    <string name="notif_channel_sampling_desc">Notificaciones para el muestreo manual y automático del estado de la batería</string>
+    <string name="notif_channel_overheat_name">Alarma de Temperatura de Batería</string>
+    <string name="notif_channel_overheat_desc">Alertas de seguridad por sobrecalentamiento de la batería durante la carga rápida o uso intenso</string>
     <string name="notif_overheat_title">⚠️ Temperatura Alta de Batería: %s</string>
     <string name="notif_overheat_text">La temperatura ha superado el umbral de seguridad (42°C). Retira la funda o desconecta temporalmente la carga SuperVOOC para preservar la vida útil de la batería.</string>
     <string name="notif_sampling_manual_title">Registro Manual Completado</string>
@@ -169,6 +173,8 @@
     <string name="notif_sampling_manual_reason">Lectura manual iniciada mediante botón en la app</string>
     <string name="notif_sampling_auto_reason">Lectura automática periódica programada (cada 24h)</string>
     <string name="notif_sampling_full_reason" formatted="false">Registro automático al desconectar el cargador con batería al 100%</string>
+    <string name="notif_sampling_summary">Salud: %1$s | Ciclos: %2$s | %3$s</string>
+    <string name="notif_sampling_expanded" formatted="false">%1$s.\n\n• Salud SOH: %2$s\n• Ciclos de carga: %3$s\n• Capacidad residual: %4$s\n• Fuente de datos: %5$s</string>
 
     <!-- RM Info Dialog -->
     <string name="dialog_rm_info_title">Residuo Químico (RM)</string>
