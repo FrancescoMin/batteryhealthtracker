@@ -1110,5 +1110,87 @@ class DevicePresetsAndHealthTest {
         val expectedDelay = (21 * 60 + 30) * 60 * 1000L
         assertEquals(expectedDelay, delay)
     }
+
+    // --- 19. TEST TELEMETRIA SAMSUNG E DERIVAZIONE DINAMICA UNIVERSALE ---
+
+    @Test
+    fun testSamsungTabS9PresetsDetection() {
+        val tabS9 = DevicePresets.detectDevicePreset("SM_X716B")
+        assertNotNull("Galaxy Tab S9 5G (SM_X716B) deve essere riconosciuto", tabS9)
+        assertEquals("Samsung", tabS9?.brand)
+        assertEquals("Galaxy Tab S9", tabS9?.modelName)
+        assertEquals(8400, tabS9?.typicalMah)
+        assertEquals(8160.0, tabS9?.ratedMah ?: 0.0, 0.01)
+
+        val tabS9Wifi = DevicePresets.detectDevicePreset("SM-X710")
+        assertNotNull(tabS9Wifi)
+        assertEquals(8160.0, tabS9Wifi?.ratedMah ?: 0.0, 0.01)
+    }
+
+    @Test
+    fun testSamsungS24UltraAndZFold6Presets() {
+        val s24u = DevicePresets.detectDevicePreset("SM-S928B")
+        assertNotNull("Galaxy S24 Ultra (SM-S928B) deve essere riconosciuto", s24u)
+        assertEquals(5000, s24u?.typicalMah)
+        assertEquals(4855.0, s24u?.ratedMah ?: 0.0, 0.01)
+
+        val fold6 = DevicePresets.detectDevicePreset("SM-F956B")
+        assertNotNull("Galaxy Z Fold 6 deve essere riconosciuto", fold6)
+        assertEquals(4400, fold6?.typicalMah)
+        assertEquals(4273.0, fold6?.ratedMah ?: 0.0, 0.01)
+    }
+
+    @Test
+    fun testUniversalBatterystatsHardwareCapacityParsing() {
+        val samsungBatterystatsOutput = "Capacity: 9800, Rated: 8160, Typical: 8400, Computed drain: 1326, actual drain: 1326"
+        val parsed = BatteryTelemetryParser.parseDumpsysBatterystatsHardwareCapacity(samsungBatterystatsOutput)
+        assertEquals(8160.0, parsed.ratedMah ?: 0.0, 0.01)
+        assertEquals(8400.0, parsed.typicalMah ?: 0.0, 0.01)
+        assertEquals(9800.0, parsed.capacityMah ?: 0.0, 0.01)
+
+        val aospBatterystatsOutput = "Capacity: 5000, Computed drain: 420"
+        val aospParsed = BatteryTelemetryParser.parseDumpsysBatterystatsHardwareCapacity(aospBatterystatsOutput)
+        assertNull(aospParsed.ratedMah)
+        assertNull(aospParsed.typicalMah)
+        assertEquals(5000.0, aospParsed.capacityMah ?: 0.0, 0.01)
+    }
+
+    @Test
+    fun testUniversalIecDerivationWithoutPreset() {
+        // Se un dispositivo non è a catalogo ma conosciamo la tipica di fabbrica (8400 mAh),
+        // deve calcolare automaticamente la nominale IEC 61960 (approx 97.2%)
+        val derived = BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(null, typicalFallback = 8400.0)
+        assertEquals(8164.8, derived, 0.01)
+    }
+
+    @Test
+    fun testSamsungEfsTelemetryParsing() {
+        val sampleDumpsys = """
+            Current Battery Service state:
+              voltage: 4134
+              Charge counter: 7274890
+              status: 2
+              temperature: 279
+              current now: 1389
+              mProtectBatteryMode: 1
+            LLB CAL: 20240522
+            10-04 21:48:23.173  [SS][BattInfo]QrData efsValue:GH43-05165A+DL1X411AS+00278N    
+            10-04 21:48:23.174  [SS][BattInfo]FirstUseDateData efsValue:20240522    
+            10-04 21:48:23.174  [SS][BattInfo]AsocData efsValue:96    
+            10-04 21:48:23.184  [SS][BattInfo]DischargeLevelData efsValue:16114    
+        """.trimIndent()
+
+        val parsed = BatteryTelemetryParser.parseDumpsysBatteryText(sampleDumpsys)
+        assertEquals(4134, parsed.voltageMv)
+        assertEquals(7274890L, parsed.chargeCounterUah)
+        assertEquals(96, parsed.asocPercent)
+        assertEquals(161, parsed.cycleCount) // 16114 / 100 = 161 cicli
+        assertEquals("2024-05-22", parsed.firstUseDate)
+        assertEquals("2024-05-22", parsed.calDate)
+        assertEquals(1389, parsed.currentNowMa)
+        assertEquals(1, parsed.protectBatteryMode)
+        assertTrue("Deve essere riconosciuta come batteria autentica", parsed.isAuthentic == true)
+    }
 }
+
 

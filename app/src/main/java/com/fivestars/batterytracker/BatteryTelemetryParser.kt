@@ -34,7 +34,20 @@ object BatteryTelemetryParser {
         val chargeCounterUah: Long? = null,
         val asocPercent: Int? = null,
         val status: Int? = null,
-        val tempTenths: Int? = null
+        val tempTenths: Int? = null,
+        val currentNowMa: Int? = null,
+        val cycleCount: Int? = null,
+        val firstUseDate: String? = null,
+        val calDate: String? = null,
+        val qrData: String? = null,
+        val protectBatteryMode: Int? = null,
+        val isAuthentic: Boolean? = null
+    )
+
+    data class BatterystatsCapacityData(
+        val ratedMah: Double? = null,
+        val typicalMah: Double? = null,
+        val capacityMah: Double? = null
     )
 
     data class CsvParseResult(
@@ -519,31 +532,35 @@ object BatteryTelemetryParser {
     }
 
     /**
-     * Heuristic rated capacity mapping for modern OPlus batteries.
+     * Universal rated capacity mapping and heuristic IEC 61960 derivation.
+     * If a known raw design capacity is provided, matches the known vendor curve.
+     * If an unlisted typical capacity is provided (e.g. from PowerProfile or dumpsys),
+     * automatically derives the IEC 61960 rated capacity (approx 97.2% of typical).
      */
-    fun deriveRatedCapacityFromRawDesign(rawDesign: Double?): Double {
+    fun deriveRatedCapacityFromRawDesign(rawDesign: Double?, typicalFallback: Double? = null): Double {
+        val base = rawDesign ?: typicalFallback
         return when {
-            rawDesign != null && rawDesign in 7400.0..7650.0 -> 7290.0 // Oppo Find X9 Pro (tipica 7500 / nominale 7290)
-            rawDesign != null && rawDesign in 7200.0..7399.0 -> 7150.0 // OnePlus 15 (tipica 7300 / nominale 7150)
-            rawDesign != null && rawDesign in 6950.0..7100.0 -> 6840.0 // Find X9 (7025 / 6840) / Realme GT 8 Pro (7000 / 6850)
-            rawDesign != null && rawDesign in 6600.0..6800.0 -> 6490.0 // Reno 16 Cina (6700 / 6490) / OnePlus Nord 5 (6800 / 6650)
-            rawDesign != null && rawDesign in 6400.0..6599.0 -> 6310.0 // GT 7 Pro EU/Cina (6500 / 6310) / Reno 15 (6500 / 6335)
-            rawDesign != null && rawDesign in 6100.0..6300.0 -> 6060.0 // Reno 14 Pro / 15 Pro (6200 / 6060)
-            rawDesign != null && rawDesign in 5900.0..6099.0 -> 5840.0 // Reno 14 / OnePlus 13 / Reno 16 EU (5820-5840) / Realme 14 Pro+ (6000 / 5850)
-            rawDesign != null && rawDesign in 5750.0..5899.0 -> 5660.0 // GT 7 Pro India (5800 / 5660)
-            rawDesign != null && rawDesign in 5550.0..5749.0 -> 5490.0 // Find X8 (5630 / 5490)
-            rawDesign != null && rawDesign in 5350.0..5549.0 -> 5360.0 // OnePlus 12R / Nord 4 / GT 6 (5500 / 5360)
-            rawDesign != null && rawDesign in 5150.0..5349.0 -> 5050.0 // Realme 13 Pro+ (5200 / 5050)
-            rawDesign != null && rawDesign in 4900.0..5149.0 -> 4880.0 // OnePlus 11 / Reno 12 / Find X7 Ultra (4860-4880)
-            rawDesign != null && rawDesign in 4500.0..4700.0 -> 4440.0 // Reno 10 Pro / Reno 11 Pro (4600 / 4440)
-            rawDesign != null && rawDesign in 4200.0..4400.0 -> 4190.0 // Find N3 Flip (4300 / 4190)
-            rawDesign != null && rawDesign > 0 -> Math.round(rawDesign * 0.97333 * 10.0) / 10.0
+            base != null && base in 7400.0..7650.0 -> 7290.0 // Oppo Find X9 Pro (tipica 7500 / nominale 7290)
+            base != null && base in 7200.0..7399.0 -> 7150.0 // OnePlus 15 (tipica 7300 / nominale 7150)
+            base != null && base in 6950.0..7100.0 -> 6840.0 // Find X9 (7025 / 6840) / Realme GT 8 Pro (7000 / 6850)
+            base != null && base in 6600.0..6800.0 -> 6490.0 // Reno 16 Cina (6700 / 6490) / OnePlus Nord 5 (6800 / 6650)
+            base != null && base in 6400.0..6599.0 -> 6310.0 // GT 7 Pro EU/Cina (6500 / 6310) / Reno 15 (6500 / 6335)
+            base != null && base in 6100.0..6300.0 -> 6060.0 // Reno 14 Pro / 15 Pro (6200 / 6060)
+            base != null && base in 5900.0..6099.0 -> 5840.0 // Reno 14 / OnePlus 13 / Reno 16 EU (5820-5840) / Realme 14 Pro+ (6000 / 5850)
+            base != null && base in 5750.0..5899.0 -> 5660.0 // GT 7 Pro India (5800 / 5660)
+            base != null && base in 5550.0..5749.0 -> 5490.0 // Find X8 (5630 / 5490)
+            base != null && base in 5350.0..5549.0 -> 5360.0 // OnePlus 12R / Nord 4 / GT 6 (5500 / 5360)
+            base != null && base in 5150.0..5349.0 -> 5050.0 // Realme 13 Pro+ (5200 / 5050)
+            base != null && base in 4900.0..5149.0 -> 4880.0 // OnePlus 11 / Reno 12 / Find X7 Ultra (4860-4880)
+            base != null && base in 4500.0..4700.0 -> 4440.0 // Reno 10 Pro / Reno 11 Pro (4600 / 4440)
+            base != null && base in 4200.0..4400.0 -> 4190.0 // Find N3 Flip (4300 / 4190)
+            base != null && base > 500.0 -> Math.round(base * 0.972 * 10.0) / 10.0
             else -> 5840.0
         }
     }
 
     /**
-     * Parses dumpsys battery plain-text output.
+     * Parses dumpsys battery plain-text output with universal and Samsung EFS support.
      */
     fun parseDumpsysBatteryText(output: String?): DumpsysParsedData {
         if (output.isNullOrBlank()) return DumpsysParsedData()
@@ -553,6 +570,13 @@ object BatteryTelemetryParser {
         var asoc: Int? = null
         var status: Int? = null
         var temp: Int? = null
+        var currentNow: Int? = null
+        var cycleCount: Int? = null
+        var firstUseDate: String? = null
+        var calDate: String? = null
+        var qrData: String? = null
+        var protectBatteryMode: Int? = null
+        var isAuthentic: Boolean? = null
 
         output.lineSequence().forEach { line ->
             val trimmed = line.trim()
@@ -560,9 +584,50 @@ object BatteryTelemetryParser {
                 trimmed.startsWith("voltage:", ignoreCase = true) -> {
                     voltage = trimmed.substringAfter(":").trim().toIntOrNull()
                 }
-                trimmed.startsWith("Charge counter:", ignoreCase = true) -> {
+                trimmed.startsWith("Charge counter:", ignoreCase = true) ||
+                trimmed.startsWith("charge counter:", ignoreCase = true) -> {
                     chargeCounter = trimmed.substringAfter(":").trim().toLongOrNull()
                 }
+                trimmed.startsWith("current now:", ignoreCase = true) -> {
+                    currentNow = trimmed.substringAfter(":").trim().toIntOrNull()
+                }
+                trimmed.startsWith("mProtectBatteryMode:", ignoreCase = true) -> {
+                    protectBatteryMode = trimmed.substringAfter(":").trim().toIntOrNull()
+                }
+                trimmed.startsWith("LLB CAL:", ignoreCase = true) -> {
+                    val rawCal = trimmed.substringAfter(":").trim()
+                    if (rawCal.length == 8 && rawCal.all { it.isDigit() }) {
+                        calDate = "${rawCal.substring(0, 4)}-${rawCal.substring(4, 6)}-${rawCal.substring(6, 8)}"
+                    }
+                }
+                trimmed.contains("[SS][BattInfo]FirstUseDateData", ignoreCase = true) -> {
+                    val rawDate = trimmed.substringAfter("efsValue:").trim()
+                    if (rawDate.length >= 8 && rawDate.take(8).all { it.isDigit() }) {
+                        firstUseDate = "${rawDate.substring(0, 4)}-${rawDate.substring(4, 6)}-${rawDate.substring(6, 8)}"
+                    }
+                }
+                trimmed.contains("[SS][BattInfo]DischargeLevelData", ignoreCase = true) -> {
+                    val rawCycles = trimmed.substringAfter("efsValue:").trim().toIntOrNull()
+                    if (rawCycles != null && rawCycles > 0) {
+                        cycleCount = rawCycles / 100
+                    }
+                }
+                trimmed.contains("[SS][BattInfo]QrData", ignoreCase = true) -> {
+                    val qr = trimmed.substringAfter("efsValue:").trim()
+                    if (qr.isNotEmpty()) {
+                        qrData = qr
+                        if (qr.contains("GH43-", ignoreCase = true) || qr.length >= 10) {
+                            isAuthentic = true
+                        }
+                    }
+                }
+                trimmed.contains("[SS][BattInfo]AsocData", ignoreCase = true) -> {
+                    val v = trimmed.substringAfter("efsValue:").trim().toIntOrNull()
+                    if (v != null && v in 1..100) {
+                        asoc = v
+                    }
+                }
+                trimmed.startsWith("mSavedBatteryBsoh:", ignoreCase = true) ||
                 trimmed.startsWith("mSavedBatteryAsoc:", ignoreCase = true) ||
                 trimmed.startsWith("mBatteryHealth:", ignoreCase = true) ||
                 trimmed.startsWith("mMaximumCapacity:", ignoreCase = true) ||
@@ -592,7 +657,41 @@ object BatteryTelemetryParser {
             chargeCounterUah = chargeCounter,
             asocPercent = asoc,
             status = status,
-            tempTenths = temp
+            tempTenths = temp,
+            currentNowMa = currentNow,
+            cycleCount = cycleCount,
+            firstUseDate = firstUseDate,
+            calDate = calDate,
+            qrData = qrData,
+            protectBatteryMode = protectBatteryMode,
+            isAuthentic = isAuthentic
+        )
+    }
+
+    /**
+     * Parses hardware rated, typical, and capacity numbers from 'dumpsys batterystats'.
+     * Samsung One UI explicitly reports: "Capacity: 9800, Rated: 8160, Typical: 8400".
+     * Standard AOSP reports: "Capacity: 5000".
+     */
+    fun parseDumpsysBatterystatsHardwareCapacity(output: String?): BatterystatsCapacityData {
+        if (output.isNullOrBlank()) return BatterystatsCapacityData()
+        var rated: Double? = null
+        var typical: Double? = null
+        var capacity: Double? = null
+
+        val ratedMatch = Regex("""Rated:\s*(\d+(?:\.\d+)?)""", RegexOption.IGNORE_CASE).find(output)
+        if (ratedMatch != null) rated = ratedMatch.groupValues[1].toDoubleOrNull()
+
+        val typicalMatch = Regex("""Typical:\s*(\d+(?:\.\d+)?)""", RegexOption.IGNORE_CASE).find(output)
+        if (typicalMatch != null) typical = typicalMatch.groupValues[1].toDoubleOrNull()
+
+        val capMatch = Regex("""Capacity:\s*(\d+(?:\.\d+)?)""", RegexOption.IGNORE_CASE).find(output)
+        if (capMatch != null) capacity = capMatch.groupValues[1].toDoubleOrNull()
+
+        return BatterystatsCapacityData(
+            ratedMah = rated?.takeIf { it > 500.0 },
+            typicalMah = typical?.takeIf { it > 500.0 },
+            capacityMah = capacity?.takeIf { it > 500.0 }
         )
     }
 

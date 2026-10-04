@@ -37,7 +37,7 @@ class BatteryPreferences(context: Context) {
         val isAuto = prefs.getBoolean(KEY_IS_AUTO, true)
         val mahStr = prefs.getString(KEY_RATED_MAH, null)
         val mah = mahStr?.toDoubleOrNull()
-        val detected = OplusDevicePresets.detectDevicePreset()
+        val detected = DevicePresets.detectDevicePreset()
         val defaultLabel = detected?.displayName ?: "Rilevamento Automatico (BMS Chip)"
         val label = prefs.getString(KEY_PRESET_LABEL, defaultLabel) ?: defaultLabel
 
@@ -54,7 +54,7 @@ class BatteryPreferences(context: Context) {
     }
 
     fun getPresetLabel(): String {
-        val detected = OplusDevicePresets.detectDevicePreset()
+        val detected = DevicePresets.detectDevicePreset()
         val defaultLabel = detected?.displayName ?: "Rilevamento Automatico (BMS Chip)"
         return prefs.getString(KEY_PRESET_LABEL, defaultLabel) ?: defaultLabel
     }
@@ -77,7 +77,7 @@ class BatteryPreferences(context: Context) {
     }
 
     fun resetToAutoDetection() {
-        val detected = OplusDevicePresets.detectDevicePreset()
+        val detected = DevicePresets.detectDevicePreset()
         val defaultLabel = detected?.let { "${it.displayName} (Auto)" } ?: "Rilevamento Automatico (BMS Chip)"
         prefs.edit()
             .putBoolean(KEY_IS_AUTO, true)

@@ -189,6 +189,7 @@
     <string name="brand_oppo">Oppo</string>
     <string name="brand_oneplus">OnePlus</string>
     <string name="brand_realme">Realme</string>
+    <string name="brand_samsung">Samsung</string>
     <string name="btn_auto_detect">Auto Detect</string>
 
     <!-- Notifications -->

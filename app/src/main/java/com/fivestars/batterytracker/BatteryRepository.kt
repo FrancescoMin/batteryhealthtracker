@@ -220,24 +220,22 @@ class BatteryRepository(private val context: Context) {
                 "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/cycle_count"
             )
             val parsedCycles = BatteryTelemetryParser.parseCycleCount(rawCyclesVal)
-            val cycles = if (parsedCycles != null) {
-                parsedCycles
-            } else {
-                val bmCycles = try {
+            val bmCycles = if (parsedCycles == null) {
+                val c = try {
                     val bm = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-                    val c = bm.getIntProperty(7)
-                    if (c >= 0) c else null
+                    val raw = bm.getIntProperty(7)
+                    if (raw > 0) raw else null
                 } catch (_: Exception) {
                     null
                 }
-                bmCycles ?: run {
+                c ?: run {
                     val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
                     if (intent != null && Build.VERSION.SDK_INT >= 34) {
                         val intentCycles = intent.getIntExtra(BatteryManager.EXTRA_CYCLE_COUNT, -1)
-                        if (intentCycles >= 0) intentCycles else null
+                        if (intentCycles > 0) intentCycles else null
                     } else null
                 }
-            }
+            } else null
 
             val sysfsSoh = querySysfs(
                 "/sys/class/oplus_chg/battery/normal_batt_soh",
@@ -274,10 +272,10 @@ class BatteryRepository(private val context: Context) {
                 }
             }
 
-            // Se né FCC né SOH sono ancora completi, tentiamo il recupero tramite il servizio Android HAL 'dumpsys battery' e 'dumpsys batterystats'
-            val dumpsysInfo = if (fcc == null || rawSoh == null) {
+            // Se né FCC né SOH né cicli sono ancora completi, tentiamo il recupero tramite il servizio Android HAL 'dumpsys battery' e 'dumpsys batterystats'
+            val dumpsysInfo = if (fcc == null || rawSoh == null || (parsedCycles == null && bmCycles == null)) {
                 readDumpsysBatteryInfo().also {
-                    if (it.asocPercent != null || it.learnedCapacityMah != null || it.estimatedCapacityMah != null || it.voltageMv != null || it.chargeCounterUah != null) {
+                    if (it.asocPercent != null || it.learnedCapacityMah != null || it.estimatedCapacityMah != null || it.voltageMv != null || it.chargeCounterUah != null || it.cycleCount != null) {
                         isDumpsysFallbackUsed = true
                     }
                 }
@@ -286,6 +284,8 @@ class BatteryRepository(private val context: Context) {
             if (rawSoh == null && dumpsysInfo?.asocPercent != null && dumpsysInfo.asocPercent in 30..100) {
                 rawSoh = dumpsysInfo.asocPercent
             }
+
+            val cycles: Int? = parsedCycles ?: bmCycles ?: dumpsysInfo?.cycleCount
 
             // Controllo finale SOH tramite API Android 14+ BATTERY_PROPERTY_STATE_OF_HEALTH (ID 10)
             if (rawSoh == null) {
@@ -307,25 +307,26 @@ class BatteryRepository(private val context: Context) {
             // Determinazione della capacità nominale (Rated Capacity IEC 61960):
             // 1. Se l'utente ha impostato una capacità manuale o scelto un preset, usa quel valore
             val userRated = preferences.getCustomRatedCapacity()
-            val detectedPreset = OplusDevicePresets.detectDevicePreset()
+            val detectedPreset = DevicePresets.detectDevicePreset()
             val presetRated = detectedPreset?.ratedMah
             val presetTypical = detectedPreset?.typicalMah?.toDouble()
 
-            val ratedDesign = if (userRated != null && userRated > 0) {
-                userRated
-            } else {
-                // Rilevamento automatico:
-                // a) Verifica se il modello hardware rilevato da Build.MODEL è presente nei preset
-                if (presetRated != null) {
-                    presetRated
-                } else {
-                    BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(rawDesign)
-                }
+            // Dynamic hardware power profile extraction (Samsung batterystats / AOSP PowerProfile)
+            val powerProfileCap = AndroidPowerProfileHelper.getPowerProfileCapacity(context)
+            val batterystatsCap = dumpsysInfo?.hardwareCapacity
+            val dynamicRated = batterystatsCap?.ratedMah
+            val dynamicTypical = batterystatsCap?.typicalMah ?: batterystatsCap?.capacityMah ?: powerProfileCap
+
+            val ratedDesign = when {
+                userRated != null && userRated > 0 -> userRated
+                presetRated != null -> presetRated
+                dynamicRated != null && dynamicRated > 0 -> dynamicRated
+                else -> BatteryTelemetryParser.deriveRatedCapacityFromRawDesign(rawDesign, dynamicTypical)
             }
 
             // Calcolo della salute reale permanente:
             // Priorità ASSOLUTA alla salute certificata dal BMS hardware / Settings OS / ASOC (rawSoh)
-            val typicalCalculationBase = userRated ?: presetTypical ?: rawDesign ?: ratedDesign
+            val typicalCalculationBase = userRated ?: presetTypical ?: dynamicTypical ?: rawDesign ?: ratedDesign
             val healthDerivation = BatteryTelemetryParser.resolveHealthAndFcc(
                 rawSoh = rawSoh,
                 fcc = fcc,
@@ -438,12 +439,12 @@ class BatteryRepository(private val context: Context) {
                 "/sys/class/oplus_chg/battery/battery_manu_date",
                 "/sys/class/power_supply/battery/battery_manu_date",
                 "/sys/class/power_supply/battery/manu_date"
-            )?.takeIf { it.isNotBlank() }
+            )?.takeIf { it.isNotBlank() } ?: dumpsysInfo?.calDate
             val firstUsageDate = querySysfs(
                 "/sys/class/oplus_chg/battery/battery_first_usage_date",
                 "/sys/class/power_supply/battery/battery_first_usage_date",
                 "/sys/class/power_supply/battery/first_usage_date"
-            )?.takeIf { it.isNotBlank() }
+            )?.takeIf { it.isNotBlank() } ?: dumpsysInfo?.firstUseDate
 
             val (parsedAgeMonths, parsedDays) = BatteryTelemetryParser.parseUsageDates(manuDate, firstUsageDate)
             var batteryAgeMonths = parsedAgeMonths
@@ -515,7 +516,10 @@ class BatteryRepository(private val context: Context) {
                 "/sys/class/power_supply/battery/authenticate",
                 "/sys/class/power_supply/battery/authentic"
             )
-            val isAuthentic = BatteryTelemetryParser.parseBatteryAuthenticity(authStr)
+            var isAuthentic = BatteryTelemetryParser.parseBatteryAuthenticity(authStr)
+            if (!isAuthentic && dumpsysInfo?.isAuthentic == true) {
+                isAuthentic = true
+            }
 
             val rmRaw = querySysfs(
                 "/sys/class/oplus_mms/gauge/battery/charge_now",
@@ -545,13 +549,14 @@ class BatteryRepository(private val context: Context) {
             )?.trim()
             val isPlugged = (plugged > 0) || rawStatus.equals("Charging", ignoreCase = true) || rawStatus.equals("Full", ignoreCase = true)
 
-            val vMv = cell0Volt ?: 4000
+            val vMv = cell0Volt ?: dumpsysInfo?.voltageMv ?: 4000
 
             // Campionamento unificato della corrente (mA) sincronizzato per Potenza ed ESR
             // Priorità:
             // 1. Sysfs Linux kernel (/sys/class/power_supply/battery/current_now o batt_current)
             // 2. bccCurrent (da bcc_parms) se != 0
-            // 3. Android BatteryManager HAL BATTERY_PROPERTY_CURRENT_NOW
+            // 3. dumpsys current now (mA)
+            // 4. Android BatteryManager HAL BATTERY_PROPERTY_CURRENT_NOW
             val rawSysfsCur = querySysfs(
                 "/sys/class/oplus_mms/gauge/battery/current_now",
                 "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/current_now",
@@ -562,6 +567,7 @@ class BatteryRepository(private val context: Context) {
 
             val rawCur = rawSysfsCur
                 ?: bccCurrent?.takeIf { it != 0 }
+                ?: dumpsysInfo?.currentNowMa?.takeIf { it != 0 }
                 ?: run {
                     val bm = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
                     val cur = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
@@ -1143,23 +1149,37 @@ class BatteryRepository(private val context: Context) {
         val learnedCapacityMah: Double? = null,
         val estimatedCapacityMah: Double? = null,
         val status: Int? = null,
-        val tempTenths: Int? = null
+        val tempTenths: Int? = null,
+        val currentNowMa: Int? = null,
+        val cycleCount: Int? = null,
+        val firstUseDate: String? = null,
+        val calDate: String? = null,
+        val qrData: String? = null,
+        val protectBatteryMode: Int? = null,
+        val isAuthentic: Boolean? = null,
+        val hardwareCapacity: BatteryTelemetryParser.BatterystatsCapacityData? = null
     )
 
     private fun readDumpsysBatteryInfo(): DumpsysBatteryInfo {
         val (output, source) = executePrivilegedCommand("dumpsys battery", multiLine = true)
-        if (output.isNullOrEmpty()) return DumpsysBatteryInfo()
-        lastPrivilegedSource = source
-
-        val parsed = BatteryTelemetryParser.parseDumpsysBatteryText(output)
+        val parsed = if (!output.isNullOrEmpty()) {
+            lastPrivilegedSource = source
+            BatteryTelemetryParser.parseDumpsysBatteryText(output)
+        } else {
+            BatteryTelemetryParser.DumpsysParsedData()
+        }
 
         var learnedCapacity: Double? = null
         var estimatedCapacity: Double? = null
+        var hwCapacity: BatteryTelemetryParser.BatterystatsCapacityData? = null
         try {
             val (learnedOutput, _) = executePrivilegedCommand("dumpsys batterystats 2>/dev/null | grep -m 1 -i 'learned battery capacity'", multiLine = false)
             learnedCapacity = BatteryTelemetryParser.parseDumpsysLearnedCapacity(learnedOutput)
             val (statsOutput, _) = executePrivilegedCommand("dumpsys batterystats 2>/dev/null | grep -m 1 -i 'Estimated battery capacity'", multiLine = false)
             estimatedCapacity = BatteryTelemetryParser.parseDumpsysEstimatedCapacity(statsOutput)
+
+            val (hwOutput, _) = executePrivilegedCommand("dumpsys batterystats 2>/dev/null | grep -m 1 -E -i 'Capacity:|Rated:'", multiLine = false)
+            hwCapacity = BatteryTelemetryParser.parseDumpsysBatterystatsHardwareCapacity(hwOutput)
         } catch (_: Exception) {}
 
         val info = DumpsysBatteryInfo(
@@ -1169,13 +1189,21 @@ class BatteryRepository(private val context: Context) {
             learnedCapacityMah = learnedCapacity,
             estimatedCapacityMah = estimatedCapacity,
             status = parsed.status,
-            tempTenths = parsed.tempTenths
+            tempTenths = parsed.tempTenths,
+            currentNowMa = parsed.currentNowMa,
+            cycleCount = parsed.cycleCount,
+            firstUseDate = parsed.firstUseDate,
+            calDate = parsed.calDate,
+            qrData = parsed.qrData,
+            protectBatteryMode = parsed.protectBatteryMode,
+            isAuthentic = parsed.isAuthentic,
+            hardwareCapacity = hwCapacity
         )
         DiagnosticLogger.log(
             tag = "DUMPSYS_INFO",
             command = "readDumpsysBatteryInfo()",
-            result = "V=${parsed.voltageMv}mV, CC=${parsed.chargeCounterUah}uAh, ASOC=${parsed.asocPercent}%, Learned=${learnedCapacity}mAh, EstProfile=${estimatedCapacity}mAh, Temp=${parsed.tempTenths?.let { it / 10.0 }}C",
-            isSuccess = parsed.voltageMv != null || parsed.chargeCounterUah != null || learnedCapacity != null || parsed.asocPercent != null
+            result = "V=${parsed.voltageMv}mV, CC=${parsed.chargeCounterUah}uAh, ASOC=${parsed.asocPercent}%, Learned=${learnedCapacity}mAh, Rated=${hwCapacity?.ratedMah}mAh, Typ=${hwCapacity?.typicalMah}mAh, Cycles=${parsed.cycleCount}, Temp=${parsed.tempTenths?.let { it / 10.0 }}C",
+            isSuccess = parsed.voltageMv != null || parsed.chargeCounterUah != null || learnedCapacity != null || parsed.asocPercent != null || parsed.cycleCount != null
         )
         return info
     }
@@ -1247,9 +1275,13 @@ class BatteryRepository(private val context: Context) {
         }
 
         val userRated = preferences.getCustomRatedCapacity()
-        val detectedPreset = OplusDevicePresets.detectDevicePreset()
-        val presetTypical = detectedPreset?.typicalMah?.toDouble()
-        val ratedDesign = userRated ?: detectedPreset?.ratedMah
+        val detectedPreset = DevicePresets.detectDevicePreset()
+        val powerProfileCap = AndroidPowerProfileHelper.getPowerProfileCapacity(context)
+        val presetTypical = detectedPreset?.typicalMah?.toDouble() ?: powerProfileCap
+        val ratedDesign = userRated
+            ?: detectedPreset?.ratedMah
+            ?: powerProfileCap?.let { Math.round(it * 0.972 * 10.0) / 10.0 }
+            ?: 5840.0
         val calculationBase = userRated ?: presetTypical ?: ratedDesign
 
         var effectiveHealth = healthPercentage

@@ -72,7 +72,7 @@ object DiagnosticLogger {
         sb.append("- **Android Version:** Android `${Build.VERSION.RELEASE}` (SDK ${Build.VERSION.SDK_INT})\n")
         sb.append("- **Build Fingerprint:** `${Build.FINGERPRINT}`\n\n")
 
-        val preset = OplusDevicePresets.detectDevicePreset()
+        val preset = DevicePresets.detectDevicePreset()
         sb.append("#### 🔋 Battery Telemetry & State\n")
         sb.append("- **Detected Preset:** ${preset?.displayName ?: "None / Unmapped"}\n")
         if (preset != null) {

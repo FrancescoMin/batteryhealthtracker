@@ -13,6 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -1117,11 +1118,12 @@ fun EditCapacityDialog(
     var selectedBrandFilter by remember { mutableStateOf("Tutti") }
 
     val filteredPresets = remember(searchQuery, selectedBrandFilter) {
-        OplusDevicePresets.ALL_PRESETS.filter { preset ->
+        DevicePresets.ALL_PRESETS.filter { preset ->
             val matchesBrand = when (selectedBrandFilter) {
                 "Oppo" -> preset.brand.equals("Oppo", ignoreCase = true)
                 "OnePlus" -> preset.brand.equals("OnePlus", ignoreCase = true)
                 "Realme" -> preset.brand.equals("Realme", ignoreCase = true)
+                "Samsung" -> preset.brand.equals("Samsung", ignoreCase = true)
                 else -> true
             }
             val matchesQuery = searchQuery.isBlank() ||
@@ -1181,7 +1183,7 @@ fun EditCapacityDialog(
                         if (input.all { it.isDigit() }) {
                             textValue = input
                             if (input.isNotBlank()) {
-                                val match = OplusDevicePresets.ALL_PRESETS.firstOrNull { it.ratedMah.toInt().toString() == input }
+                                val match = DevicePresets.ALL_PRESETS.firstOrNull { it.ratedMah.toInt().toString() == input }
                                 selectedLabel = match?.displayName ?: "Custom ($input mAh)"
                             }
                         }
@@ -1225,14 +1227,17 @@ fun EditCapacityDialog(
 
                 // Chip selezione brand
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     val brandOptions = listOf(
                         "Tutti" to stringResource(R.string.brand_all),
                         "Oppo" to stringResource(R.string.brand_oppo),
                         "OnePlus" to stringResource(R.string.brand_oneplus),
-                        "Realme" to stringResource(R.string.brand_realme)
+                        "Realme" to stringResource(R.string.brand_realme),
+                        "Samsung" to stringResource(R.string.brand_samsung)
                     )
                     brandOptions.forEach { (brandKey, brandLabel) ->
                         FilterChip(
