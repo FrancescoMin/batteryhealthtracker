@@ -122,6 +122,18 @@ The app clearly indicates how SOH is sourced on your device:
 
 ---
 
+## 🔮 Upcoming Features (Next Release)
+
+The following improvements and capabilities are currently in active development or undergoing testing on the `main` branch, slated for inclusion in the upcoming official release (**v1.8**):
+
+- **⏰ Configurable Automatic Background Sampling:** User-customizable periodic snapshot scheduling with selectable intervals (**24 hours**, **2 days**, or **7 days**) and a native **Material 3 TimePicker** to set the exact execution time of day (preventing nighttime notifications), smart WorkManager delay synchronization, and dashboard countdown integration.
+- **📥 CSV History Import & Bidirectional Backup:** Seamlessly restore previously exported history files with automatic deduplication, integrity checking, and localized confirmation dialogs.
+- **⚡ Enhanced OnePlus 13 & Snapdragon 8 Elite Telemetry:** Extended BMS sysfs probing, dual-cell silicon-carbon SOH inference, dynamic ESR sampling improvements, and first-boot activation date derivation.
+- **🔍 Advanced Hardware Diagnostic Probing:** Expanded live sysfs node exploration and refined fallback strategies for community-reported devices under restricted SELinux policies.
+- **📱 Expanded Device Presets Catalog:** Ongoing integration of factory rated capacities (IEC 61960) and battery architectures for new Oppo, Realme, and OnePlus models.
+
+---
+
 ## 📱 Verified Device Battery Database & Hardware Compatibility
 
 > [!IMPORTANT]
