@@ -11,6 +11,12 @@ interface BatteryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(batteryData: BatteryData): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(batteryDataList: List<BatteryData>): List<Long>
+
+    @Query("SELECT timestamp FROM battery_records")
+    suspend fun getAllTimestamps(): List<Long>
+
     @Query("SELECT * FROM battery_records WHERE isDeleted = 0 ORDER BY timestamp DESC")
     fun getAllActiveBatteryData(): Flow<List<BatteryData>>
 

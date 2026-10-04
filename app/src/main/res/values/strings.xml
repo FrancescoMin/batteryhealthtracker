@@ -18,6 +18,7 @@
     <string name="back">Back</string>
     <string name="action_trash">Trash</string>
     <string name="action_export_csv">Export CSV</string>
+    <string name="action_import_csv">Import CSV</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_settings">Settings</string>
     <string name="action_select_all">Select all</string>
@@ -29,6 +30,15 @@
     <string name="snapshot_saved_snackbar">Snapshot saved to database!</string>
     <string name="csv_export_success">History successfully exported to CSV!</string>
     <string name="csv_export_error">Error exporting CSV file.</string>
+    <string name="csv_import_success_title">Restore Completed</string>
+    <string name="csv_import_success_msg">Successfully imported %1$d measurements into the database.</string>
+    <string name="csv_import_duplicates_msg">%1$d duplicate records already present were skipped.</string>
+    <string name="csv_import_all_duplicates">All %1$d records in the file were already present in the database. No duplicate data added.</string>
+    <string name="csv_import_error_title">Import Error</string>
+    <string name="csv_import_error_msg">Failed to import data from the selected CSV file.</string>
+    <string name="csv_import_empty_msg">No valid battery records found in the selected CSV file.</string>
+    <string name="csv_import_success_snackbar">%1$d measurements imported successfully!</string>
+    <string name="csv_import_success_snackbar_with_duplicates">%1$d imported (%2$d duplicates skipped).</string>
 
     <!-- Shizuku Banner -->
     <string name="shizuku_connected_title">Shizuku Connected</string>
@@ -261,6 +271,13 @@
     <string name="theme_dark_desc">Dark shades, reduces eye strain</string>
     <string name="theme_amoled">AMOLED Pure Black</string>
     <string name="theme_amoled_desc">Turn off OLED pixels (#000000) for maximum battery saving</string>
+
+    <!-- Settings: Data & Backup -->
+    <string name="settings_section_backup">Data &amp; Backup</string>
+    <string name="settings_backup_export_title">Export Backup (CSV)</string>
+    <string name="settings_backup_export_desc">Save complete measurement history to an external CSV file</string>
+    <string name="settings_backup_import_title">Import Backup (CSV)</string>
+    <string name="settings_backup_import_desc">Restore measurements from a previously exported CSV file</string>
 
     <!-- Diagnostic Console -->
     <string name="action_diagnostic_console">Diagnostic Console</string>

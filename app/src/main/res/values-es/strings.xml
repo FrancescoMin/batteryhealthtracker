@@ -18,6 +18,7 @@
     <string name="back">Atrás</string>
     <string name="action_trash">Papelera</string>
     <string name="action_export_csv">Exportar CSV</string>
+    <string name="action_import_csv">Importar CSV</string>
     <string name="action_refresh">Actualizar</string>
     <string name="action_settings">Ajustes</string>
     <string name="action_select_all">Seleccionar todo</string>
@@ -29,6 +30,15 @@
     <string name="snapshot_saved_snackbar">¡Medición guardada en la base de datos!</string>
     <string name="csv_export_success">¡Historial exportado con éxito a CSV!</string>
     <string name="csv_export_error">Error al exportar el archivo CSV.</string>
+    <string name="csv_import_success_title">Restauración completada</string>
+    <string name="csv_import_success_msg">Se importaron con éxito %1$d mediciones en la base de datos.</string>
+    <string name="csv_import_duplicates_msg">Se ignoraron %1$d registros duplicados ya presentes.</string>
+    <string name="csv_import_all_duplicates">Todos los %1$d registros en el archivo ya estaban en la base de datos. No se agregaron duplicados.</string>
+    <string name="csv_import_error_title">Error de importación</string>
+    <string name="csv_import_error_msg">No se pudieron importar los datos del archivo seleccionado.</string>
+    <string name="csv_import_empty_msg">No se encontraron mediciones válidas en el archivo CSV seleccionado.</string>
+    <string name="csv_import_success_snackbar">¡%1$d mediciones importadas con éxito!</string>
+    <string name="csv_import_success_snackbar_with_duplicates">¡%1$d importadas (%2$d duplicados ignorados)!</string>
 
     <!-- Shizuku Banner -->
     <string name="shizuku_connected_title">Shizuku Conectado</string>
@@ -261,6 +271,13 @@
     <string name="theme_dark_desc">Tonos oscuros, reduce el cansancio visual</string>
     <string name="theme_amoled">Negro Puro AMOLED</string>
     <string name="theme_amoled_desc">Píxeles negros apagados (#000000) para el máximo ahorro de batería</string>
+
+    <!-- Settings: Data & Backup -->
+    <string name="settings_section_backup">Datos y copia de seguridad</string>
+    <string name="settings_backup_export_title">Exportar copia de seguridad (CSV)</string>
+    <string name="settings_backup_export_desc">Guarda el historial completo de mediciones en un archivo CSV</string>
+    <string name="settings_backup_import_title">Importar copia de seguridad (CSV)</string>
+    <string name="settings_backup_import_desc">Restaura las mediciones guardadas desde un archivo CSV exportado</string>
 
     <!-- Diagnostic Console -->
     <string name="action_diagnostic_console">Consola de Diagnóstico</string>

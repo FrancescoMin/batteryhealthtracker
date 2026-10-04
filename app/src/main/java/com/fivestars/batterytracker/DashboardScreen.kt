@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
@@ -77,6 +78,31 @@ fun BatteryTrackerDashboardScreen(
                     if (success) context.getString(R.string.csv_export_success)
                     else context.getString(R.string.csv_export_error)
                 )
+            }
+        }
+    }
+
+    // Launcher per importazione CSV via Storage Access Framework
+    val importCsvLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            coroutineScope.launch {
+                val result = viewModel.importCsvFromUri(uri)
+                val message = if (result.success) {
+                    if (result.importedCount > 0) {
+                        if (result.duplicateCount > 0) {
+                            context.getString(R.string.csv_import_success_snackbar_with_duplicates, result.importedCount, result.duplicateCount)
+                        } else {
+                            context.getString(R.string.csv_import_success_snackbar, result.importedCount)
+                        }
+                    } else {
+                        context.getString(R.string.csv_import_all_duplicates, result.duplicateCount)
+                    }
+                } else {
+                    result.errorMessage ?: context.getString(R.string.csv_import_error_msg)
+                }
+                snackbarHostState.showSnackbar(message)
             }
         }
     }
@@ -489,6 +515,14 @@ fun BatteryTrackerDashboardScreen(
                                         showOverflowMenu = false
                                         val defaultFileName = "battery_history_${SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date())}.csv"
                                         exportCsvLauncher.launch(defaultFileName)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.action_import_csv)) },
+                                    leadingIcon = { Icon(Icons.Default.Upload, contentDescription = null) },
+                                    onClick = {
+                                        showOverflowMenu = false
+                                        importCsvLauncher.launch(arrayOf("text/comma-separated-values", "text/csv", "application/csv", "text/plain", "*/*"))
                                     }
                                 )
                                 DropdownMenuItem(

@@ -270,6 +270,60 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    data class CsvImportResult(
+        val totalRead: Int = 0,
+        val importedCount: Int = 0,
+        val duplicateCount: Int = 0,
+        val success: Boolean = true,
+        val errorMessage: String? = null
+    )
+
+    suspend fun importCsvFromUri(uri: Uri): CsvImportResult = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val context = getApplication<Application>()
+            val contentResolver = context.contentResolver
+            val lines = contentResolver.openInputStream(uri)?.bufferedReader()?.use { reader ->
+                reader.lineSequence().toList()
+            } ?: return@withContext CsvImportResult(
+                success = false,
+                errorMessage = "Impossibile aprire il file selezionato"
+            )
+
+            val parseResult = BatteryTelemetryParser.parseBatteryCsv(lines)
+            if (parseResult.records.isEmpty()) {
+                return@withContext CsvImportResult(
+                    totalRead = 0,
+                    importedCount = 0,
+                    duplicateCount = parseResult.duplicateInFileCount,
+                    success = false,
+                    errorMessage = null
+                )
+            }
+
+            val existingTimestamps = database.batteryDao().getAllTimestamps().toSet()
+            val recordsToInsert = parseResult.records.filter { !existingTimestamps.contains(it.timestamp) }
+            val duplicateCount = (parseResult.records.size - recordsToInsert.size) + parseResult.duplicateInFileCount
+
+            if (recordsToInsert.isNotEmpty()) {
+                database.batteryDao().insertAll(recordsToInsert)
+                refreshSnapshot()
+            }
+
+            CsvImportResult(
+                totalRead = parseResult.records.size + parseResult.duplicateInFileCount,
+                importedCount = recordsToInsert.size,
+                duplicateCount = duplicateCount,
+                success = true
+            )
+        } catch (e: Exception) {
+            Log.e(tag, "Errore durante l'importazione del file CSV", e)
+            CsvImportResult(
+                success = false,
+                errorMessage = e.localizedMessage ?: "Errore imprevisto"
+            )
+        }
+    }
+
     data class BatteryProjection(
         val remainingCycles: Int,
         val totalCyclesAt80: Int
