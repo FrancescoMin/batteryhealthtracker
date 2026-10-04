@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Warning
@@ -228,7 +229,7 @@ fun MetricCard(
 }
 
 @Composable
-fun NextScheduleBanner(nextScheduleTime: Long?) {
+fun NextScheduleBanner(nextScheduleTime: Long?, isAutoSamplingEnabled: Boolean = true) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -239,17 +240,19 @@ fun NextScheduleBanner(nextScheduleTime: Long?) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.Info,
+                imageVector = if (isAutoSamplingEnabled) Icons.Default.Info else Icons.Default.Schedule,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = if (isAutoSamplingEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            val text = if (nextScheduleTime != null && nextScheduleTime > System.currentTimeMillis()) {
+            val text = if (!isAutoSamplingEnabled) {
+                stringResource(R.string.schedule_disabled)
+            } else if (nextScheduleTime != null && nextScheduleTime > System.currentTimeMillis()) {
                 val formatted = historyDateFormat.format(Date(nextScheduleTime))
                 stringResource(R.string.schedule_next, formatted)
             } else {
-                stringResource(R.string.schedule_periodic_24h)
+                stringResource(R.string.schedule_periodic_active)
             }
             Text(text = text, style = MaterialTheme.typography.bodySmall)
         }

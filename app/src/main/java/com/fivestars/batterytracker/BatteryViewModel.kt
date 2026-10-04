@@ -36,6 +36,7 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
     val batteryConfigState: StateFlow<BatteryConfigState> = preferences.configState
     val appLanguage: StateFlow<String> = preferences.appLanguage
     val appThemeMode: StateFlow<AppThemeMode> = preferences.appThemeMode
+    val samplingConfig: StateFlow<SamplingConfig> = preferences.samplingConfig
 
     fun setAppLanguage(langCode: String) {
         preferences.setAppLanguage(langCode)
@@ -43,6 +44,45 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
 
     fun setAppThemeMode(mode: AppThemeMode) {
         preferences.setAppThemeMode(mode)
+    }
+
+    fun setSamplingEnabled(enabled: Boolean) {
+        preferences.setSamplingEnabled(enabled)
+        val config = preferences.getSamplingConfig()
+        BatteryWorkScheduler.schedule(
+            context = getApplication(),
+            isEnabled = enabled,
+            intervalHours = config.intervalHours,
+            targetHour = config.targetHour,
+            targetMinute = config.targetMinute,
+            forceReschedule = true
+        )
+    }
+
+    fun setSamplingIntervalHours(hours: Long) {
+        preferences.setSamplingIntervalHours(hours)
+        val config = preferences.getSamplingConfig()
+        BatteryWorkScheduler.schedule(
+            context = getApplication(),
+            isEnabled = config.isEnabled,
+            intervalHours = hours,
+            targetHour = config.targetHour,
+            targetMinute = config.targetMinute,
+            forceReschedule = true
+        )
+    }
+
+    fun setSamplingTime(hour: Int, minute: Int) {
+        preferences.setSamplingTime(hour, minute)
+        val config = preferences.getSamplingConfig()
+        BatteryWorkScheduler.schedule(
+            context = getApplication(),
+            isEnabled = config.isEnabled,
+            intervalHours = config.intervalHours,
+            targetHour = hour,
+            targetMinute = minute,
+            forceReschedule = true
+        )
     }
 
     val allBatteryData: StateFlow<List<BatteryData>> = database.batteryDao()
@@ -76,7 +116,7 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
     val isCheckingUpdate: StateFlow<Boolean> = _isCheckingUpdate.asStateFlow()
 
     val nextWorkScheduleTime: Flow<Long?> = workManager
-        .getWorkInfosForUniqueWorkFlow("DailyBatteryCheck")
+        .getWorkInfosForUniqueWorkFlow(BatteryWorkScheduler.WORK_NAME)
         .map { workInfos ->
             val workInfo = workInfos.firstOrNull {
                 it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING

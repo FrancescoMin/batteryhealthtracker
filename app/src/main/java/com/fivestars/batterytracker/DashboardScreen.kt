@@ -57,6 +57,7 @@ fun BatteryTrackerDashboardScreen(
     val isShizukuAvailable by viewModel.isShizukuAvailable.collectAsState()
     val isShizukuGranted by viewModel.isShizukuPermissionGranted.collectAsState()
     val nextScheduleTime by viewModel.nextWorkScheduleTime.collectAsState(initial = null)
+    val samplingConfig by viewModel.samplingConfig.collectAsState()
 
     // Stato selezione multipla per eliminazione nello storico
     var selectedRecordIds by remember { mutableStateOf<Set<Int>>(emptySet()) }
@@ -657,7 +658,10 @@ fun BatteryTrackerDashboardScreen(
             item(key = "schedule_banner") {
                 Spacer(modifier = Modifier.height(16.dp))
                 // Info sul prossimo campionamento automatico
-                NextScheduleBanner(nextScheduleTime = nextScheduleTime)
+                NextScheduleBanner(
+                    nextScheduleTime = nextScheduleTime,
+                    isAutoSamplingEnabled = samplingConfig.isEnabled
+                )
             }
 
             item(key = "history_header") {

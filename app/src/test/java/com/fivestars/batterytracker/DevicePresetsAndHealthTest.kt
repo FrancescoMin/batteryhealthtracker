@@ -1069,4 +1069,46 @@ class DevicePresetsAndHealthTest {
         assertEquals(150, result.records[0].cycleCount)
         assertEquals(5600.0, result.records[0].currentCapacityMah ?: 0.0, 0.01)
     }
+
+    // --- 18. TEST SCHEDULER DI CAMPIONAMENTO AUTOMATICO ---
+
+    @Test
+    fun testBatteryWorkSchedulerInitialDelayFutureToday() {
+        val calendar = java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.HOUR_OF_DAY, 10)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val currentMillis = calendar.timeInMillis
+
+        // Target: 20:00 today (10 hours later = 10 * 3600 * 1000 ms)
+        val delay = BatteryWorkScheduler.calculateInitialDelayMillis(
+            targetHour = 20,
+            targetMinute = 0,
+            currentTimeMillis = currentMillis
+        )
+        assertEquals(10 * 60 * 60 * 1000L, delay)
+    }
+
+    @Test
+    fun testBatteryWorkSchedulerInitialDelayPastTimeRollsToTomorrow() {
+        val calendar = java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.HOUR_OF_DAY, 22)
+            set(java.util.Calendar.MINUTE, 30)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val currentMillis = calendar.timeInMillis
+
+        // Target: 20:00 (already passed today, so 21 hours and 30 minutes until tomorrow 20:00)
+        val delay = BatteryWorkScheduler.calculateInitialDelayMillis(
+            targetHour = 20,
+            targetMinute = 0,
+            currentTimeMillis = currentMillis
+        )
+        val expectedDelay = (21 * 60 + 30) * 60 * 1000L
+        assertEquals(expectedDelay, delay)
+    }
 }
+

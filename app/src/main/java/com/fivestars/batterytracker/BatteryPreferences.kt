@@ -19,6 +19,13 @@ enum class AppThemeMode {
     AMOLED
 }
 
+data class SamplingConfig(
+    val isEnabled: Boolean = true,
+    val intervalHours: Long = 24L,
+    val targetHour: Int = 20,
+    val targetMinute: Int = 0
+)
+
 class BatteryPreferences(context: Context) {
 
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -93,6 +100,50 @@ class BatteryPreferences(context: Context) {
         private const val KEY_LAST_CALIBRATION_CYCLE = "key_last_calibration_cycle"
         private const val KEY_APP_THEME_MODE = "key_app_theme_mode"
         private const val KEY_LAST_KNOWN_ESR = "key_last_known_esr"
+        private const val KEY_SAMPLING_ENABLED = "key_sampling_enabled"
+        private const val KEY_SAMPLING_INTERVAL_HOURS = "key_sampling_interval_hours"
+        private const val KEY_SAMPLING_HOUR = "key_sampling_hour"
+        private const val KEY_SAMPLING_MINUTE = "key_sampling_minute"
+    }
+
+    private val _samplingConfig = MutableStateFlow(getSamplingConfig())
+    val samplingConfig: StateFlow<SamplingConfig> = _samplingConfig.asStateFlow()
+
+    fun getSamplingConfig(): SamplingConfig {
+        val isEnabled = prefs.getBoolean(KEY_SAMPLING_ENABLED, true)
+        val interval = prefs.getLong(KEY_SAMPLING_INTERVAL_HOURS, 24L)
+        val hour = prefs.getInt(KEY_SAMPLING_HOUR, 20)
+        val minute = prefs.getInt(KEY_SAMPLING_MINUTE, 0)
+        return SamplingConfig(
+            isEnabled = isEnabled,
+            intervalHours = if (interval in listOf(24L, 48L, 168L)) interval else 24L,
+            targetHour = if (hour in 0..23) hour else 20,
+            targetMinute = if (minute in 0..59) minute else 0
+        )
+    }
+
+    fun setSamplingEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_SAMPLING_ENABLED, enabled).apply()
+        _samplingConfig.value = _samplingConfig.value.copy(isEnabled = enabled)
+    }
+
+    fun setSamplingIntervalHours(hours: Long) {
+        val safeHours = if (hours in listOf(24L, 48L, 168L)) hours else 24L
+        prefs.edit().putLong(KEY_SAMPLING_INTERVAL_HOURS, safeHours).apply()
+        _samplingConfig.value = _samplingConfig.value.copy(intervalHours = safeHours)
+    }
+
+    fun setSamplingTime(hour: Int, minute: Int) {
+        val safeHour = hour.coerceIn(0, 23)
+        val safeMinute = minute.coerceIn(0, 59)
+        prefs.edit()
+            .putInt(KEY_SAMPLING_HOUR, safeHour)
+            .putInt(KEY_SAMPLING_MINUTE, safeMinute)
+            .apply()
+        _samplingConfig.value = _samplingConfig.value.copy(
+            targetHour = safeHour,
+            targetMinute = safeMinute
+        )
     }
 
     fun getLastKnownEsr(): Double? {

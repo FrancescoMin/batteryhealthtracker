@@ -49,12 +49,15 @@ fun SettingsScreen(
     val isShizukuGranted by viewModel.isShizukuPermissionGranted.collectAsState()
     val currentLang by viewModel.appLanguage.collectAsState()
     val currentTheme by viewModel.appThemeMode.collectAsState()
+    val samplingConfig by viewModel.samplingConfig.collectAsState()
     val updateResult by viewModel.updateCheckResult.collectAsState()
     val isCheckingUpdate by viewModel.isCheckingUpdate.collectAsState()
 
     var showEditDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showIntervalDialog by remember { mutableStateOf(false) }
+    var showTimeDialog by remember { mutableStateOf(false) }
     var importResult by remember { mutableStateOf<BatteryViewModel.CsvImportResult?>(null) }
 
     val coroutineScope = rememberCoroutineScope()
@@ -227,6 +230,30 @@ fun SettingsScreen(
         )
     }
 
+    if (showIntervalDialog) {
+        SamplingIntervalDialog(
+            currentIntervalHours = samplingConfig.intervalHours,
+            onDismiss = { showIntervalDialog = false },
+            onSelectInterval = { hours ->
+                viewModel.setSamplingIntervalHours(hours)
+                showIntervalDialog = false
+            }
+        )
+    }
+
+    if (showTimeDialog) {
+        SamplingTimePickerDialog(
+            initialHour = samplingConfig.targetHour,
+            initialMinute = samplingConfig.targetMinute,
+            is24Hour = android.text.format.DateFormat.is24HourFormat(context),
+            onDismiss = { showTimeDialog = false },
+            onConfirm = { hour, minute ->
+                viewModel.setSamplingTime(hour, minute)
+                showTimeDialog = false
+            }
+        )
+    }
+
     importResult?.let { result ->
         AppAlertDialog(
             onDismissRequest = { importResult = null },
@@ -379,6 +406,200 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Sezione Campionamento Automatico
+                Text(
+                    text = stringResource(R.string.settings_section_sampling),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                val samplingIntervalLabel = when (samplingConfig.intervalHours) {
+                    48L -> stringResource(R.string.sampling_interval_48h_short)
+                    168L -> stringResource(R.string.sampling_interval_168h_short)
+                    else -> stringResource(R.string.sampling_interval_24h_short)
+                }
+                val formattedSamplingTime = String.format(Locale.getDefault(), "%02d:%02d", samplingConfig.targetHour, samplingConfig.targetMinute)
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        // Switch principale: Abilita / Disabilita
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.setSamplingEnabled(!samplingConfig.isEnabled) }
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                modifier = Modifier.size(44.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Schedule,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.settings_sampling_title),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = if (samplingConfig.isEnabled) {
+                                        stringResource(
+                                            R.string.settings_sampling_desc_active,
+                                            samplingIntervalLabel,
+                                            formattedSamplingTime
+                                        )
+                                    } else {
+                                        stringResource(R.string.settings_sampling_desc_disabled)
+                                    },
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            Switch(
+                                checked = samplingConfig.isEnabled,
+                                onCheckedChange = { viewModel.setSamplingEnabled(it) }
+                            )
+                        }
+
+                        if (samplingConfig.isEnabled) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            )
+
+                            // Selettore Intervallo
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showIntervalDialog = true }
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f),
+                                    modifier = Modifier.size(44.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.DateRange,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.secondary
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.width(16.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.settings_sampling_interval_title),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = when (samplingConfig.intervalHours) {
+                                            48L -> stringResource(R.string.sampling_interval_48h)
+                                            168L -> stringResource(R.string.sampling_interval_168h)
+                                            else -> stringResource(R.string.sampling_interval_24h)
+                                        },
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                IconButton(onClick = { showIntervalDialog = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            )
+
+                            // Selettore Orario Programmato
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showTimeDialog = true }
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f),
+                                    modifier = Modifier.size(44.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.AccessTime,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.tertiary
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.width(16.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.settings_sampling_time_title),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = formattedSamplingTime,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = stringResource(R.string.settings_sampling_time_hint),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                IconButton(onClick = { showTimeDialog = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
                 // Sezione Selezione Lingua
                 Text(
                     text = stringResource(R.string.settings_section_language),
@@ -392,6 +613,7 @@ fun SettingsScreen(
                     "it" -> stringResource(R.string.lang_it)
                     "en" -> stringResource(R.string.lang_en)
                     "es" -> stringResource(R.string.lang_es)
+                    "fr" -> stringResource(R.string.lang_fr)
                     else -> stringResource(R.string.lang_system_default)
                 }
 
@@ -825,7 +1047,8 @@ fun LanguageDialog(
         "system" to stringResource(R.string.lang_system_default),
         "it" to stringResource(R.string.lang_it),
         "en" to stringResource(R.string.lang_en),
-        "es" to stringResource(R.string.lang_es)
+        "es" to stringResource(R.string.lang_es),
+        "fr" to stringResource(R.string.lang_fr)
     )
 
     AppAlertDialog(
@@ -1231,3 +1454,108 @@ fun UpdateAvailableDialog(
         }
     )
 }
+
+@Composable
+fun SamplingIntervalDialog(
+    currentIntervalHours: Long,
+    onDismiss: () -> Unit,
+    onSelectInterval: (Long) -> Unit
+) {
+    val options = listOf(
+        Pair(24L, stringResource(R.string.sampling_interval_24h)),
+        Pair(48L, stringResource(R.string.sampling_interval_48h)),
+        Pair(168L, stringResource(R.string.sampling_interval_168h))
+    )
+
+    AppAlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.dialog_sampling_interval_title),
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column {
+                options.forEach { (hours, label) ->
+                    val isSelected = currentIntervalHours == hours
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelectInterval(hours) }
+                            .padding(vertical = 10.dp, horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = isSelected,
+                            onClick = { onSelectInterval(hours) }
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SamplingTimePickerDialog(
+    initialHour: Int,
+    initialMinute: Int,
+    is24Hour: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (Int, Int) -> Unit
+) {
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialHour,
+        initialMinute = initialMinute,
+        is24Hour = is24Hour
+    )
+
+    AppAlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.dialog_sampling_time_title),
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                TimePicker(state = timePickerState)
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm(timePickerState.hour, timePickerState.minute)
+                }
+            ) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    )
+}
+

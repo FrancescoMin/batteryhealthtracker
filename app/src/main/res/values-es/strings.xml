@@ -70,6 +70,8 @@
     <!-- Next Schedule -->
     <string name="schedule_next">Próximo registro automático: %s</string>
     <string name="schedule_periodic_24h">Registro automático WorkManager activo cada 24 horas.</string>
+    <string name="schedule_periodic_active">Registro automático programado activo.</string>
+    <string name="schedule_disabled">Registro automático periódico desactivado.</string>
 
     <!-- Hardware Diagnostics -->
     <string name="diag_hardware_title">Diagnóstico de Hardware</string>
@@ -143,6 +145,24 @@
     <string name="settings_rated_capacity_title">Capacidad nominal de la batería</string>
     <string name="settings_mode_auto">Modo: Detección Automática (BMS/Sysfs)</string>
     <string name="settings_mode_custom">Modo: Valor Personalizado / Ajuste</string>
+
+    <!-- Automatic Sampling Settings -->
+    <string name="settings_section_sampling">Registro Automático</string>
+    <string name="settings_sampling_title">Registro Periódico</string>
+    <string name="settings_sampling_desc_active">Cada %1$s a las %2$s</string>
+    <string name="settings_sampling_desc_disabled">Desactivado (sin lectura automática en segundo plano)</string>
+    <string name="settings_sampling_interval_title">Frecuencia de Registro</string>
+    <string name="settings_sampling_time_title">Hora Programada</string>
+    <string name="settings_sampling_time_hint">Establece una hora cómoda para evitar notificaciones mientras descansas</string>
+    <string name="dialog_sampling_interval_title">Frecuencia de Registro</string>
+    <string name="sampling_interval_24h">24 horas (1 día) • Recomendado</string>
+    <string name="sampling_interval_48h">2 días (48 horas)</string>
+    <string name="sampling_interval_168h">7 días (1 semana)</string>
+    <string name="sampling_interval_24h_short">24 horas</string>
+    <string name="sampling_interval_48h_short">2 días</string>
+    <string name="sampling_interval_168h_short">7 días</string>
+    <string name="dialog_sampling_time_title">Hora Programada</string>
+
     <string name="settings_section_language">Idioma de la aplicación</string>
     <string name="settings_language_title">Idioma</string>
     <string name="settings_section_hardware_info">Información de Hardware y Ecosistema</string>
@@ -157,6 +177,7 @@
     <string name="lang_it">Italiano</string>
     <string name="lang_en">English (Inglés)</string>
     <string name="lang_es">Español</string>
+    <string name="lang_fr">Français (Francés)</string>
 
     <!-- Capacity Dialog -->
     <string name="dialog_capacity_title">Capacidad Nominal de Diseño</string>
@@ -178,10 +199,10 @@
     <string name="notif_overheat_title">⚠️ Temperatura Alta de Batería: %s</string>
     <string name="notif_overheat_text">La temperatura ha superado el umbral de seguridad (42°C). Retira la funda o desconecta temporalmente la carga SuperVOOC para preservar la vida útil de la batería.</string>
     <string name="notif_sampling_manual_title">Registro Manual Completado</string>
-    <string name="notif_sampling_auto_title">Registro Automático (24h)</string>
+    <string name="notif_sampling_auto_title">Registro Automático</string>
     <string name="notif_sampling_full_title" formatted="false">Carga 100% Completada • Registro Tomado</string>
     <string name="notif_sampling_manual_reason">Lectura manual iniciada mediante botón en la app</string>
-    <string name="notif_sampling_auto_reason">Lectura automática periódica programada (cada 24h)</string>
+    <string name="notif_sampling_auto_reason">Lectura automática periódica programada</string>
     <string name="notif_sampling_full_reason" formatted="false">Registro automático al desconectar el cargador con batería al 100%</string>
     <string name="notif_sampling_summary">Salud: %1$s | Ciclos: %2$s | %3$s</string>
     <string name="notif_sampling_expanded" formatted="false">%1$s.\n\n• Salud SOH: %2$s\n• Ciclos de carga: %3$s\n• Capacidad residual: %4$s\n• Fuente de datos: %5$s</string>

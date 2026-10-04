@@ -16,6 +16,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BatteryTracker"
+        android:localeConfig="@xml/locales_config"
         tools:targetApi="34">
         <activity
             android:name=".MainActivity"
