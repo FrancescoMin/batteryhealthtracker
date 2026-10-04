@@ -92,6 +92,16 @@ class BatteryPreferences(context: Context) {
         private const val KEY_APP_LANGUAGE = "key_app_language"
         private const val KEY_LAST_CALIBRATION_CYCLE = "key_last_calibration_cycle"
         private const val KEY_APP_THEME_MODE = "key_app_theme_mode"
+        private const val KEY_LAST_KNOWN_ESR = "key_last_known_esr"
+    }
+
+    fun getLastKnownEsr(): Double? {
+        val str = prefs.getString(KEY_LAST_KNOWN_ESR, null)
+        return str?.toDoubleOrNull()
+    }
+
+    fun setLastKnownEsr(esr: Double) {
+        prefs.edit().putString(KEY_LAST_KNOWN_ESR, esr.toString()).apply()
     }
 
     private val _appThemeMode = MutableStateFlow(getAppThemeMode())

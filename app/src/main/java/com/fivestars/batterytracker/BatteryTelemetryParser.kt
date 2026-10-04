@@ -37,6 +37,12 @@ object BatteryTelemetryParser {
         val tempTenths: Int? = null
     )
 
+    data class CsvParseResult(
+        val records: List<BatteryData>,
+        val duplicateInFileCount: Int,
+        val invalidLinesCount: Int
+    )
+
     /**
      * Parses the dynamic CSV fuel-gauge log header and content rows from OPlus kernel
      * (/sys/class/oplus_chg/battery/battery_log_head and battery_log_content).
@@ -185,6 +191,29 @@ object BatteryTelemetryParser {
     }
 
     /**
+     * Estimates the thermodynamic equilibrium Open Circuit Voltage (OCV in mV)
+     * as a function of State of Charge (SoC % in [0, 100]) for high-density
+     * Lithium-ion / Silicon-Carbon battery cells (nominal 3.85V-3.91V, cutoff 4.45V-4.50V).
+     */
+    fun estimateEquilibriumOcv(batteryLevel: Int): Int {
+        val lvl = batteryLevel.coerceIn(0, 100)
+        return when {
+            lvl >= 100 -> 4450
+            lvl >= 95 -> 4350 + ((lvl - 95) * 100) / 5
+            lvl >= 90 -> 4260 + ((lvl - 90) * 90) / 5
+            lvl >= 80 -> 4130 + ((lvl - 80) * 130) / 10
+            lvl >= 70 -> 4040 + ((lvl - 70) * 90) / 10
+            lvl >= 60 -> 3960 + ((lvl - 60) * 80) / 10
+            lvl >= 50 -> 3890 + ((lvl - 50) * 70) / 10
+            lvl >= 40 -> 3830 + ((lvl - 40) * 60) / 10
+            lvl >= 30 -> 3790 + ((lvl - 30) * 40) / 10
+            lvl >= 20 -> 3750 + ((lvl - 20) * 40) / 10
+            lvl >= 10 -> 3680 + ((lvl - 10) * 70) / 10
+            else -> 3300 + (lvl * 380) / 10
+        }
+    }
+
+    /**
      * Calculates dynamic step ESR via pulse differential response: R = |dV| / |dI|
      */
     fun calculateDynamicStepEsr(
@@ -197,17 +226,18 @@ object BatteryTelemetryParser {
     ): Double? {
         if (elapsedMs !in 500L..45_000L) return null
         val deltaI = Math.abs(i2Ma - i1Ma)
-        if (deltaI < 150) return null
+        if (deltaI < 120) return null
         val deltaV = Math.abs(v2Mv - v1Mv)
         val stepEsr = (deltaV.toDouble() / deltaI.toDouble()) * 1000.0
-        val maxLimit = if (isDual == true) 900.0 else 550.0
-        return if (stepEsr in 15.0..maxLimit) {
-            Math.round(stepEsr * 10.0) / 10.0
+        val packStepEsr = if (isDual == true && v1Mv <= 4600 && v2Mv <= 4600) stepEsr * 2.0 else stepEsr
+        val maxLimit = 3000.0
+        return if (packStepEsr in 15.0..maxLimit) {
+            Math.round(packStepEsr * 10.0) / 10.0
         } else null
     }
 
     /**
-     * Fallback calculation of ESR using OCV with anti-static cutoff and scale guards.
+     * Fallback calculation of ESR using sysfs OCV with anti-static cutoff and scale guards.
      */
     fun calculateOcvEsr(
         voltageOcvMv: Int,
@@ -216,22 +246,46 @@ object BatteryTelemetryParser {
         batteryLevel: Int?,
         isDual: Boolean?
     ): Double? {
-        if (Math.abs(currentMa) < 120) return null
+        if (Math.abs(currentMa) < 40) return null
         val normOcv = if (voltageOcvMv > 5000 && vNowMv <= 4600) voltageOcvMv / 2 else voltageOcvMv
         val normVnow = if (vNowMv > 5000 && voltageOcvMv <= 4600) vNowMv / 2 else vNowMv
 
-        val isStaticOcvCutoff = (batteryLevel ?: 100) < 95 && normOcv >= 4420
         val deltaV = Math.abs(normOcv - normVnow)
-        val maxAllowableDeltaV = if (isDual == true) 300 else 150
+        val isStaticOcvCutoff = (batteryLevel ?: 100) < 90 && normOcv >= 4420 && deltaV > 250
+        val maxAllowableDeltaV = if (isDual == true) 700 else 450
 
         if (!isStaticOcvCutoff && deltaV <= maxAllowableDeltaV) {
             val esr = (deltaV.toDouble() / Math.abs(currentMa).toDouble()) * 1000.0
-            val maxLimit = if (isDual == true) 900.0 else 550.0
-            if (esr in 20.0..maxLimit) {
+            val maxLimit = 3000.0
+            if (esr in 15.0..maxLimit) {
                 return Math.round(esr * 10.0) / 10.0
             }
         }
         return null
+    }
+
+    /**
+     * Calculates internal DC resistance based on the thermodynamic equilibrium OCV curve.
+     * Used when the kernel sysfs node is a static float cutoff (e.g. 4540 mV on MediaTek Dimensity chips)
+     * or when direct OCV registers are uncalibrated or absent.
+     */
+    fun calculateEquilibriumSocEsr(
+        batteryLevel: Int,
+        vNowMv: Int,
+        currentMa: Int,
+        isDual: Boolean?
+    ): Double? {
+        if (Math.abs(currentMa) < 40) return null
+        val lvl = batteryLevel.coerceIn(1, 100)
+        val eqOcv = estimateEquilibriumOcv(lvl)
+        val normV = if (vNowMv > 5000 && eqOcv <= 4600) vNowMv / 2 else vNowMv
+        val deltaV = Math.abs(eqOcv - normV)
+        val cellEsr = (deltaV.toDouble() / Math.abs(currentMa).toDouble()) * 1000.0
+        val packEsr = if (isDual == true && vNowMv <= 4600) cellEsr * 2.0 else cellEsr
+        val maxLimit = 3000.0
+        return if (packEsr in 15.0..maxLimit) {
+            Math.round(packEsr * 10.0) / 10.0
+        } else null
     }
 
     /**
@@ -571,14 +625,185 @@ object BatteryTelemetryParser {
      */
     fun parseSettingsBatteryHealth(output: String?): Int? {
         if (output.isNullOrBlank()) return null
+        val lower = output.lowercase(Locale.ROOT)
+        // Rejects analytics, count, state, or flag entries (e.g. battery_health_enter_times_daily=1)
+        if (lower.contains("times") || lower.contains("count") || lower.contains("enable") ||
+            lower.contains("switch") || lower.contains("daily") || lower.contains("state") ||
+            lower.contains("status") || lower.contains("mode") || lower.contains("flag") ||
+            lower.contains("level")
+        ) {
+            return null
+        }
         val directInt = output.trim().toIntOrNull()
         if (directInt != null) {
-            return if (directInt in 1..100) directInt else null
+            return if (directInt in 30..100) directInt else null
         }
         val match = Regex("""(?:value|health|soh|capacity)[:=]\s*(\d{1,3})""", RegexOption.IGNORE_CASE).find(output)
             ?: Regex("""=(\d{1,3})""").find(output)
             ?: Regex("""(?<![-+0-9])(100|[1-9]\d?)(?![-+0-9])""").find(output)
         val parsed = match?.groupValues?.getOrNull(1)?.toIntOrNull()
-        return if (parsed != null && parsed in 1..100) parsed else null
+        return if (parsed != null && parsed in 30..100) parsed else null
     }
+
+    /**
+     * Splits a single CSV row into tokens, respecting double-quoted fields.
+     */
+    fun splitCsvLine(line: String): List<String> {
+        val tokens = mutableListOf<String>()
+        val sb = StringBuilder()
+        var inQuotes = false
+        for (char in line) {
+            when {
+                char == '\"' -> inQuotes = !inQuotes
+                char == ',' && !inQuotes -> {
+                    tokens.add(sb.toString().trim().removeSurrounding("\"").trim())
+                    sb.clear()
+                }
+                else -> sb.append(char)
+            }
+        }
+        tokens.add(sb.toString().trim().removeSurrounding("\"").trim())
+        return tokens
+    }
+
+    /**
+     * Parses battery records from a sequence of CSV lines.
+     * Supports standard export format:
+     * ID,Timestamp,Data_Ora,Salute_Percentuale,Cicli_Carica,Capacita_Residua_mAh,Sorgente
+     * As well as flexible header matching across multiple languages and column orders.
+     */
+    fun parseBatteryCsv(lines: Sequence<String>): CsvParseResult {
+        val iterator = lines.iterator()
+        if (!iterator.hasNext()) {
+            return CsvParseResult(emptyList(), 0, 0)
+        }
+
+        var timestampIdx = -1
+        var dateIdx = -1
+        var healthIdx = -1
+        var cyclesIdx = -1
+        var capacityIdx = -1
+        var sourceIdx = -1
+
+        val records = mutableListOf<BatteryData>()
+        val seenTimestamps = mutableSetOf<Long>()
+        var duplicatesInFile = 0
+        var invalidLines = 0
+
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+
+        fun mapHeader(headerTokens: List<String>) {
+            headerTokens.forEachIndexed { index, rawToken ->
+                val token = rawToken.lowercase(Locale.ROOT)
+                when {
+                    token.contains("timestamp") || token.contains("epoch") -> timestampIdx = index
+                    token.contains("salut") || token.contains("health") || token.contains("soh") -> healthIdx = index
+                    token.contains("cicl") || token.contains("cycl") -> cyclesIdx = index
+                    token.contains("capacit") || token.contains("mah") || token.contains("fcc") -> capacityIdx = index
+                    token.contains("sorgent") || token.contains("sourc") || token.contains("origen") -> sourceIdx = index
+                    token.contains("data") || token.contains("date") || token.contains("fech") -> dateIdx = index
+                }
+            }
+        }
+
+        fun parseLine(line: String) {
+            val trimmed = line.trim()
+            if (trimmed.isEmpty()) return
+            val tokens = splitCsvLine(trimmed)
+            if (tokens.isEmpty()) return
+
+            var timestamp: Long? = if (timestampIdx in tokens.indices) {
+                tokens[timestampIdx].toLongOrNull()
+            } else null
+
+            // Fallback timestamp from formatted date string if timestamp column is missing or <= 0
+            if ((timestamp == null || timestamp <= 0) && dateIdx in tokens.indices) {
+                val dateStr = tokens[dateIdx]
+                try {
+                    timestamp = dateFormat.parse(dateStr)?.time
+                } catch (_: Exception) {}
+            }
+
+            if (timestamp == null || timestamp <= 0) {
+                invalidLines++
+                return
+            }
+
+            val health = if (healthIdx in tokens.indices) {
+                tokens[healthIdx].toIntOrNull()?.takeIf { it in 1..150 }
+            } else null
+
+            val cycles = if (cyclesIdx in tokens.indices) {
+                tokens[cyclesIdx].toIntOrNull()?.takeIf { it >= 0 }
+            } else null
+
+            val capacity = if (capacityIdx in tokens.indices) {
+                tokens[capacityIdx].replace(',', '.').toDoubleOrNull()?.takeIf { it > 0.0 }
+            } else null
+
+            val source = if (sourceIdx in tokens.indices) {
+                val rawSrc = tokens[sourceIdx]
+                if (rawSrc.isNotBlank() && rawSrc != "N/D" && rawSrc != "null") rawSrc else "CSV_IMPORT"
+            } else "CSV_IMPORT"
+
+            if (seenTimestamps.contains(timestamp)) {
+                duplicatesInFile++
+            } else {
+                seenTimestamps.add(timestamp)
+                records.add(
+                    BatteryData(
+                        id = 0,
+                        timestamp = timestamp,
+                        cycleCount = cycles,
+                        healthPercentage = health,
+                        currentCapacityMah = capacity,
+                        source = source,
+                        isDeleted = false
+                    )
+                )
+            }
+        }
+
+        val firstLine = iterator.next().removePrefix("\uFEFF").trim()
+        if (firstLine.isNotEmpty()) {
+            val firstTokens = splitCsvLine(firstLine)
+            val isHeader = firstTokens.any { token ->
+                val lower = token.lowercase(Locale.ROOT)
+                lower.contains("id") || lower.contains("timestamp") || lower.contains("salut") ||
+                lower.contains("health") || lower.contains("cicl") || lower.contains("cycl") ||
+                lower.contains("capacit") || lower.contains("data") || lower.contains("date")
+            }
+
+            if (isHeader) {
+                mapHeader(firstTokens)
+            } else {
+                // Not a header: set fallback columns according to standard 7-col format
+                // ID, Timestamp, Data_Ora, Salute, Cicli, Capacita, Sorgente
+                if (firstTokens.size >= 6) {
+                    timestampIdx = 1
+                    dateIdx = 2
+                    healthIdx = 3
+                    cyclesIdx = 4
+                    capacityIdx = 5
+                    sourceIdx = 6
+                }
+                parseLine(firstLine)
+            }
+        }
+
+        while (iterator.hasNext()) {
+            val line = iterator.next().trim()
+            if (line.isNotEmpty()) {
+                parseLine(line)
+            }
+        }
+
+        return CsvParseResult(
+            records = records.sortedBy { it.timestamp },
+            duplicateInFileCount = duplicatesInFile,
+            invalidLinesCount = invalidLines
+        )
+    }
+
+    fun parseBatteryCsv(lines: List<String>): CsvParseResult = parseBatteryCsv(lines.asSequence())
 }

@@ -6,6 +6,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.BatteryManager
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -191,7 +192,9 @@ class BatteryRepository(private val context: Context) {
                 "/sys/class/power_supply/bms/charge_full",
                 "/sys/class/power_supply/battery/batt_fcc",
                 "/sys/class/power_supply/battery/battery_fcc",
-                "/sys/class/power_supply/bms/batt_fcc"
+                "/sys/class/power_supply/bms/batt_fcc",
+                "/sys/class/oplus_mms/gauge/battery/charge_full",
+                "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/charge_full"
             )
             var fcc = BatteryTelemetryParser.parseCapacity(rawFccVal)
 
@@ -199,7 +202,9 @@ class BatteryRepository(private val context: Context) {
                 "/sys/class/oplus_chg/battery/design_capacity",
                 "/sys/class/power_supply/battery/charge_full_design",
                 "/sys/class/power_supply/bms/charge_full_design",
-                "/sys/class/power_supply/battery/design_capacity"
+                "/sys/class/power_supply/battery/design_capacity",
+                "/sys/class/oplus_mms/gauge/battery/charge_full_design",
+                "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/charge_full_design"
             )
             val rawDesign = BatteryTelemetryParser.parseCapacity(rawDesignVal)
 
@@ -210,7 +215,9 @@ class BatteryRepository(private val context: Context) {
                 "/sys/class/power_supply/battery/cycle_count",
                 "/sys/class/power_supply/bms/cycle_count",
                 "/sys/class/power_supply/battery/battery_cycle",
-                "/sys/class/power_supply/battery/charge_cycle"
+                "/sys/class/power_supply/battery/charge_cycle",
+                "/sys/class/oplus_mms/gauge/battery/cycle_count",
+                "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/cycle_count"
             )
             val parsedCycles = BatteryTelemetryParser.parseCycleCount(rawCyclesVal)
             val cycles = if (parsedCycles != null) {
@@ -249,7 +256,7 @@ class BatteryRepository(private val context: Context) {
                 "/proc/oplus_battery/soh",
                 "/proc/oplus_battery/batt_soh",
                 "/proc/oplus_battery/battery_soh"
-            )?.toIntOrNull()?.takeIf { it in 1..100 }
+            )?.toIntOrNull()?.takeIf { it in 30..100 }
 
             var rawSoh = BatteryTelemetryParser.resolveRawSoh(logSoh, sysfsSoh)
 
@@ -276,7 +283,7 @@ class BatteryRepository(private val context: Context) {
                 }
             } else null
 
-            if (rawSoh == null && dumpsysInfo?.asocPercent != null && dumpsysInfo.asocPercent in 1..100) {
+            if (rawSoh == null && dumpsysInfo?.asocPercent != null && dumpsysInfo.asocPercent in 30..100) {
                 rawSoh = dumpsysInfo.asocPercent
             }
 
@@ -285,7 +292,7 @@ class BatteryRepository(private val context: Context) {
                 try {
                     val bm = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
                     val bmSoh = bm.getIntProperty(10)
-                    if (bmSoh in 1..100) {
+                    if (bmSoh in 30..100) {
                         rawSoh = bmSoh
                     }
                 } catch (_: Exception) {}
@@ -367,6 +374,8 @@ class BatteryRepository(private val context: Context) {
 
             if (cell0Volt == null || cell0Volt == 0) {
                 val rawV = querySysfs(
+                    "/sys/class/oplus_mms/gauge/battery/voltage_now",
+                    "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/voltage_now",
                     "/sys/class/oplus_chg/battery/gauge_vbat",
                     "/sys/class/oplus_chg/battery/batt_volt",
                     "/sys/class/power_supply/battery/voltage_now",
@@ -388,6 +397,8 @@ class BatteryRepository(private val context: Context) {
 
             // --- 3. Tensione Minima di Spegnimento vbat_uv ---
             val vbatUv = querySysfs(
+                "/sys/class/oplus_mms/gauge/battery/voltage_min",
+                "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/voltage_min",
                 "/sys/class/oplus_chg/battery/vbat_uv",
                 "/sys/class/power_supply/battery/vbat_uv"
             )?.toIntOrNull()
@@ -437,9 +448,47 @@ class BatteryRepository(private val context: Context) {
             val (parsedAgeMonths, parsedDays) = BatteryTelemetryParser.parseUsageDates(manuDate, firstUsageDate)
             var batteryAgeMonths = parsedAgeMonths
             var daysSinceFirstUsage = parsedDays
+            var effectiveFirstUsageDate = firstUsageDate
 
             if (daysSinceFirstUsage == null) {
-                // Fallback 1: ro.runtime.firstboot (timestamp ms della prima accensione/setup post-fabbrica)
+                // Fallback 1: phone_first_internet_time (timestamp prima connessione a internet specifica di ColorOS / OxygenOS / Realme UI)
+                val internetTimeSetting = try {
+                    Settings.System.getString(context.contentResolver, "phone_first_internet_time")
+                } catch (_: Exception) { null }
+                    ?: executePrivilegedCommand("settings get system phone_first_internet_time", multiLine = false).first?.trim()?.takeIf { it.isNotBlank() && it != "null" }
+
+                if (!internetTimeSetting.isNullOrBlank()) {
+                    val dateToken = internetTimeSetting.split(':').firstOrNull()?.trim()
+                    if (dateToken != null && dateToken.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) {
+                        effectiveFirstUsageDate = dateToken
+                        val (netMonths, netDays) = BatteryTelemetryParser.parseUsageDates(manuDate, dateToken)
+                        if (netDays != null) {
+                            daysSinceFirstUsage = netDays
+                            if (batteryAgeMonths == null) batteryAgeMonths = netMonths
+                        }
+                    }
+                }
+            }
+
+            if (daysSinceFirstUsage == null) {
+                // Fallback 2: wizard_first_power_on_time (timestamp prima configurazione ColorOS / OxygenOS)
+                val wizardTimeSetting = try {
+                    Settings.Secure.getString(context.contentResolver, "wizard_first_power_on_time")
+                } catch (_: Exception) { null }
+                    ?: executePrivilegedCommand("settings get secure wizard_first_power_on_time", multiLine = false).first?.trim()?.takeIf { it.isNotBlank() && it != "null" }
+
+                val wizardTimestamp = wizardTimeSetting?.toLongOrNull()
+                if (wizardTimestamp != null && wizardTimestamp >= BatteryTelemetryParser.MIN_VALID_BOOT_TIMESTAMP_MS) {
+                    val (wizMonths, wizDays) = BatteryTelemetryParser.deriveUsageFromTimestamp(wizardTimestamp)
+                    if (wizDays != null) {
+                        daysSinceFirstUsage = wizDays
+                        if (batteryAgeMonths == null) batteryAgeMonths = wizMonths
+                    }
+                }
+            }
+
+            if (daysSinceFirstUsage == null) {
+                // Fallback 3: ro.runtime.firstboot (timestamp ms della prima accensione/setup post-fabbrica)
                 val firstBootProp = executePrivilegedCommand("getprop ro.runtime.firstboot", multiLine = false).first?.trim()?.toLongOrNull()
                     ?: readSystemProperty("ro.runtime.firstboot")?.trim()?.toLongOrNull()
                 val (propMonths, propDays) = BatteryTelemetryParser.deriveUsageFromTimestamp(firstBootProp)
@@ -450,7 +499,7 @@ class BatteryRepository(private val context: Context) {
             }
 
             if (daysSinceFirstUsage == null) {
-                // Fallback 2: firstInstallTime da PackageManager con validazione temporale rigorosa (>= 2018)
+                // Fallback 4: firstInstallTime da PackageManager con validazione temporale rigorosa (>= 2018)
                 try {
                     val pInfo = context.packageManager.getPackageInfo("android", 0)
                     val (pkgMonths, pkgDays) = BatteryTelemetryParser.deriveUsageFromTimestamp(pInfo.firstInstallTime)
@@ -469,6 +518,8 @@ class BatteryRepository(private val context: Context) {
             val isAuthentic = BatteryTelemetryParser.parseBatteryAuthenticity(authStr)
 
             val rmRaw = querySysfs(
+                "/sys/class/oplus_mms/gauge/battery/charge_now",
+                "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/charge_now",
                 "/sys/class/oplus_chg/battery/battery_rm",
                 "/sys/class/oplus_chg/battery/rm",
                 "/sys/class/power_supply/battery/charge_now",
@@ -487,6 +538,8 @@ class BatteryRepository(private val context: Context) {
             val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
             val plugged = intent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: 0
             val rawStatus = querySysfs(
+                "/sys/class/oplus_mms/gauge/battery/status",
+                "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/status",
                 "/sys/class/power_supply/battery/status",
                 "/sys/class/oplus_chg/battery/status"
             )?.trim()
@@ -500,6 +553,8 @@ class BatteryRepository(private val context: Context) {
             // 2. bccCurrent (da bcc_parms) se != 0
             // 3. Android BatteryManager HAL BATTERY_PROPERTY_CURRENT_NOW
             val rawSysfsCur = querySysfs(
+                "/sys/class/oplus_mms/gauge/battery/current_now",
+                "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/current_now",
                 "/sys/class/power_supply/battery/current_now",
                 "/sys/class/power_supply/bms/current_now",
                 "/sys/class/oplus_chg/battery/batt_current"
@@ -541,6 +596,8 @@ class BatteryRepository(private val context: Context) {
             )
 
             val tempRaw = querySysfs(
+                "/sys/class/oplus_mms/gauge/battery/temp",
+                "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/temp",
                 "/sys/class/oplus_chg/battery/batt_temp",
                 "/sys/class/power_supply/battery/temp",
                 "/sys/class/power_supply/bms/temp"
@@ -558,12 +615,24 @@ class BatteryRepository(private val context: Context) {
 
             // --- 7. Resistenza Interna Dinamica DC / ESR (Punto 1) ---
             val vNowStr = querySysfs(
+                "/sys/class/oplus_mms/gauge/battery/voltage_now",
+                "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/voltage_now",
+                "/sys/class/oplus_chg/battery/batt_volt",
+                "/sys/class/oplus_chg/battery/vbat_mv",
                 "/sys/class/power_supply/battery/voltage_now",
                 "/sys/class/power_supply/bms/voltage_now"
             )
-            val vNowMv = BatteryTelemetryParser.parseVoltage(vNowStr) ?: cell0Volt
+            val vNowMv = BatteryTelemetryParser.parseVoltage(vNowStr)
+                ?: cell0Volt
+                ?: oplusLogMap["vbat_mv"]?.toIntOrNull()
+                ?: dumpsysInfo?.voltageMv
+
+            val effectiveCurrentMa = currentMa ?: oplusLogMap["ibat_ma"]?.toIntOrNull()?.let {
+                BatteryTelemetryParser.normalizeCurrent(it, isPlugged)
+            }
 
             var internalResistanceMohm: Double? = null
+            var esrMethod = "NONE"
 
             // Priorità 1: Lettura diretta del registro di resistenza interna hardware dal BMS / sysfs
             val rawResistanceStr = querySysfs(
@@ -580,11 +649,12 @@ class BatteryRepository(private val context: Context) {
             val rawRes = rawResistanceStr?.toDoubleOrNull()
             if (rawRes != null && rawRes > 0) {
                 internalResistanceMohm = BatteryTelemetryParser.normalizeInternalResistance(rawRes, isDual)
+                if (internalResistanceMohm != null) esrMethod = "BMS_REGISTER"
             }
 
             // Priorità 2: Calcolo Elettrochimico Dinamico a Impulso / Step (ΔV / ΔI tra campioni successivi)
             val nowMs = System.currentTimeMillis()
-            if (internalResistanceMohm == null && vNowMv != null && currentMa != null) {
+            if (internalResistanceMohm == null && vNowMv != null && effectiveCurrentMa != null) {
                 val prevV = lastVoltageMv
                 val prevI = lastCurrentMa
                 val elapsedMs = nowMs - lastSampleTimeMs
@@ -593,50 +663,98 @@ class BatteryRepository(private val context: Context) {
                         v1Mv = prevV,
                         i1Ma = prevI,
                         v2Mv = vNowMv,
-                        i2Ma = currentMa,
+                        i2Ma = effectiveCurrentMa,
                         elapsedMs = elapsedMs,
                         isDual = isDual
                     )
                     if (stepEsr != null) {
                         internalResistanceMohm = stepEsr
                         cachedDynamicEsr = stepEsr
+                        preferences.setLastKnownEsr(stepEsr)
+                        esrMethod = "DYNAMIC_STEP"
                     }
                 }
             }
 
             // Aggiorna lo storico del campione temporale per il calcolo differenziale ΔV/ΔI
-            if (vNowMv != null && currentMa != null) {
+            if (vNowMv != null && effectiveCurrentMa != null) {
                 lastVoltageMv = vNowMv
-                lastCurrentMa = currentMa
+                lastCurrentMa = effectiveCurrentMa
                 lastSampleTimeMs = nowMs
             }
 
-            // Priorità 3: Fallback con OCV (|V_ocv - V_now| / |I|), MA con validazione anti-static e anti-desync
+            // Priorità 3: Fallback con OCV Sysfs genuino (|V_ocv - V_now| / |I|)
             val ocvStr = querySysfs(
+                "/sys/class/oplus_mms/gauge/battery/voltage_ocv",
+                "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/voltage_ocv",
                 "/sys/class/power_supply/battery/voltage_ocv",
                 "/sys/class/power_supply/bms/voltage_ocv",
                 "/sys/class/oplus_chg/battery/voltage_ocv"
             )
             val voltageOcvMv = BatteryTelemetryParser.parseVoltage(ocvStr)
 
-            if (internalResistanceMohm == null && voltageOcvMv != null && vNowMv != null && currentMa != null) {
+            if (internalResistanceMohm == null && voltageOcvMv != null && vNowMv != null && effectiveCurrentMa != null) {
                 val ocvEsr = BatteryTelemetryParser.calculateOcvEsr(
                     voltageOcvMv = voltageOcvMv,
                     vNowMv = vNowMv,
-                    currentMa = currentMa,
+                    currentMa = effectiveCurrentMa,
                     batteryLevel = batteryLevel,
                     isDual = isDual
                 )
                 if (ocvEsr != null) {
                     internalResistanceMohm = ocvEsr
                     cachedDynamicEsr = ocvEsr
+                    preferences.setLastKnownEsr(ocvEsr)
+                    esrMethod = "SYSFS_OCV"
                 }
             }
 
-            // Se nessun calcolo istantaneo è stato possibile ma disponiamo di un ESR dinamico recente verificato
-            if (internalResistanceMohm == null && cachedDynamicEsr != null) {
-                internalResistanceMohm = cachedDynamicEsr
+            // Priorità 4: Modello Termodinamico di Equilibrio OCV-SoC (Calibrazione Elettrochimica Silicon-Carbon / Li-ion)
+            if (internalResistanceMohm == null && batteryLevel != null && vNowMv != null && effectiveCurrentMa != null && Math.abs(effectiveCurrentMa) >= 40) {
+                val eqEsr = BatteryTelemetryParser.calculateEquilibriumSocEsr(
+                    batteryLevel = batteryLevel,
+                    vNowMv = vNowMv,
+                    currentMa = effectiveCurrentMa,
+                    isDual = isDual
+                )
+                if (eqEsr != null) {
+                    internalResistanceMohm = eqEsr
+                    cachedDynamicEsr = eqEsr
+                    preferences.setLastKnownEsr(eqEsr)
+                    esrMethod = "EQUILIBRIUM_SOC_OCV"
+                }
             }
+
+            // Priorità 5: Calcolo Differenziale Diretto (v1.5 Fallback se OCV presente ma fuori range modello)
+            if (internalResistanceMohm == null && voltageOcvMv != null && vNowMv != null && effectiveCurrentMa != null && Math.abs(effectiveCurrentMa) >= 40) {
+                val normOcv = if (voltageOcvMv > 5000 && vNowMv <= 4600) voltageOcvMv / 2 else voltageOcvMv
+                val normVnow = if (vNowMv > 5000 && voltageOcvMv <= 4600) vNowMv / 2 else vNowMv
+                val deltaV = Math.abs(normOcv - normVnow)
+                val rawEsr = (deltaV.toDouble() / Math.abs(effectiveCurrentMa).toDouble()) * 1000.0
+                if (rawEsr in 15.0..3000.0) {
+                    val rounded = Math.round(rawEsr * 10.0) / 10.0
+                    internalResistanceMohm = rounded
+                    cachedDynamicEsr = rounded
+                    preferences.setLastKnownEsr(rounded)
+                    esrMethod = "RAW_OCV_FALLBACK"
+                }
+            }
+
+            // Priorità 6: Ripristino Ultimo ESR Dinamico Convalidato (Persistente / Cache)
+            if (internalResistanceMohm == null) {
+                val cached = cachedDynamicEsr ?: preferences.getLastKnownEsr()
+                if (cached != null) {
+                    internalResistanceMohm = cached
+                    esrMethod = "PERSISTED_CACHE"
+                }
+            }
+
+            DiagnosticLogger.log(
+                tag = "ESR_PIPELINE",
+                command = "internalResistancePipeline()",
+                result = "ESR=${internalResistanceMohm?.let { "$it mΩ" } ?: "NULL"} (Method=$esrMethod, Vnow=${vNowMv}mV, Inow=${effectiveCurrentMa}mA, Ocv=${voltageOcvMv}mV, SoC=$batteryLevel%, Dual=$isDual)",
+                isSuccess = internalResistanceMohm != null
+            )
 
             // --- 8. Analisi Bilanciamento Celle (Punto 3) ---
             val cellBalance = BatteryTelemetryParser.evaluateCellBalance(cell0Volt, cell1Volt, isDual)
@@ -670,6 +788,8 @@ class BatteryRepository(private val context: Context) {
 
             // --- 10. Saturazione Reale: True Full Charge vs Display 100% (Punto 4) ---
             val chipSoc = querySysfs(
+                "/sys/class/oplus_mms/gauge/battery/capacity",
+                "/sys/devices/platform/soc/soc:oplus,mms_gauge/oplus_mms/gauge/battery/capacity",
                 "/sys/class/oplus_chg/battery/chip_soc",
                 "/sys/class/power_supply/battery/chip_soc"
             )?.toIntOrNull()
@@ -763,7 +883,7 @@ class BatteryRepository(private val context: Context) {
                     rawFccMah = rawFccMah,
                     batteryType = battType,
                     manuDate = manuDate,
-                    firstUsageDate = firstUsageDate,
+                    firstUsageDate = effectiveFirstUsageDate,
                     batteryAgeMonths = batteryAgeMonths,
                     daysSinceFirstUsage = daysSinceFirstUsage,
                     isAuthentic = isAuthentic,
@@ -989,7 +1109,7 @@ class BatteryRepository(private val context: Context) {
             for k in battery_health maximum_capacity battery_maximum_capacity oplus_battery_soh oplus_battery_health oplus_battery_maximum_capacity oplus_customize_battery_soh battery_soh; do
                 for ns in system global secure; do
                     v=$(settings get ${'$'}ns ${'$'}k 2>/dev/null)
-                    if [ "${'$'}v" != "null" ] && [ -n "${'$'}v" ] && [ "${'$'}v" -ge 1 ] && [ "${'$'}v" -le 100 ] 2>/dev/null; then
+                    if [ "${'$'}v" != "null" ] && [ -n "${'$'}v" ] && [ "${'$'}v" -ge 30 ] && [ "${'$'}v" -le 100 ] 2>/dev/null; then
                         echo "${'$'}v"
                         exit 0
                     fi
@@ -998,13 +1118,6 @@ class BatteryRepository(private val context: Context) {
             for uri in content://com.oplus.battery.provider/battery_health content://com.oplus.battery.provider/maximum_capacity content://com.oplus.battery.provider/battery_soh content://com.oplus.battery/battery_health; do
                 res=$(content query --uri ${'$'}uri 2>/dev/null)
                 if [ -n "${'$'}res" ] && [ "${'$'}res" != "No result" ]; then
-                    echo "${'$'}res"
-                    exit 0
-                fi
-            done
-            for ns in system global secure; do
-                res=$(settings list ${'$'}ns 2>/dev/null | grep -iE '^(.*(soh|maximum_capacity|battery_health).*)=' | head -n 1)
-                if [ -n "${'$'}res" ]; then
                     echo "${'$'}res"
                     exit 0
                 fi
@@ -1085,7 +1198,7 @@ class BatteryRepository(private val context: Context) {
         var healthPercentage: Int? = null
         try {
             val rawHealth = batteryManager.getIntProperty(10) // BATTERY_PROPERTY_STATE_OF_HEALTH
-            if (rawHealth in 1..100) {
+            if (rawHealth in 30..100) {
                 healthPercentage = rawHealth
             }
         } catch (e: Exception) {

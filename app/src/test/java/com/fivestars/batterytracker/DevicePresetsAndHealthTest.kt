@@ -395,6 +395,90 @@ class DevicePresetsAndHealthTest {
     }
 
     @Test
+    fun testEquilibriumOcvModelAcrossSocRange() {
+        assertEquals(4450, BatteryTelemetryParser.estimateEquilibriumOcv(100))
+        assertEquals(4350, BatteryTelemetryParser.estimateEquilibriumOcv(95))
+        assertEquals(4260, BatteryTelemetryParser.estimateEquilibriumOcv(90))
+        assertEquals(4130, BatteryTelemetryParser.estimateEquilibriumOcv(80))
+        assertEquals(4040, BatteryTelemetryParser.estimateEquilibriumOcv(70))
+        // Reno 13 a 66% SoC
+        assertEquals(4008, BatteryTelemetryParser.estimateEquilibriumOcv(66))
+        assertEquals(3960, BatteryTelemetryParser.estimateEquilibriumOcv(60))
+        assertEquals(3890, BatteryTelemetryParser.estimateEquilibriumOcv(50))
+        assertEquals(3830, BatteryTelemetryParser.estimateEquilibriumOcv(40))
+        assertEquals(3790, BatteryTelemetryParser.estimateEquilibriumOcv(30))
+        assertEquals(3750, BatteryTelemetryParser.estimateEquilibriumOcv(20))
+        assertEquals(3680, BatteryTelemetryParser.estimateEquilibriumOcv(10))
+        assertEquals(3300, BatteryTelemetryParser.estimateEquilibriumOcv(0))
+    }
+
+    @Test
+    fun testEquilibriumSocEsrResolutionForReno13StaticCutoff() {
+        // Ripristina l'estrazione per Reno 13 5G (Issue #3) quando il sysfs ha 4540 mV statici:
+        // SoC = 66%, Vnow = 3932 mV, Current = 734 mA, Single-Cell (1S)
+        val eqEsr = BatteryTelemetryParser.calculateEquilibriumSocEsr(
+            batteryLevel = 66,
+            vNowMv = 3932,
+            currentMa = 734,
+            isDual = false
+        )
+        assertNotNull("La resistenza interna non deve più essere N/D su Reno 13", eqEsr)
+        // OCV(66) = 4008 mV, dV = |4008 - 3932| = 76 mV -> ESR = (76 / 734) * 1000 = 103.5 mOhm
+        assertEquals(103.5, eqEsr ?: 0.0, 0.5)
+        assertTrue("103.5 mOhm è perfettamente nella fascia eccellente 1S (40-180 mOhm)", (eqEsr ?: 0.0) in 40.0..180.0)
+    }
+
+    @Test
+    fun testEquilibriumSocEsrResolutionForDualCellSuperVOOC() {
+        // Realme GT 7T / Find X (2S serie):
+        // SoC = 60%, Vnow = 3960 mV (per cella), Current = 2000 mA
+        val eqEsr = BatteryTelemetryParser.calculateEquilibriumSocEsr(
+            batteryLevel = 60,
+            vNowMv = 3960,
+            currentMa = 2000,
+            isDual = true
+        )
+        // A 60% OCV = 3960 mV, deltaV = 0 -> in caso di deltaV minimo
+        assertNull(eqEsr) // deltaV = 0 produce ESR < 15 mOhm quindi filtrato
+
+        // Con carico/scarica reale: Vnow = 3880 mV, current = -400 mA
+        val realEsr = BatteryTelemetryParser.calculateEquilibriumSocEsr(
+            batteryLevel = 60,
+            vNowMv = 3880,
+            currentMa = -400,
+            isDual = true
+        )
+        assertNotNull(realEsr)
+        // dV per cella = 80 mV, cellEsr = 200 mOhm, packEsr = 400 mOhm
+        assertEquals(400.0, realEsr ?: 0.0, 1.0)
+    }
+
+    @Test
+    fun testOcvEsrAllowsRealisticDynamicLightLoadAndFastChargeRanges() {
+        // Reno 14 (1S): V_ocv = 4150 mV, V_now = 4050 mV, I = -200 mA
+        val reno14Esr = BatteryTelemetryParser.calculateOcvEsr(
+            voltageOcvMv = 4150,
+            vNowMv = 4050,
+            currentMa = -200,
+            batteryLevel = 80,
+            isDual = false
+        )
+        assertNotNull(reno14Esr)
+        assertEquals(500.0, reno14Esr ?: 0.0, 1.0)
+
+        // Realme GT 7T (2S): dV = 200 mV, I = 185 mA (da test fisici in GEMINI.md ~1079.6 mOhm)
+        val realmeEsr = BatteryTelemetryParser.calculateOcvEsr(
+            voltageOcvMv = 4225,
+            vNowMv = 4025,
+            currentMa = 185,
+            batteryLevel = 65,
+            isDual = true
+        )
+        assertNotNull("Realme GT 7T in carica a 1079 mOhm non deve essere scartato", realmeEsr)
+        assertEquals(1081.1, realmeEsr ?: 0.0, 5.0)
+    }
+
+    @Test
     fun testDynamicDeltaVDeltaIStepEsrCalculation() {
         // Campione 1: Uso leggero (I1 = -300 mA, V1 = 3920 mV)
         // Campione 2: Carico attivo/avvio app (I2 = -800 mA, V2 = 3880 mV)
@@ -740,6 +824,13 @@ class DevicePresetsAndHealthTest {
         assertNull(BatteryTelemetryParser.parseSettingsBatteryHealth("-1"))
         assertNull(BatteryTelemetryParser.parseSettingsBatteryHealth("null"))
         assertNull(BatteryTelemetryParser.parseSettingsBatteryHealth(null))
+
+        // Reiezione chiavi di telemetria, contatori o flag (es. OnePlus/Oppo battery_health_enter_times_daily=1)
+        assertNull(BatteryTelemetryParser.parseSettingsBatteryHealth("battery_health_enter_times_daily=1"))
+        assertNull(BatteryTelemetryParser.parseSettingsBatteryHealth("oplus_customize_rhythm_health_enable=1"))
+        assertNull(BatteryTelemetryParser.parseSettingsBatteryHealth("1"))
+        assertNull(BatteryTelemetryParser.parseSettingsBatteryHealth("2"))
+        assertNull(BatteryTelemetryParser.parseSettingsBatteryHealth("battery_health_count=5"))
     }
 
     @Test
@@ -877,5 +968,105 @@ class DevicePresetsAndHealthTest {
             ppsIng = null
         )
         assertEquals("STANDBY", standby)
+    }
+
+    // --- 16. TEST IMPORTAZIONE ED ESPORTAZIONE BACKUP CSV ---
+
+    @Test
+    fun testSplitCsvLineStandardAndQuoted() {
+        val line = """1,1740000000000,"2025-06-07 14:30:00",95,321,5525.0,"OPLUS_SYSFS""""
+        val tokens = BatteryTelemetryParser.splitCsvLine(line)
+        assertEquals(7, tokens.size)
+        assertEquals("1", tokens[0])
+        assertEquals("1740000000000", tokens[1])
+        assertEquals("2025-06-07 14:30:00", tokens[2])
+        assertEquals("95", tokens[3])
+        assertEquals("321", tokens[4])
+        assertEquals("5525.0", tokens[5])
+        assertEquals("OPLUS_SYSFS", tokens[6])
+    }
+
+    @Test
+    fun testParseBatteryCsvStandardExportFormat() {
+        val csvLines = listOf(
+            "ID,Timestamp,Data_Ora,Salute_Percentuale,Cicli_Carica,Capacita_Residua_mAh,Sorgente",
+            """1,1740000000000,"2025-06-07 14:30:00",95,321,5525.0,"OPLUS_SYSFS"""",
+            """2,1740086400000,"2025-06-08 14:30:00",94,325,5480.5,"OPLUS_SYSFS""""
+        )
+
+        val result = BatteryTelemetryParser.parseBatteryCsv(csvLines)
+        assertEquals(2, result.records.size)
+        assertEquals(0, result.duplicateInFileCount)
+        assertEquals(0, result.invalidLinesCount)
+
+        val r1 = result.records[0]
+        assertEquals(0, r1.id)
+        assertEquals(1740000000000L, r1.timestamp)
+        assertEquals(95, r1.healthPercentage)
+        assertEquals(321, r1.cycleCount)
+        assertEquals(5525.0, r1.currentCapacityMah ?: 0.0, 0.01)
+        assertEquals("OPLUS_SYSFS", r1.source)
+
+        val r2 = result.records[1]
+        assertEquals(1740086400000L, r2.timestamp)
+        assertEquals(94, r2.healthPercentage)
+        assertEquals(325, r2.cycleCount)
+        assertEquals(5480.5, r2.currentCapacityMah ?: 0.0, 0.01)
+    }
+
+    @Test
+    fun testParseBatteryCsvWithNullsAndEuropeanComma() {
+        val csvLines = listOf(
+            "ID,Timestamp,Data_Ora,Salute_Percentuale,Cicli_Carica,Capacita_Residua_mAh,Sorgente",
+            """1,1740000000000,"2025-06-07 14:30:00",N/D,N/D,"5525,0","BATTERY_MANAGER"""",
+            """2,1740086400000,"2025-06-08 14:30:00",100,10,N/D,"""""
+        )
+
+        val result = BatteryTelemetryParser.parseBatteryCsv(csvLines)
+        assertEquals(2, result.records.size)
+        val r1 = result.records[0]
+        assertNull(r1.healthPercentage)
+        assertNull(r1.cycleCount)
+        assertEquals(5525.0, r1.currentCapacityMah ?: 0.0, 0.01)
+        assertEquals("BATTERY_MANAGER", r1.source)
+
+        val r2 = result.records[1]
+        assertEquals(100, r2.healthPercentage)
+        assertEquals(10, r2.cycleCount)
+        assertNull(r2.currentCapacityMah)
+        assertEquals("CSV_IMPORT", r2.source)
+    }
+
+    @Test
+    fun testParseBatteryCsvDeduplicationAndInvalidLines() {
+        val csvLines = listOf(
+            "\uFEFFID,Timestamp,Data_Ora,Salute_Percentuale,Cicli_Carica,Capacita_Residua_mAh,Sorgente",
+            """1,1740000000000,"2025-06-07 14:30:00",95,321,5525.0,"OPLUS_SYSFS"""",
+            """2,1740000000000,"2025-06-07 14:30:00",95,321,5525.0,"OPLUS_SYSFS"""", // Duplicato
+            """3,invalid_timestamp,"invalid_date",95,321,5525.0,"OPLUS_SYSFS"""", // Riga non valida
+            """4,1740172800000,"2025-06-09 14:30:00",93,330,5450.0,"OPLUS_SYSFS""""
+        )
+
+        val result = BatteryTelemetryParser.parseBatteryCsv(csvLines)
+        assertEquals(2, result.records.size)
+        assertEquals(1, result.duplicateInFileCount)
+        assertEquals(1, result.invalidLinesCount)
+        assertEquals(1740000000000L, result.records[0].timestamp)
+        assertEquals(1740172800000L, result.records[1].timestamp)
+    }
+
+    @Test
+    fun testParseBatteryCsvEnglishHeaders() {
+        val csvLines = listOf(
+            "Timestamp,Date_Time,SOH,Cycle_Count,Capacity_mAh,Source",
+            """1740000000000,"2025-06-07 14:30:00",98,150,5600.0,"OPLUS_SYSFS""""
+        )
+
+        val result = BatteryTelemetryParser.parseBatteryCsv(csvLines)
+        assertEquals(1, result.records.size)
+        assertEquals(1740000000000L, result.records[0].timestamp)
+        assertEquals(98, result.records[0].healthPercentage)
+        assertEquals(150, result.records[0].cycleCount)
+        assertEquals(5600.0, result.records[0].currentCapacityMah ?: 0.0, 0.01)
     }
 }
