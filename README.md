@@ -139,8 +139,7 @@ The app clearly indicates how SOH is sourced on your device:
 The following improvements and capabilities are planned for upcoming releases (**v1.9**):
 
 - **📊 Interactive Home Screen Widget:** Glanceable battery health %, cycle count, and charging wattage on your home screen.
-- **🔍 Xiaomi / HyperOS Kernel Telemetry Probing:** Direct driver mapping for Xiaomi/Redmi/POCO BMS nodes (`/sys/class/power_supply/bms`).
-- **📉 Advanced Battery Degradation Modeling:** Nonlinear wear curves based on deep cycle history and operating temperature distribution.
+- **TBA**
 
 ---
 
