@@ -26,7 +26,8 @@ object BatteryTelemetryParser {
         val effectiveHealth: Int?,
         val isHealthCalculated: Boolean,
         val effectiveFcc: Double?,
-        val displayDesignCapacity: Double
+        val displayDesignCapacity: Double,
+        val isCapacityEstimated: Boolean = false
     )
 
     data class DumpsysParsedData(
@@ -494,6 +495,7 @@ object BatteryTelemetryParser {
         typicalCalculationBase: Double
     ): HealthDerivation {
         var isHealthCalculated = false
+        var isCapacityEstimated = false
         var calculationBaseUsed = ratedDesign
 
         val effectiveHealth = when {
@@ -512,12 +514,17 @@ object BatteryTelemetryParser {
         val effectiveFcc = when {
             rawSoh != null && rawSoh in 1..100 && ratedDesign > 0 -> {
                 if (fcc != null && fcc > 0 && Math.abs((fcc / ratedDesign * 100.0) - rawSoh) <= 5.0 && fcc <= ratedDesign * 1.02) {
+                    isCapacityEstimated = false
                     fcc
                 } else {
+                    isCapacityEstimated = true
                     Math.round((ratedDesign * rawSoh / 100.0) * 10.0) / 10.0
                 }
             }
-            fcc != null && fcc > 0 -> fcc
+            fcc != null && fcc > 0 -> {
+                isCapacityEstimated = false
+                fcc
+            }
             else -> null
         }
 
@@ -527,7 +534,8 @@ object BatteryTelemetryParser {
             effectiveHealth = effectiveHealth,
             isHealthCalculated = isHealthCalculated,
             effectiveFcc = effectiveFcc,
-            displayDesignCapacity = displayDesignCapacity
+            displayDesignCapacity = displayDesignCapacity,
+            isCapacityEstimated = isCapacityEstimated
         )
     }
 

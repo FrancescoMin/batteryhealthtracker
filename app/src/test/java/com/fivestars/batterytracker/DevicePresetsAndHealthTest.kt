@@ -1208,6 +1208,7 @@ class DevicePresetsAndHealthTest {
         )
         assertEquals(96, healthDerivation.effectiveHealth)
         assertFalse(healthDerivation.isHealthCalculated)
+        assertTrue("La capacità deve essere contrassegnata come calcolata/stimata da ASOC", healthDerivation.isCapacityEstimated)
         assertEquals(7833.6, healthDerivation.effectiveFcc ?: 0.0, 0.01)
     }
 

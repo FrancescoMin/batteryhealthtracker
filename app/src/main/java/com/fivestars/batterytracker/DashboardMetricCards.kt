@@ -48,7 +48,11 @@ fun DashboardCards(
         } ?: stringResource(R.string.card_capacity_sub_bm)
     } else {
         snapshot?.designCapacityMah?.let {
-            stringResource(R.string.card_capacity_sub_design, it.toInt())
+            if (snapshot.isCapacityEstimated) {
+                stringResource(R.string.card_capacity_sub_design_estimated, it.toInt())
+            } else {
+                stringResource(R.string.card_capacity_sub_design, it.toInt())
+            }
         } ?: stringResource(R.string.card_capacity_sub_fcc)
     }
 
