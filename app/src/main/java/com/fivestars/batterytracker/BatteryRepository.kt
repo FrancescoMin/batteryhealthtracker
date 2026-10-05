@@ -281,8 +281,8 @@ class BatteryRepository(private val context: Context) {
                 }
             } else null
 
-            if (rawSoh == null && dumpsysInfo?.asocPercent != null && dumpsysInfo.asocPercent in 30..100) {
-                rawSoh = dumpsysInfo.asocPercent
+            if (dumpsysInfo?.asocPercent != null && dumpsysInfo.asocPercent in 30..100) {
+                rawSoh = if (rawSoh != null) minOf(rawSoh, dumpsysInfo.asocPercent) else dumpsysInfo.asocPercent
             }
 
             val cycles: Int? = parsedCycles ?: bmCycles ?: dumpsysInfo?.cycleCount
@@ -857,9 +857,11 @@ class BatteryRepository(private val context: Context) {
 
             Log.d(tag, "Oplus Sysfs: FCC=${effectiveFcc ?: fcc} mAh, Qmax=$qMaxMah mAh, Dual=$isDual, Cell0=$cell0Volt mV, Cell1=$cell1Volt mV, ESR=$internalResistanceMohm mOhm, Sync=$bmsSyncStatus, TrueFull=$isTrueFullCharge, SatStatus=$saturationStatus, TempComp=$tempCompensatedCapacityMah, Safe=$isHardwareSafe")
 
+            val isSamsungEfs = dumpsysInfo?.qrData != null || (dumpsysInfo?.asocPercent != null && dumpsysInfo.firstUseDate != null)
             val snapshotSource = when {
                 lastPrivilegedSource == "ROOT" && !isDumpsysFallbackUsed -> "Oplus Sysfs (Root)"
-                lastPrivilegedSource == "ROOT" && isDumpsysFallbackUsed -> "Android HAL / dumpsys (Root)"
+                lastPrivilegedSource == "ROOT" && isDumpsysFallbackUsed -> if (isSamsungEfs) "Samsung EFS (Root)" else "Android HAL / dumpsys (Root)"
+                isSamsungEfs -> "Samsung EFS (Shizuku)"
                 isDumpsysFallbackUsed -> "Android HAL / dumpsys (Shizuku)"
                 else -> "Oplus Sysfs (Shizuku)"
             }

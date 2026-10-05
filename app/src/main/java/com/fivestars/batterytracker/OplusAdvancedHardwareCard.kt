@@ -134,6 +134,12 @@ fun OplusAdvancedHardwareCard(
 
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (snapshot?.isAuthentic == true) {
+                        val authLabel = when {
+                            android.os.Build.MANUFACTURER.contains("samsung", ignoreCase = true) -> "Samsung Auth"
+                            android.os.Build.MANUFACTURER.contains("realme", ignoreCase = true) -> "Realme Auth"
+                            android.os.Build.MANUFACTURER.contains("oneplus", ignoreCase = true) -> "OnePlus Auth"
+                            else -> stringResource(R.string.diag_badge_oppo_auth)
+                        }
                         Surface(
                             shape = RoundedCornerShape(6.dp),
                             color = MaterialTheme.colorScheme.primaryContainer
@@ -150,7 +156,7 @@ fun OplusAdvancedHardwareCard(
                                 )
                                 Spacer(modifier = Modifier.width(3.dp))
                                 Text(
-                                    text = stringResource(R.string.diag_badge_oppo_auth),
+                                    text = authLabel,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer

@@ -1,6 +1,7 @@
 package com.fivestars.batterytracker
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -1165,6 +1166,9 @@ class DevicePresetsAndHealthTest {
 
     @Test
     fun testSamsungEfsTelemetryParsing() {
+        // Test con dump reale di Galaxy Tab S9 5G (SM-X716B)
+        // Nota: mSavedBatteryBsoh: 99 compare in coda nel dump, ma AsocData efsValue: 96
+        // deve avere PRIORITÀ ASSOLUTA perché rappresenta il reale degrado chimico del fuelgauge hardware.
         val sampleDumpsys = """
             Current Battery Service state:
               voltage: 4134
@@ -1178,18 +1182,49 @@ class DevicePresetsAndHealthTest {
             10-04 21:48:23.174  [SS][BattInfo]FirstUseDateData efsValue:20240522    
             10-04 21:48:23.174  [SS][BattInfo]AsocData efsValue:96    
             10-04 21:48:23.184  [SS][BattInfo]DischargeLevelData efsValue:16114    
+            BatteryInfoBackUp
+              mSavedBatteryMaxTemp: 379
+              mSavedBatteryMaxCurrent: 7354
+              mSavedBatteryBsoh: 99
         """.trimIndent()
 
         val parsed = BatteryTelemetryParser.parseDumpsysBatteryText(sampleDumpsys)
         assertEquals(4134, parsed.voltageMv)
         assertEquals(7274890L, parsed.chargeCounterUah)
-        assertEquals(96, parsed.asocPercent)
+        assertEquals("La salute reale chimica EFS (96%) non deve essere sovrascritta dal BSOH software (99%)", 96, parsed.asocPercent)
         assertEquals(161, parsed.cycleCount) // 16114 / 100 = 161 cicli
         assertEquals("2024-05-22", parsed.firstUseDate)
         assertEquals("2024-05-22", parsed.calDate)
         assertEquals(1389, parsed.currentNowMa)
         assertEquals(1, parsed.protectBatteryMode)
         assertTrue("Deve essere riconosciuta come batteria autentica", parsed.isAuthentic == true)
+
+        // Verifica calcolo capacità effettiva su base nominale 8160 mAh
+        val healthDerivation = BatteryTelemetryParser.resolveHealthAndFcc(
+            rawSoh = parsed.asocPercent,
+            fcc = null,
+            ratedDesign = 8160.0,
+            typicalCalculationBase = 8400.0
+        )
+        assertEquals(96, healthDerivation.effectiveHealth)
+        assertFalse(healthDerivation.isHealthCalculated)
+        assertEquals(7833.6, healthDerivation.effectiveFcc ?: 0.0, 0.01)
+    }
+
+    @Test
+    fun testSamsungBsohFallbackWhenAsocMissing() {
+        // Se AsocData non è presente nel dump, mSavedBatteryBsoh deve fungere da fallback
+        val sampleDumpsysWithoutAsoc = """
+            Current Battery Service state:
+              voltage: 4134
+              Charge counter: 7274890
+              status: 2
+            BatteryInfoBackUp
+              mSavedBatteryBsoh: 99
+        """.trimIndent()
+
+        val parsed = BatteryTelemetryParser.parseDumpsysBatteryText(sampleDumpsysWithoutAsoc)
+        assertEquals(99, parsed.asocPercent)
     }
 }
 

@@ -567,7 +567,8 @@ object BatteryTelemetryParser {
 
         var voltage: Int? = null
         var chargeCounter: Long? = null
-        var asoc: Int? = null
+        var efsAsoc: Int? = null
+        var bsohFallback: Int? = null
         var status: Int? = null
         var temp: Int? = null
         var currentNow: Int? = null
@@ -624,11 +625,16 @@ object BatteryTelemetryParser {
                 trimmed.contains("[SS][BattInfo]AsocData", ignoreCase = true) -> {
                     val v = trimmed.substringAfter("efsValue:").trim().toIntOrNull()
                     if (v != null && v in 1..100) {
-                        asoc = v
+                        efsAsoc = v
+                    }
+                }
+                trimmed.startsWith("mSavedBatteryAsoc:", ignoreCase = true) -> {
+                    val v = trimmed.substringAfter(":").trim().toIntOrNull()
+                    if (v != null && v in 1..100 && efsAsoc == null) {
+                        efsAsoc = v
                     }
                 }
                 trimmed.startsWith("mSavedBatteryBsoh:", ignoreCase = true) ||
-                trimmed.startsWith("mSavedBatteryAsoc:", ignoreCase = true) ||
                 trimmed.startsWith("mBatteryHealth:", ignoreCase = true) ||
                 trimmed.startsWith("mMaximumCapacity:", ignoreCase = true) ||
                 trimmed.startsWith("mBatteryStateOfHealth:", ignoreCase = true) ||
@@ -639,8 +645,8 @@ object BatteryTelemetryParser {
                 trimmed.startsWith("health_percent:", ignoreCase = true) ||
                 trimmed.startsWith("State of Health:", ignoreCase = true) -> {
                     val v = trimmed.substringAfter(":").trim().toIntOrNull()
-                    if (v != null && v in 1..100) {
-                        asoc = v
+                    if (v != null && v in 1..100 && bsohFallback == null) {
+                        bsohFallback = v
                     }
                 }
                 trimmed.startsWith("status:", ignoreCase = true) -> {
@@ -652,10 +658,12 @@ object BatteryTelemetryParser {
             }
         }
 
+        val resolvedAsoc = efsAsoc ?: bsohFallback
+
         return DumpsysParsedData(
             voltageMv = voltage,
             chargeCounterUah = chargeCounter,
-            asocPercent = asoc,
+            asocPercent = resolvedAsoc,
             status = status,
             tempTenths = temp,
             currentNowMa = currentNow,
