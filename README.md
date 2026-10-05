@@ -31,7 +31,7 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 
 > [!NOTE]
 > **🚀 Repository Development Status / Stato di Sviluppo della Repository:**  
-> The codebase in the `main` branch may be ahead of the latest tagged GitHub Release (`BatteryHealthTracker-v1.7.apk`). New features, hardware presets, and optimizations currently undergoing testing in the repository will be bundled and published in future release APKs.  
+> The codebase in the `main` branch may be ahead of the latest tagged GitHub Release (`BatteryHealthTracker-v1.8.apk`). New features, hardware presets, and optimizations currently undergoing testing in the repository will be bundled and published in future release APKs.  
 > *Il codice presente nella repository (`main`) potrebbe risultare più avanzato rispetto all'ultima release ufficiale scaricabile, poiché alcune nuove funzioni o migliorie sono ancora in fase di testing e confluiranno nelle release successive.*
 
 ---
@@ -97,10 +97,22 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 ### 📊 Health Trends & Projections
 - **Interactive SOH Chart:** Visual canvas trend with 100%, 90%, and 80% industrial replacement threshold lines.
 - **Cycle Life Projection:** Estimates remaining cycles before reaching 80% capacity based on historical wear rate.
-- **Safe History Management:** Multi-select deletion, persistent Trash bin, full restore, and CSV/JSON export.
+- **Safe History Management:** Multi-select deletion, persistent Trash bin, full restore, and bidirectional CSV/JSON export and import with automatic deduplication.
+
+### ⏰ Configurable Background Work Scheduler
+- **Customizable Intervals:** Select between **24 hours**, **2 days**, or **7 days** periodic snapshots via Android `WorkManager`.
+- **Material 3 TimePicker:** Choose the exact time of day for scheduled background measurements to prevent nighttime wakeups, with real-time countdown banner on the dashboard.
+
+### 📥 CSV History Import & Bidirectional Backup
+- **Full History Portability:** Restore snapshots exported from other devices or previous installations.
+- **Deduplication & Integrity:** Automatically skips duplicate timestamps while preserving notes and battery metrics.
+
+### 📱 Universal Device Presets & Samsung Galaxy Telemetry
+- **OPlus & Samsung Coverage:** Built-in rated capacities (IEC 61960) for 40+ Oppo, Realme, and OnePlus models, plus extensive Samsung Galaxy presets (Galaxy S24, S23, S22, Z Fold/Flip, and A-series).
+- **Samsung EFS Telemetry:** Direct decoding of Samsung battery health nodes (`batt_capacity_max`, `batt_discharge_level`, cycle logs), plus platform `power_profile.xml` capacity derivation.
 
 ### 🔔 Smart Notifications & Thermal Protection
-- **Snapshot Receipts:** Confirmation cards for manual saves, 24h background logs (`WorkManager`), and 100% charger unplug events.
+- **Snapshot Receipts:** Confirmation cards for manual saves, scheduled background logs (`WorkManager`), and 100% charger unplug events.
 - **Overheat Alarm:** High-priority alert when battery temperature exceeds 42°C during high-speed charging or heavy workloads.
 
 ### 🚀 120 Hz UI & Themes
@@ -118,19 +130,17 @@ The app clearly indicates how SOH is sourced on your device:
 3. **`Unavailable via API`:** Fallback indicator when running without Shizuku permissions.
 
 ### 🌐 Multilingual
-- Fully localized in **English**, **Italian (Italiano)**, and **Spanish (Español)**.
+- Fully localized in **English**, **Italian (Italiano)**, **Spanish (Español)**, and **French (Français)**.
 
 ---
 
 ## 🔮 Upcoming Features (Next Release)
 
-The following improvements and capabilities are currently in active development or undergoing testing on the `main` branch, slated for inclusion in the upcoming official release (**v1.8**):
+The following improvements and capabilities are planned for upcoming releases (**v1.9**):
 
-- **⏰ Configurable Automatic Background Sampling:** User-customizable periodic snapshot scheduling with selectable intervals (**24 hours**, **2 days**, or **7 days**) and a native **Material 3 TimePicker** to set the exact execution time of day (preventing nighttime notifications), smart WorkManager delay synchronization, and dashboard countdown integration.
-- **📥 CSV History Import & Bidirectional Backup:** Seamlessly restore previously exported history files with automatic deduplication, integrity checking, and localized confirmation dialogs.
-- **⚡ Enhanced OnePlus 13 & Snapdragon 8 Elite Telemetry:** Extended BMS sysfs probing, dual-cell silicon-carbon SOH inference, dynamic ESR sampling improvements, and first-boot activation date derivation.
-- **🔍 Advanced Hardware Diagnostic Probing:** Expanded live sysfs node exploration and refined fallback strategies for community-reported devices under restricted SELinux policies.
-- **📱 Expanded Device Presets Catalog:** Ongoing integration of factory rated capacities (IEC 61960) and battery architectures for new Oppo, Realme, and OnePlus models.
+- **📊 Interactive Home Screen Widget:** Glanceable battery health %, cycle count, and charging wattage on your home screen.
+- **🔍 Xiaomi / HyperOS Kernel Telemetry Probing:** Direct driver mapping for Xiaomi/Redmi/POCO BMS nodes (`/sys/class/power_supply/bms`).
+- **📉 Advanced Battery Degradation Modeling:** Nonlinear wear curves based on deep cycle history and operating temperature distribution.
 
 ---
 
@@ -232,7 +242,7 @@ flowchart TD
 2. **Shizuku:** Installed from [Google Play](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api) or [GitHub Releases](https://github.com/RikkaApps/Shizuku/releases) and running via **Wireless Debugging** or **Root**.
 
 ### App Setup
-1. Download and install `BatteryHealthTracker-v1.7.apk` from [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases).
+1. Download and install `BatteryHealthTracker-v1.8.apk` from [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases).
 2. Open the app and grant the **Notification Permission** (required for background snapshot receipts and > 42°C overheat alerts).
 3. Tap **"Authorize Shizuku"** and allow access when prompted.
 4. Telemetry, health metrics, and hardware registers will populate immediately!
