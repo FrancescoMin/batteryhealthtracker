@@ -149,6 +149,7 @@ The following improvements and capabilities are planned for upcoming releases (*
 > **Compatibility, Community Testing & Diagnostic Logs:**
 > - 🟢 **Oppo Reno 14 (EU):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (all BMS telemetry, SOH, FCC, cycle counts, voltage, power, and safety registers read with complete accuracy).
 > - 🟢 **Realme GT 7T (EU / RMX5085):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (dynamic fuel-gauge SOH parsing, Qmax 6736 mAh, 259 cycles, dual-cell balance, ESR, production & first use dates).
+> - 🟢 **OnePlus 13 (PJZ110 / CPH2653 / CPH2655):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (Snapdragon 8 Elite platform, OxygenOS/ColorOS 15 `oplus_mms` fuel-gauge telemetry, 6000 / 5840 mAh Silicon-Carbon dual-cell architecture, hardware cycle count, dynamic ESR & activation date).
 > - 🟡 **Other Devices (`🤝 Help wanted`):** Due to variations in regional firmware, SELinux enforcement (e.g. OnePlus Nord 5 requiring root for direct Qualcomm sysfs access), and vendor driver differences across ColorOS, OxygenOS, and Realme UI, **full hardware compatibility is not yet guaranteed for other models**.
 >   - 📋 **1-Click Markdown Report:** Simply tap **"Copy Report"** in the console to copy your device environment and all raw kernel query outputs to your clipboard.
 >   - 🐛 **Standardized Compatibility Form:** Open our dedicated [Device Compatibility Report Form](https://github.com/FrancescoMin/batteryhealthtracker/issues/new?template=device_compatibility.yml) to submit verified metrics with a structured checklist and paste your console logs.
@@ -159,7 +160,7 @@ The following improvements and capabilities are planned for upcoming releases (*
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Oppo** | **Reno 14 (EU)** | High-Density Single-Cell | 6000 / 5840 | ✅ **100% Verified (Shizuku)** | MediaTek |
 | **Realme** | **GT 7T (EU)** | Dual-Cell Serial | 7000 (2×3500) / 6850 (2×3425) | ✅ **100% Verified (Shizuku)** | MediaTek |
-| **OnePlus** | OnePlus 13 | Silicon-Carbon Dual-Cell | 6000 / 5840 | 🧪 Testing / 🤝 Help wanted | Snapdragon |
+| **OnePlus** | **OnePlus 13** | Silicon-Carbon Dual-Cell | 6000 / 5840 | ✅ **100% Verified (Shizuku)** | Snapdragon |
 | **OnePlus** | OnePlus 13R | Silicon-Carbon Dual-Cell | 6000 / 5840 | 🤝 Help wanted | Snapdragon |
 | **OnePlus** | OnePlus 15 | Serial Dual-Cell | 7300 (2×3650) / 7150 (2×3575) | 🤝 Help wanted | Snapdragon |
 | **OnePlus** | OnePlus 12 / 12R | Dual-Cell Serial | 5400–5500 / 5260–5360 | 🤝 Help wanted | Snapdragon |

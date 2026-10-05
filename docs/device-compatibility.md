@@ -25,7 +25,7 @@ Unlike conventional battery monitors that rely solely on Android's public `Batte
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Oppo** | **Reno 14 (EU)** | `CPH2737` / `OP5F02L1` | Dimensity 7300 | 1S Single-Cell (5840 mAh) | `normal_batt_soh` (95%) | `battery_cc` (321) | N/A (1S) | 🟢 **100% Verified (Shizuku)** |
 | **Realme** | **GT 7T (EU)** | `RMX5085` / `RE6090L1` | Dimensity 8400 | 2S Dual-Cell (6850 mAh) | `battery_log_content` (99%) | `battery_cc` (259) | `bcc_parms` (Δ 1 mV) | 🟢 **100% Verified (Shizuku)** |
-| **OnePlus** | OnePlus 13 | `CPH2581` / `PJZ110` | Snapdragon 8 Elite | 2S Dual-Cell (5840 mAh) | Dynamically Calculated | `cycle_count` | In testing | 🟡 Testing in progress |
+| **OnePlus** | **OnePlus 13** | `PJZ110` / `CPH2653` | Snapdragon 8 Elite | 2S Dual-Cell (5840 mAh) | `oplus_mms` / Dynamic SOH | `oplus_mms/cycle_count` | `bcc_parms` / dual-cell | 🟢 **100% Verified (Shizuku)** |
 | **OnePlus** | OnePlus 13R | `CPH2645` | Snapdragon 8 Gen 3 | 2S Dual-Cell (5840 mAh) | To verify | To verify | To verify | 🤝 Help wanted |
 | **OnePlus** | OnePlus 12 / 12R | `CPH2573` / `CPH2609` | Snapdragon 8 Gen 3 / 2 | 2S Dual-Cell (5400 mAh) | To verify | `battery_cycle` | To verify | 🤝 Help wanted |
 | **OnePlus** | Nord 5 (Global/IN) | `CPH2707` | Snapdragon 8s Gen 3 | 2S Dual-Cell (6650 mAh) | Direct Sysfs | Sysfs BMS | To verify | ⚠️ Requires Root (SELinux) |
