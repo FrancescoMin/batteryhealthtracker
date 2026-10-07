@@ -100,13 +100,39 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
     private val _currentSnapshot = MutableStateFlow<BatterySnapshot?>(null)
     val currentSnapshot: StateFlow<BatterySnapshot?> = _currentSnapshot.asStateFlow()
 
+    private val _livePowerData = MutableStateFlow<LivePowerData?>(null)
+    val livePowerData: StateFlow<LivePowerData?> = _livePowerData.asStateFlow()
+
+    private var livePowerJob: Job? = null
+
+    fun startLivePowerStream() {
+        if (livePowerJob?.isActive == true) return
+        livePowerJob = viewModelScope.launch(Dispatchers.Default) {
+            while (true) {
+                try {
+                    val currentBaseProtocol = _currentSnapshot.value?.chargingProtocol
+                    val live = repository.getLivePowerData(currentBaseProtocol)
+                    _livePowerData.value = live
+                } catch (e: Exception) {
+                    Log.w(tag, "Error updating live power data", e)
+                }
+                kotlinx.coroutines.delay(1500)
+            }
+        }
+    }
+
+    fun stopLivePowerStream() {
+        livePowerJob?.cancel()
+        livePowerJob = null
+    }
+
     private val _isShizukuAvailable = MutableStateFlow(false)
     val isShizukuAvailable: StateFlow<Boolean> = _isShizukuAvailable.asStateFlow()
 
     private val _isShizukuPermissionGranted = MutableStateFlow(false)
     val isShizukuPermissionGranted: StateFlow<Boolean> = _isShizukuPermissionGranted.asStateFlow()
 
-    private val _isRefreshing = MutableStateFlow(false)
+    private val _isRefreshing = MutableStateFlow(true)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     private val _updateCheckResult = MutableStateFlow<UpdateCheckResult?>(null)
@@ -156,6 +182,7 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
 
     override fun onCleared() {
         super.onCleared()
+        stopLivePowerStream()
         try {
             Shizuku.removeBinderReceivedListener(binderReceivedListener)
             Shizuku.removeBinderDeadListener(binderDeadListener)
@@ -192,13 +219,18 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
         }
         refreshJob = viewModelScope.launch {
             _isRefreshing.value = true
-            if (resetProbe) {
-                repository.resetProbe()
+            try {
+                if (resetProbe) {
+                    repository.resetProbe()
+                }
+                checkShizukuStatus()
+                val snapshot = repository.getBatterySnapshot()
+                _currentSnapshot.value = snapshot
+            } catch (e: Throwable) {
+                Log.e(tag, "Errore durante refreshSnapshot", e)
+            } finally {
+                _isRefreshing.value = false
             }
-            checkShizukuStatus()
-            val snapshot = repository.getBatterySnapshot()
-            _currentSnapshot.value = snapshot
-            _isRefreshing.value = false
         }
     }
 

@@ -1,5 +1,8 @@
 package com.fivestars.batterytracker
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +17,7 @@ import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -26,12 +30,14 @@ import java.util.Locale
 @Composable
 fun DashboardCards(
     snapshot: BatterySnapshot?,
+    isLoading: Boolean = false,
     onHealthInfoClick: () -> Unit = {},
     onCyclesInfoClick: () -> Unit = {},
     onCapacityInfoClick: () -> Unit = {},
     onOpenConsole: () -> Unit = {}
 ) {
     val notAvail = stringResource(R.string.not_available)
+    val readingText = stringResource(R.string.card_reading_telemetry)
     val isBatteryManager = snapshot?.isShizukuUsed != true
     val isHealthInaccurate = isBatteryManager || snapshot?.healthPercentage == null
     val isCyclesInaccurate = (snapshot?.cycleCount == null) || (isBatteryManager && snapshot.cycleCount == 0)
@@ -40,9 +46,11 @@ fun DashboardCards(
     val cyclesText = if (isCyclesInaccurate) notAvail else (snapshot?.cycleCount?.let { "$it" } ?: notAvail)
     val capacityText = snapshot?.currentCapacityMah?.let { String.format(Locale.US, "%.0f mAh", it) } ?: notAvail
     val levelText = snapshot?.batteryLevelPercentage?.let { "$it%" } ?: notAvail
-    val sourceText = snapshot?.source ?: notAvail
+    val sourceText = if (isLoading) readingText else (snapshot?.source ?: notAvail)
 
-    val capacitySubtitle = if (isBatteryManager) {
+    val capacitySubtitle = if (isLoading) {
+        readingText
+    } else if (isBatteryManager) {
         snapshot?.designCapacityMah?.let {
             stringResource(R.string.card_capacity_sub_bm_with_design, it.toInt())
         } ?: stringResource(R.string.card_capacity_sub_bm)
@@ -57,16 +65,19 @@ fun DashboardCards(
     }
 
     val healthSubtitle = when {
+        isLoading -> readingText
         isHealthInaccurate -> stringResource(R.string.card_health_sub_bm)
         snapshot?.isHealthCalculated == true -> stringResource(R.string.card_health_sub)
         else -> stringResource(R.string.card_health_sub_bms)
     }
 
-    val cyclesSubtitle = if (isCyclesInaccurate) {
-        stringResource(R.string.card_cycles_sub_bm)
-    } else {
-        stringResource(R.string.card_cycles_sub)
+    val cyclesSubtitle = when {
+        isLoading -> readingText
+        isCyclesInaccurate -> stringResource(R.string.card_cycles_sub_bm)
+        else -> stringResource(R.string.card_cycles_sub)
     }
+
+    val levelSubtitle = if (isLoading) readingText else stringResource(R.string.card_level_sub)
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // Riga 1: Salute % e Cicli
@@ -80,10 +91,11 @@ fun DashboardCards(
                 subtitle = healthSubtitle,
                 icon = Icons.Default.BatteryChargingFull,
                 modifier = Modifier.weight(1f),
-                isHighlighted = !isHealthInaccurate,
+                isHighlighted = !isHealthInaccurate && !isLoading,
                 showInfoIcon = true,
-                showWarningIcon = isHealthInaccurate,
-                onClick = onHealthInfoClick
+                showWarningIcon = isHealthInaccurate && !isLoading,
+                isLoading = isLoading,
+                onClick = if (isLoading) null else onHealthInfoClick
             )
             MetricCard(
                 title = stringResource(R.string.card_cycles_title),
@@ -92,8 +104,9 @@ fun DashboardCards(
                 icon = Icons.Default.Autorenew,
                 modifier = Modifier.weight(1f),
                 showInfoIcon = true,
-                showWarningIcon = isCyclesInaccurate,
-                onClick = onCyclesInfoClick
+                showWarningIcon = isCyclesInaccurate && !isLoading,
+                isLoading = isLoading,
+                onClick = if (isLoading) null else onCyclesInfoClick
             )
         }
 
@@ -109,15 +122,17 @@ fun DashboardCards(
                 icon = Icons.Default.Speed,
                 modifier = Modifier.weight(1f),
                 showInfoIcon = true,
-                showWarningIcon = isBatteryManager,
-                onClick = onCapacityInfoClick
+                showWarningIcon = isBatteryManager && !isLoading,
+                isLoading = isLoading,
+                onClick = if (isLoading) null else onCapacityInfoClick
             )
             MetricCard(
                 title = stringResource(R.string.card_level_title),
                 value = levelText,
-                subtitle = stringResource(R.string.card_level_sub),
+                subtitle = levelSubtitle,
                 icon = Icons.Default.ElectricBolt,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                isLoading = isLoading
             )
         }
 
@@ -136,7 +151,7 @@ fun DashboardCards(
                 Icon(
                     imageVector = Icons.Default.Terminal,
                     contentDescription = null,
-                    tint = if (snapshot?.isShizukuUsed == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = if (!isLoading && snapshot?.isShizukuUsed == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(13.dp)
                 )
                 Spacer(modifier = Modifier.width(5.dp))
@@ -149,7 +164,7 @@ fun DashboardCards(
                     text = sourceText,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = if (snapshot?.isShizukuUsed == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (!isLoading && snapshot?.isShizukuUsed == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -166,13 +181,18 @@ fun MetricCard(
     isHighlighted: Boolean = false,
     showInfoIcon: Boolean = false,
     showWarningIcon: Boolean = false,
+    isLoading: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {
+    val containerColor by animateColorAsState(
+        targetValue = if (isHighlighted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+        animationSpec = tween(durationMillis = 300),
+        label = "MetricCardContainerColor"
+    )
+
     Card(
         modifier = if (onClick != null) modifier.clickable { onClick() } else modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = if (isHighlighted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-        )
+        colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -198,7 +218,7 @@ fun MetricCard(
                             modifier = Modifier.size(14.dp)
                         )
                     }
-                    if (showInfoIcon) {
+                    if (showInfoIcon && !isLoading) {
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
                             imageVector = Icons.Default.Info,
@@ -216,12 +236,38 @@ fun MetricCard(
                 )
             }
             Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (isHighlighted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(36.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Crossfade(
+                    targetState = isLoading,
+                    animationSpec = tween(durationMillis = 300),
+                    label = "MetricLoadingCrossfade"
+                ) { loading ->
+                    if (loading) {
+                        Box(
+                            modifier = Modifier.fillMaxHeight(),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.5.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = value,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isHighlighted) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = subtitle,

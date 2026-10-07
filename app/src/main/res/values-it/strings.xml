@@ -51,6 +51,7 @@
 
     <!-- Dashboard Cards -->
     <string name="dashboard_section_title">Stato Attuale Batteria</string>
+    <string name="card_reading_telemetry">Lettura in corso…</string>
     <string name="card_health_title">Salute Batteria</string>
     <string name="card_health_sub">SOH Calcolato</string>
     <string name="card_health_sub_bms">BMS Hardware / OS</string>

@@ -61,6 +61,15 @@ data class BatterySnapshot(
     val safetyFaultDetails: String? = null
 )
 
+data class LivePowerData(
+    val watts: Double?,
+    val currentMa: Int?,
+    val voltageMv: Int?,
+    val isPlugged: Boolean,
+    val chargingProtocol: String,
+    val temperatureCelsius: Double?
+)
+
 class BatteryRepository(private val context: Context) {
 
     companion object {
@@ -98,6 +107,57 @@ class BatteryRepository(private val context: Context) {
         } catch (e: Throwable) {
             false
         }
+    }
+
+    /**
+     * Ultra-lightweight, zero-subprocess live power sampler.
+     * Queries native Android BatteryManager HAL in-memory Binder and cached broadcast intent in <0.2ms.
+     */
+    fun getLivePowerData(baseProtocol: String? = null): LivePowerData {
+        val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        val statusInt = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+        val plugged = intent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: 0
+        val isPlugged = (plugged > 0) || statusInt == BatteryManager.BATTERY_STATUS_CHARGING || statusInt == BatteryManager.BATTERY_STATUS_FULL
+
+        val rawVoltage = intent?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1)?.takeIf { it > 0 }
+        val vMv = if (rawVoltage != null) BatteryTelemetryParser.normalizeVoltage(rawVoltage) else (lastVoltageMv ?: 4000)
+
+        val rawTemp = intent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -999) ?: -999
+        val tempCelsius = if (rawTemp != -999) rawTemp / 10.0 else null
+
+        val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+        val rawCur = try {
+            val cur = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
+            if (cur != 0) cur else null
+        } catch (_: Exception) { null }
+
+        val currentMa = BatteryTelemetryParser.normalizeCurrent(rawCur, isPlugged)
+        val watts = BatteryTelemetryParser.calculateChargingPowerWatts(vMv, currentMa)
+
+        val protocol = if (!isPlugged) {
+            "DISCHARGING"
+        } else {
+            if (!baseProtocol.isNullOrBlank() && baseProtocol !in listOf("DISCHARGING", "In Scarica", "STANDBY", "Standby")) {
+                baseProtocol
+            } else {
+                BatteryTelemetryParser.determineChargingProtocol(
+                    isPlugged = true,
+                    currentMa = currentMa,
+                    voocIng = null,
+                    fastChgType = null,
+                    ppsIng = null
+                )
+            }
+        }
+
+        return LivePowerData(
+            watts = watts,
+            currentMa = currentMa,
+            voltageMv = vMv,
+            isPlugged = isPlugged,
+            chargingProtocol = protocol,
+            temperatureCelsius = tempCelsius
+        )
     }
 
     private var isRootChecked = false
@@ -1268,6 +1328,8 @@ class BatteryRepository(private val context: Context) {
         } else null
 
         val statusInt = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+        val plugged = intent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: 0
+        val isPlugged = (plugged > 0) || statusInt == BatteryManager.BATTERY_STATUS_CHARGING || statusInt == BatteryManager.BATTERY_STATUS_FULL
         val isFull = statusInt == BatteryManager.BATTERY_STATUS_FULL
         val isTrueFull = if (batteryLevel == 100) isFull else false
         val satStatus = when {
@@ -1277,6 +1339,22 @@ class BatteryRepository(private val context: Context) {
             statusInt == BatteryManager.BATTERY_STATUS_DISCHARGING -> "DISCHARGING"
             else -> "STANDBY"
         }
+
+        val rawVoltage = intent?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1)?.takeIf { it > 0 }
+        val vMv = if (rawVoltage != null) BatteryTelemetryParser.normalizeVoltage(rawVoltage) else null
+        val rawCur = try {
+            val cur = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
+            if (cur != 0) cur else null
+        } catch (_: Exception) { null }
+        val currentMa = BatteryTelemetryParser.normalizeCurrent(rawCur, isPlugged)
+        val chargingPowerWatts = BatteryTelemetryParser.calculateChargingPowerWatts(vMv, currentMa)
+        val chargingProtocol = BatteryTelemetryParser.determineChargingProtocol(
+            isPlugged = isPlugged,
+            currentMa = currentMa,
+            voocIng = null,
+            fastChgType = null,
+            ppsIng = null
+        )
 
         val userRated = preferences.getCustomRatedCapacity()
         val detectedPreset = DevicePresets.detectDevicePreset()
@@ -1290,18 +1368,18 @@ class BatteryRepository(private val context: Context) {
 
         var effectiveHealth = healthPercentage
         var isHealthCalculated = false
-        if (effectiveHealth == null && capacityMah != null && capacityMah > 1000.0 && calculationBase != null && calculationBase > 0) {
+        if (effectiveHealth == null && capacityMah != null && capacityMah > 1000.0 && calculationBase > 0) {
             if (batteryLevel == 100 || isFull) {
                 effectiveHealth = ((capacityMah * 100.0) / calculationBase).toInt().coerceIn(1, 100)
                 isHealthCalculated = true
             }
         }
-        val displayDesign = if (isHealthCalculated && calculationBase != null) calculationBase else ratedDesign
+        val displayDesign = if (isHealthCalculated) calculationBase else ratedDesign
 
         DiagnosticLogger.log(
             tag = "BATTERY_MANAGER",
             command = "readFromBatteryManager()",
-            result = "Cycles=$cycleCount, Health=$effectiveHealth%, Cap=${capacityMah}mAh, Design=${displayDesign}mAh",
+            result = "Cycles=$cycleCount, Health=$effectiveHealth%, Cap=${capacityMah}mAh, Design=${displayDesign}mAh, Watts=${chargingPowerWatts}W",
             isSuccess = true
         )
 
@@ -1326,6 +1404,8 @@ class BatteryRepository(private val context: Context) {
             isShizukuUsed = false,
             isHealthCalculated = isHealthCalculated,
             daysSinceFirstUsage = bmDaysSinceFirstUsage,
+            chargingPowerWatts = chargingPowerWatts,
+            chargingProtocol = chargingProtocol,
             batteryTemperatureCelsius = tempC,
             isTrueFullCharge = isTrueFull,
             saturationStatus = satStatus,

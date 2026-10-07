@@ -31,10 +31,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -54,10 +57,28 @@ fun BatteryTrackerDashboardScreen(
     val history by viewModel.allBatteryData.collectAsState()
     val trashedItems by viewModel.trashedBatteryData.collectAsState()
     val currentSnapshot by viewModel.currentSnapshot.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
     val isShizukuAvailable by viewModel.isShizukuAvailable.collectAsState()
     val isShizukuGranted by viewModel.isShizukuPermissionGranted.collectAsState()
     val nextScheduleTime by viewModel.nextWorkScheduleTime.collectAsState(initial = null)
     val samplingConfig by viewModel.samplingConfig.collectAsState()
+    val livePowerData by viewModel.livePowerData.collectAsState()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.startLivePowerStream()
+            } else if (event == Lifecycle.Event.ON_PAUSE) {
+                viewModel.stopLivePowerStream()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            viewModel.stopLivePowerStream()
+        }
+    }
 
     // Stato selezione multipla per eliminazione nello storico
     var selectedRecordIds by remember { mutableStateOf<Set<Int>>(emptySet()) }
@@ -666,6 +687,7 @@ fun BatteryTrackerDashboardScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 DashboardCards(
                     snapshot = currentSnapshot,
+                    isLoading = currentSnapshot == null && isRefreshing,
                     onHealthInfoClick = { showHealthInfoDialog = true },
                     onCyclesInfoClick = { showCyclesInfoDialog = true },
                     onCapacityInfoClick = { showCapacityFluctuationDialog = true },
@@ -678,6 +700,7 @@ fun BatteryTrackerDashboardScreen(
                 // Diagnostica Hardware & BMS Oplus (Punti 1, 2, 3, 4)
                 OplusAdvancedHardwareCard(
                     snapshot = currentSnapshot,
+                    livePower = livePowerData,
                     onOpenConsole = { showDiagnosticConsole = true }
                 )
             }

@@ -105,7 +105,12 @@ object BatteryTelemetryParser {
      */
     fun normalizeVoltage(rawMvOrUv: Int?): Int? {
         if (rawMvOrUv == null || rawMvOrUv <= 0) return null
-        return if (rawMvOrUv > 100_000) rawMvOrUv / 1000 else rawMvOrUv
+        return when {
+            rawMvOrUv in 1..9 -> rawMvOrUv * 1000
+            rawMvOrUv in 10..99 -> rawMvOrUv * 100
+            rawMvOrUv > 100_000 -> rawMvOrUv / 1000
+            else -> rawMvOrUv
+        }
     }
 
     fun parseVoltage(rawStr: String?): Int? {

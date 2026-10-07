@@ -571,6 +571,10 @@ class DevicePresetsAndHealthTest {
         assertEquals(3920, BatteryTelemetryParser.normalizeVoltage(3920))
         assertEquals(4050, BatteryTelemetryParser.parseVoltage("4050"))
 
+        // Volt singoli (es. Android sticky broadcast "4" o "4 V")
+        assertEquals(4000, BatteryTelemetryParser.normalizeVoltage(4))
+        assertEquals(4000, BatteryTelemetryParser.parseVoltage("4"))
+
         // Sentinelle
         assertNull(BatteryTelemetryParser.normalizeVoltage(0))
         assertNull(BatteryTelemetryParser.normalizeVoltage(-1))

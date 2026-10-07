@@ -1,5 +1,8 @@
 package com.fivestars.batterytracker
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Terminal
@@ -19,6 +23,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -95,6 +100,7 @@ private fun DiagnosticHardwareDialog(
 @Composable
 fun OplusAdvancedHardwareCard(
     snapshot: BatterySnapshot?,
+    livePower: LivePowerData? = null,
     onOpenConsole: () -> Unit = {}
 ) {
     val notAvail = stringResource(R.string.not_available)
@@ -187,63 +193,149 @@ fun OplusAdvancedHardwareCard(
                 }
             }
 
-            // Barra Potenza Istantanea & Temperatura (Punto 2)
+            // Barra Potenza Istantanea & Temperatura Live (Punto 2)
             Spacer(modifier = Modifier.height(10.dp))
+
+            val activeWatts = livePower?.watts ?: snapshot?.chargingPowerWatts
+            val activeCurrentMa = livePower?.currentMa
+            val activeProtocol = livePower?.chargingProtocol ?: snapshot?.chargingProtocol
+            val activeTemp = livePower?.temperatureCelsius ?: snapshot?.batteryTemperatureCelsius
+            val isPlugged = livePower?.isPlugged ?: ((snapshot?.chargingPowerWatts ?: 0.0) > 0)
+
+            val isCharging = isPlugged && (activeWatts == null || activeWatts >= 0.0)
+            val absWatts = activeWatts?.let { abs(it) } ?: 0.0
+
+            val formattedWatts = if (activeWatts == null) {
+                notAvail
+            } else if (isCharging) {
+                "+${String.format(Locale.US, "%.1f", absWatts)} W"
+            } else {
+                "-${String.format(Locale.US, "%.1f", absWatts)} W"
+            }
+
+            val currentMaText = activeCurrentMa?.let {
+                if (it != 0) {
+                    "${if (it > 0) "+$it" else "$it"} mA"
+                } else null
+            }
+
+            val protocolLabel = when (activeProtocol) {
+                "In Scarica", "DISCHARGING" -> stringResource(R.string.diag_discharging)
+                "Carica Standard", "STANDARD" -> stringResource(R.string.diag_standard_charging)
+                "Standby", "STANDBY" -> stringResource(R.string.diag_standby)
+                else -> activeProtocol ?: stringResource(R.string.diag_standby)
+            }
+
+            // Scala di potenza: massimo 80W in carica (saturazione piena sopra 80W), massimo 6.0W in scarica
+            val progressFraction = if (activeWatts == null || absWatts == 0.0) {
+                0f
+            } else if (isCharging) {
+                (absWatts / 80.0).toFloat().coerceIn(0.02f, 1.0f)
+            } else {
+                (absWatts / 6.0).toFloat().coerceIn(0.02f, 1.0f)
+            }
+
+            val animatedProgress by animateFloatAsState(
+                targetValue = progressFraction,
+                animationSpec = tween(durationMillis = 400),
+                label = "livePowerProgress"
+            )
+
+            val barIndicatorColor = when {
+                isCharging -> MaterialTheme.colorScheme.primary
+                absWatts > 4.0 -> MaterialTheme.colorScheme.error
+                absWatts > 2.5 -> MaterialTheme.colorScheme.tertiary
+                else -> MaterialTheme.colorScheme.secondary
+            }
+
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(10.dp),
                 color = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 12.dp, vertical = 9.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Bolt,
-                            contentDescription = null,
-                            tint = if ((snapshot?.chargingPowerWatts ?: 0.0) > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = snapshot?.chargingPowerWatts?.let {
-                                if (it > 0) "+$it W" else "$it W"
-                            } ?: notAvail,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        val protocolLabel = when (snapshot?.chargingProtocol) {
-                            "In Scarica", "DISCHARGING" -> stringResource(R.string.diag_discharging)
-                            "Carica Standard", "STANDARD" -> stringResource(R.string.diag_standard_charging)
-                            "Standby", "STANDBY" -> stringResource(R.string.diag_standby)
-                            else -> snapshot?.chargingProtocol ?: stringResource(R.string.diag_standby)
+                    // Riga 1: Valore Watt principale e Temperatura
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = if (isCharging) Icons.Default.Bolt else Icons.Default.ElectricBolt,
+                                contentDescription = null,
+                                tint = if (isCharging) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.size(19.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = formattedWatts,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isCharging) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            val isWarm = (activeTemp ?: 0.0) >= 38.0
+                            val tempColor = if (isWarm) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+
+                            Icon(
+                                imageVector = Icons.Default.Thermostat,
+                                contentDescription = null,
+                                tint = tempColor,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = activeTemp?.let { String.format(Locale.US, "%.1f°C", it) } ?: notAvail,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = tempColor
+                            )
+                        }
+                    }
+
+                    // Riga 2: Dettaglio Corrente (mA), Protocollo e Indicazione Scala
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val subText = buildString {
+                            if (currentMaText != null) {
+                                append(currentMaText)
+                                append("  •  ")
+                            }
+                            append(protocolLabel)
                         }
                         Text(
-                            text = "($protocolLabel)",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = subText,
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Thermostat,
-                            contentDescription = null,
-                            tint = if ((snapshot?.batteryTemperatureCelsius ?: 0.0) >= 42.0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Text(
-                            text = snapshot?.batteryTemperatureCelsius?.let { String.format(Locale.US, "%.1f°C", it) } ?: notAvail,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if ((snapshot?.batteryTemperatureCelsius ?: 0.0) >= 42.0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                    // Riga 3: Barra di avanzamento proporzionale animata
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(5.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(fraction = animatedProgress)
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(barIndicatorColor)
                         )
                     }
                 }
