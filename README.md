@@ -140,6 +140,7 @@ The following improvements and capabilities are planned for upcoming releases (*
 
 - **📊 Interactive Home Screen Widget:** Glanceable battery health %, cycle count, and charging wattage on your home screen.
 - **🔬 Better Telemetry for Samsung:** Using ASOC for better telemetry of battery health on Samsung Devices.
+- **📈 Real-time Discharge and Recharge Graph:** Real-time monitoring of device charging and discharging, incorporating a minimalist graph.
 - **TBA**
 
 ---
