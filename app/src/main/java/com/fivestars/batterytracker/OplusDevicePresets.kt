@@ -240,7 +240,7 @@ object OplusDevicePresets {
             regionVariant = "Global/EU",
             typicalMah = 6000,
             ratedMah = 5840.0,
-            codeNames = listOf("CPH2737", "CPH2739")
+            codeNames = listOf("CPH2737", "OP5F02L1")
         ),
         DeviceBatteryPreset(
             brand = "Oppo",
@@ -248,7 +248,7 @@ object OplusDevicePresets {
             regionVariant = null,
             typicalMah = 6200,
             ratedMah = 6060.0,
-            codeNames = listOf("CPH2741")
+            codeNames = listOf("CPH2739", "CPH2741", "PKZ110", "OP5F05L1")
         ),
         DeviceBatteryPreset(
             brand = "Oppo",

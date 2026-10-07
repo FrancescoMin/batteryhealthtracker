@@ -24,6 +24,7 @@ Unlike conventional battery monitors that rely solely on Android's public `Batte
 | Manufacturer | Commercial Model | Codename / Board | SoC Family | Battery Architecture | Tested SOH Source | Cycle Source | Dual-Cell Balance | Compatibility Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Oppo** | **Reno 14 (EU)** | `CPH2737` / `OP5F02L1` | Dimensity 7300 | 1S Single-Cell (5840 mAh) | `normal_batt_soh` (95%) | `battery_cc` (321) | N/A (1S) | 🟢 **100% Verified (Shizuku)** |
+| **Oppo** | **Reno 14 Pro (Global/IN)** | `CPH2739` / `OP5F05L1` | Dimensity 8450 | 1S Single-Cell (6060 mAh) | `normal_batt_soh` (100%) | `battery_cycle` (104) | N/A (1S) | 🟢 **100% Verified (Shizuku)** |
 | **Realme** | **GT 7T (EU)** | `RMX5085` / `RE6090L1` | Dimensity 8400 | 2S Dual-Cell (6850 mAh) | `battery_log_content` (99%) | `battery_cc` (259) | `bcc_parms` (Δ 1 mV) | 🟢 **100% Verified (Shizuku)** |
 | **OnePlus** | **OnePlus 13** | `PJZ110` / `CPH2653` | Snapdragon 8 Elite | 2S Dual-Cell (5840 mAh) | `oplus_mms` / Dynamic SOH | `oplus_mms/cycle_count` | `bcc_parms` / dual-cell | 🟢 **100% Verified (Shizuku)** |
 | **OnePlus** | OnePlus 13R | `CPH2645` | Snapdragon 8 Gen 3 | 2S Dual-Cell (5840 mAh) | To verify | To verify | To verify | 🤝 Help wanted |

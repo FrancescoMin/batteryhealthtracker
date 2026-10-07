@@ -792,22 +792,8 @@ class BatteryRepository(private val context: Context) {
                 }
             }
 
-            // Priorità 5: Calcolo Differenziale Diretto (v1.5 Fallback se OCV presente ma fuori range modello)
-            if (internalResistanceMohm == null && voltageOcvMv != null && vNowMv != null && effectiveCurrentMa != null && Math.abs(effectiveCurrentMa) >= 40) {
-                val normOcv = if (voltageOcvMv > 5000 && vNowMv <= 4600) voltageOcvMv / 2 else voltageOcvMv
-                val normVnow = if (vNowMv > 5000 && voltageOcvMv <= 4600) vNowMv / 2 else vNowMv
-                val deltaV = Math.abs(normOcv - normVnow)
-                val rawEsr = (deltaV.toDouble() / Math.abs(effectiveCurrentMa).toDouble()) * 1000.0
-                if (rawEsr in 15.0..3000.0) {
-                    val rounded = Math.round(rawEsr * 10.0) / 10.0
-                    internalResistanceMohm = rounded
-                    cachedDynamicEsr = rounded
-                    preferences.setLastKnownEsr(rounded)
-                    esrMethod = "RAW_OCV_FALLBACK"
-                }
-            }
-
-            // Priorità 6: Ripristino Ultimo ESR Dinamico Convalidato (Persistente / Cache)
+            // Priorità 5: Ripristino Ultimo ESR Dinamico Convalidato (Persistente / Cache)
+            // Entra in gioco se il BMS non espone registri diretti e il dispositivo è a riposo (basso carico / vicinanza all'equilibrio OCV)
             if (internalResistanceMohm == null) {
                 val cached = cachedDynamicEsr ?: preferences.getLastKnownEsr()
                 if (cached != null) {

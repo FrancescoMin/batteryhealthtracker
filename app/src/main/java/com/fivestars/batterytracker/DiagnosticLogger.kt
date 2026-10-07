@@ -22,6 +22,15 @@ data class DiagnosticLogEntry(
     fun formatTime(): String {
         return SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date(timestamp))
     }
+
+    fun getDisplayCommand(): String {
+        val trimmed = command.trim()
+        if (trimmed.startsWith("for p in ") && trimmed.contains("; do")) {
+            val paths = trimmed.substringAfter("for p in ").substringBefore("; do").trim()
+            return "querySysfs: $paths"
+        }
+        return trimmed
+    }
 }
 
 object DiagnosticLogger {
@@ -58,9 +67,9 @@ object DiagnosticLogger {
                 val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
                 "v${pInfo.versionName} (${pInfo.longVersionCode})"
             } catch (_: Exception) {
-                "v1.5"
+                "v1.8"
             }
-        } else "v1.5"
+        } else "v1.8"
 
         sb.append("### 📱 Battery Health Tracker - Device Diagnostic Report\n\n")
         sb.append("#### ⚙️ Device Environment\n")
@@ -102,12 +111,24 @@ object DiagnosticLogger {
         if (currentLogs.isEmpty()) {
             sb.append("(No command logs recorded yet. Tap refresh in dashboard to execute commands)\n")
         } else {
-            currentLogs.forEach { entry ->
+            // Includiamo solo l'ultima sessione di campionamento per garantire che il report
+            // rimanga completo, leggibile e non venga mai troncato dal limite di 20.000 caratteri dei form GitHub
+            val lastSnapshotIdx = currentLogs.indexOfLast { it.tag == "SNAPSHOT_DONE" }
+            val sessionLogs = if (lastSnapshotIdx > 0) {
+                val prevSnapshotIdx = currentLogs.subList(0, lastSnapshotIdx).indexOfLast { it.tag == "SNAPSHOT_DONE" }
+                val startIdx = if (prevSnapshotIdx >= 0) prevSnapshotIdx + 1 else maxOf(0, currentLogs.size - 35)
+                currentLogs.subList(startIdx, currentLogs.size)
+            } else {
+                currentLogs.takeLast(35)
+            }
+
+            sessionLogs.forEach { entry ->
                 val status = if (entry.isSuccess) "OK" else "FAIL"
+                val cmd = entry.getDisplayCommand()
                 val res = entry.result?.let {
-                    if (it.length > 1200) it.take(1200) + "... [truncated]" else it
+                    if (it.length > 500) it.take(500) + "... [truncated]" else it
                 } ?: "null"
-                sb.append("[${entry.formatTime()}] [${entry.tag}] [$status] ${entry.command}\n")
+                sb.append("[${entry.formatTime()}] [${entry.tag}] [$status] $cmd\n")
                 sb.append("  ↳ OUTPUT: $res\n")
             }
         }
@@ -121,6 +142,23 @@ object DiagnosticLogger {
         val clip = ClipData.newPlainText("BatteryHealthTracker Diagnostic Report", report)
         clipboard.setPrimaryClip(clip)
         Toast.makeText(context, R.string.console_copied_toast, Toast.LENGTH_SHORT).show()
+    }
+
+    fun shareReport(context: Context, snapshot: BatterySnapshot?) {
+        val report = buildMarkdownReport(snapshot, context)
+        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, report)
+            putExtra(Intent.EXTRA_SUBJECT, "Battery Health Tracker Diagnostic Report - ${Build.MODEL}")
+        }
+        val shareIntent = Intent.createChooser(sendIntent, context.getString(R.string.console_btn_share)).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        try {
+            context.startActivity(shareIntent)
+        } catch (_: Exception) {
+            Toast.makeText(context, "Unable to share report", Toast.LENGTH_SHORT).show()
+        }
     }
 
     fun openGitHubIssues(context: Context) {

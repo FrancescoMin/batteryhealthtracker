@@ -148,11 +148,14 @@ class BatteryPreferences(context: Context) {
 
     fun getLastKnownEsr(): Double? {
         val str = prefs.getString(KEY_LAST_KNOWN_ESR, null)
-        return str?.toDoubleOrNull()
+        val v = str?.toDoubleOrNull()
+        return if (v != null && v in 15.0..1200.0) v else null
     }
 
     fun setLastKnownEsr(esr: Double) {
-        prefs.edit().putString(KEY_LAST_KNOWN_ESR, esr.toString()).apply()
+        if (esr in 15.0..1200.0) {
+            prefs.edit().putString(KEY_LAST_KNOWN_ESR, esr.toString()).apply()
+        }
     }
 
     private val _appThemeMode = MutableStateFlow(getAppThemeMode())

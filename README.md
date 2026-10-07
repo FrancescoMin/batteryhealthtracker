@@ -151,6 +151,7 @@ The following improvements and capabilities are planned for upcoming releases (*
 > [!IMPORTANT]
 > **Compatibility, Community Testing & Diagnostic Logs:**
 > - 🟢 **Oppo Reno 14 (EU):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (all BMS telemetry, SOH, FCC, cycle counts, voltage, power, and safety registers read with complete accuracy).
+> - 🟢 **Oppo Reno 14 Pro (CPH2739 / Global / India):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (Dimensity 8450, 6200 / 6060 mAh Silicon-Carbon single-cell, hardware cycle count, authentic battery, verified via Issue #4).
 > - 🟢 **Realme GT 7T (EU / RMX5085):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (dynamic fuel-gauge SOH parsing, Qmax 6736 mAh, 259 cycles, dual-cell balance, ESR, production & first use dates).
 > - 🟢 **OnePlus 13 (PJZ110 / CPH2653 / CPH2655):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (Snapdragon 8 Elite platform, OxygenOS/ColorOS 15 `oplus_mms` fuel-gauge telemetry, 6000 / 5840 mAh Silicon-Carbon dual-cell architecture, hardware cycle count, dynamic ESR & activation date).
 > - 🟡 **Other Devices (`🤝 Help wanted`):** Due to variations in regional firmware, SELinux enforcement (e.g. OnePlus Nord 5 requiring root for direct Qualcomm sysfs access), and vendor driver differences across ColorOS, OxygenOS, and Realme UI, **full hardware compatibility is not yet guaranteed for other models**.
@@ -189,7 +190,7 @@ The following improvements and capabilities are planned for upcoming releases (*
 | **Oppo** | Reno 16 (Global/EU) | High-Density Single-Cell | 6000 / 5820 | 🤝 Help wanted | Snapdragon |
 | **Oppo** | Reno 16 (China) | Silicon-Carbon | 6700 / 6490 | 🤝 Help wanted | MediaTek |
 | **Oppo** | Reno 15 / 15 Pro | High-Density Single-Cell | 6200–6500 / 6040–6335 | 🤝 Help wanted | MediaTek |
-| **Oppo** | Reno 14 Pro | High-Density Single-Cell | 6200 / 6060 | 🤝 Help wanted | MediaTek |
+| **Oppo** | **Reno 14 Pro** | High-Density Single-Cell | 6200 / 6060 | ✅ **100% Verified (Shizuku)** | MediaTek |
 | **Oppo** | Reno 13 | High-Density Single-Cell | 5600 / 5450 | 🤝 Help wanted | MediaTek |
 | **Oppo** | Reno 10 Pro / 11 Pro | Dual-Cell Serial | 4600 / 4440 | 🤝 Help wanted | MediaTek |
 

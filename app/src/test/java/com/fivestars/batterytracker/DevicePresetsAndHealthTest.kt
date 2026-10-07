@@ -198,6 +198,37 @@ class DevicePresetsAndHealthTest {
         assertEquals("Reno 14", preset?.modelName)
         assertEquals(6000, preset?.typicalMah)
         assertEquals(5840.0, preset?.ratedMah ?: 0.0, 0.01)
+
+        val presetByCodename = OplusDevicePresets.detectDevicePreset("OP5F02L1")
+        assertNotNull(presetByCodename)
+        assertEquals("Reno 14", presetByCodename?.modelName)
+    }
+
+    @Test
+    fun testOppoReno14ProPreset() {
+        // Verifica modello India / Global segnalato in Issue #4 (CPH2739 / CPH2739IN / OP5F05L1)
+        val presetByModel = OplusDevicePresets.detectDevicePreset("CPH2739")
+        assertNotNull(presetByModel)
+        assertEquals("Oppo", presetByModel?.brand)
+        assertEquals("Reno 14 Pro", presetByModel?.modelName)
+        assertEquals(6200, presetByModel?.typicalMah)
+        assertEquals(6060.0, presetByModel?.ratedMah ?: 0.0, 0.01)
+
+        val presetByIn = OplusDevicePresets.detectDevicePreset("CPH2739IN")
+        assertNotNull(presetByIn)
+        assertEquals("Reno 14 Pro", presetByIn?.modelName)
+
+        val presetByCodename = OplusDevicePresets.detectDevicePreset("OP5F05L1")
+        assertNotNull(presetByCodename)
+        assertEquals("Reno 14 Pro", presetByCodename?.modelName)
+
+        val presetByChina = OplusDevicePresets.detectDevicePreset("PKZ110")
+        assertNotNull(presetByChina)
+        assertEquals("Reno 14 Pro", presetByChina?.modelName)
+
+        val presetByAlt = OplusDevicePresets.detectDevicePreset("CPH2741")
+        assertNotNull(presetByAlt)
+        assertEquals("Reno 14 Pro", presetByAlt?.modelName)
     }
 
     @Test
@@ -517,6 +548,58 @@ class DevicePresetsAndHealthTest {
         assertNull(BatteryTelemetryParser.normalizeInternalResistance(650.0, false))
         assertNull(BatteryTelemetryParser.normalizeInternalResistance(0.0, false))
         assertNull(BatteryTelemetryParser.normalizeInternalResistance(-50.0, false))
+    }
+
+    @Test
+    fun testReno14ProMediaTekFloatCutoffRejection() {
+        // Scenario reale hardware da Issue #4 su Oppo Reno 14 Pro (MediaTek Dimensity 8450):
+        // voltage_ocv = 4520 mV (static float target), vNow = 3982 mV, current = -239 mA, SoC = 63%
+        val rejectedEsr = BatteryTelemetryParser.calculateOcvEsr(
+            voltageOcvMv = 4520,
+            vNowMv = 3982,
+            currentMa = -239,
+            batteryLevel = 63,
+            isDual = false
+        )
+        // Deve essere categoricamente scartato come static cutoff OCV (deltaV 538 mV > 450 mV e SoC < 90% a 4520 mV)
+        assertNull("La tensione fittizia di cutoff 4520 mV su MediaTek non deve essere usata per calcolare ESR", rejectedEsr)
+    }
+
+    @Test
+    fun testDiagnosticLogEntryDisplayCommandFormatting() {
+        val rawBashLoop = """
+            for p in /sys/class/oplus_chg/battery/normal_batt_soh /sys/class/oplus_chg/battery/batt_soh; do
+                if [ -f "${'$'}p" ]; then
+                    v=${'$'}(cat "${'$'}p" 2>/dev/null)
+                    if [ -n "${'$'}v" ] && [ "${'$'}v" != "0" ] && [ "${'$'}v" != "-1" ] && [ "${'$'}v" != "null" ]; then
+                        echo "${'$'}v"
+                        exit 0
+                    fi
+                fi
+            done
+        """.trimIndent()
+
+        val entry = DiagnosticLogEntry(
+            tag = "SHIZUKU",
+            command = rawBashLoop,
+            result = "100",
+            isSuccess = true
+        )
+
+        val display = entry.getDisplayCommand()
+        assertEquals(
+            "querySysfs: /sys/class/oplus_chg/battery/normal_batt_soh /sys/class/oplus_chg/battery/batt_soh",
+            display
+        )
+
+        // Comandi non-loop devono restare intatti
+        val getpropEntry = DiagnosticLogEntry(
+            tag = "SHIZUKU",
+            command = "getprop ro.runtime.firstboot",
+            result = "1725400000000",
+            isSuccess = true
+        )
+        assertEquals("getprop ro.runtime.firstboot", getpropEntry.getDisplayCommand())
     }
 
     // --- 6. SUITE DI TEST UNITARI PURA SUI PARSER KERNEL/SYSFS (ISPIRATA AD aBATTERY ISSUE #2) ---

@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -66,24 +68,41 @@ fun DiagnosticConsoleDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Pulsanti Azione: Copia Report & Apri Issue GitHub
+                // Pulsanti Azione: Copia Report, Condividi & Apri Issue GitHub
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Button(
                         onClick = { DiagnosticLogger.copyReportToClipboard(context, snapshot) },
                         modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.ContentCopy,
                             contentDescription = null,
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(14.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
                         Text(
                             text = stringResource(R.string.console_btn_copy),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+
+                    FilledTonalButton(
+                        onClick = { DiagnosticLogger.shareReport(context, snapshot) },
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = stringResource(R.string.console_btn_share),
                             style = MaterialTheme.typography.labelSmall
                         )
                     }
@@ -91,14 +110,14 @@ fun DiagnosticConsoleDialog(
                     OutlinedButton(
                         onClick = { DiagnosticLogger.openGitHubIssues(context) },
                         modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.BugReport,
                             contentDescription = null,
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(14.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
                         Text(
                             text = stringResource(R.string.console_btn_issues),
                             style = MaterialTheme.typography.labelSmall
@@ -108,7 +127,7 @@ fun DiagnosticConsoleDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Monospace Terminal Box
+                // Monospace Terminal Box con supporto completo a selezione e copia manuale
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = Color(0xFF141416),
@@ -117,83 +136,85 @@ fun DiagnosticConsoleDialog(
                         .fillMaxWidth()
                         .weight(1f, fill = false)
                 ) {
-                    if (logs.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = stringResource(R.string.console_empty_logs),
-                                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                                color = Color(0xFF888888),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                        ) {
-                            items(logs) { entry ->
-                                Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            text = "[${entry.formatTime()}]",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontFamily = FontFamily.Monospace,
-                                                fontSize = 10.sp
-                                            ),
-                                            color = Color(0xFF757575)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Surface(
-                                            shape = RoundedCornerShape(3.dp),
-                                            color = if (entry.isSuccess) Color(0xFF1B5E20) else Color(0xFFB71C1C)
-                                        ) {
+                    SelectionContainer {
+                        if (logs.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.console_empty_logs),
+                                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                                    color = Color(0xFF888888),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                            ) {
+                                items(logs) { entry ->
+                                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
                                             Text(
-                                                text = if (entry.isSuccess) "OK" else "ERR",
+                                                text = "[${entry.formatTime()}]",
                                                 style = MaterialTheme.typography.labelSmall.copy(
                                                     fontFamily = FontFamily.Monospace,
-                                                    fontSize = 9.sp,
+                                                    fontSize = 10.sp
+                                                ),
+                                                color = Color(0xFF757575)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Surface(
+                                                shape = RoundedCornerShape(3.dp),
+                                                color = if (entry.isSuccess) Color(0xFF1B5E20) else Color(0xFFB71C1C)
+                                            ) {
+                                                Text(
+                                                    text = if (entry.isSuccess) "OK" else "ERR",
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        fontFamily = FontFamily.Monospace,
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    ),
+                                                    color = Color.White,
+                                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(
+                                                text = entry.tag,
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontFamily = FontFamily.Monospace,
+                                                    fontSize = 10.sp,
                                                     fontWeight = FontWeight.Bold
                                                 ),
-                                                color = Color.White,
-                                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                color = Color(0xFF64B5F6)
                                             )
                                         }
-                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Spacer(modifier = Modifier.height(2.dp))
                                         Text(
-                                            text = entry.tag,
-                                            style = MaterialTheme.typography.labelSmall.copy(
+                                            text = "$ ${entry.getDisplayCommand()}",
+                                            style = MaterialTheme.typography.bodySmall.copy(
                                                 fontFamily = FontFamily.Monospace,
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold
+                                                fontSize = 11.sp
                                             ),
-                                            color = Color(0xFF64B5F6)
+                                            color = Color(0xFFECEFF1)
                                         )
-                                    }
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "$ ${entry.command}",
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            fontFamily = FontFamily.Monospace,
-                                            fontSize = 11.sp
-                                        ),
-                                        color = Color(0xFFECEFF1)
-                                    )
-                                    if (!entry.result.isNullOrEmpty()) {
-                                        Text(
-                                            text = "↳ ${entry.result}",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                fontFamily = FontFamily.Monospace,
-                                                fontSize = 10.sp
-                                            ),
-                                            color = if (entry.isSuccess) Color(0xFF81C784) else Color(0xFFEF9A9A),
-                                            maxLines = 4
-                                        )
+                                        if (!entry.result.isNullOrEmpty()) {
+                                            Text(
+                                                text = "↳ ${entry.result}",
+                                                style = MaterialTheme.typography.labelSmall.copy(
+                                                    fontFamily = FontFamily.Monospace,
+                                                    fontSize = 10.sp
+                                                ),
+                                                color = if (entry.isSuccess) Color(0xFF81C784) else Color(0xFFEF9A9A),
+                                                maxLines = 4
+                                            )
+                                        }
                                     }
                                 }
                             }

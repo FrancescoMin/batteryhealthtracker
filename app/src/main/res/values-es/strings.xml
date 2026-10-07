@@ -310,6 +310,7 @@
     <string name="console_title">Consola de Diagnóstico y Registros</string>
     <string name="console_subtitle">Comandos y salidas en bruto para verificar dispositivos e incidencias en GitHub</string>
     <string name="console_btn_copy">Copiar Informe</string>
+    <string name="console_btn_share">Compartir Informe</string>
     <string name="console_btn_issues">Abrir Issues GitHub</string>
     <string name="console_btn_clear">Borrar</string>
     <string name="console_copied_toast">¡Informe de diagnóstico copiado al portapapeles!</string>

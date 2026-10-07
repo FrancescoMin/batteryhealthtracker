@@ -310,6 +310,7 @@
     <string name="console_title">Console de diagnostic et journaux</string>
     <string name="console_subtitle">Sorties brutes des commandes pour vérification de l\'appareil et signalement sur GitHub</string>
     <string name="console_btn_copy">Copier le rapport</string>
+    <string name="console_btn_share">Partager le rapport</string>
     <string name="console_btn_issues">Ouvrir GitHub Issues</string>
     <string name="console_btn_clear">Effacer</string>
     <string name="console_copied_toast">Rapport de diagnostic copié dans le presse-papiers !</string>

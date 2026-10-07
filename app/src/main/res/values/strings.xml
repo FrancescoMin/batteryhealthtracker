@@ -310,6 +310,7 @@
     <string name="console_title">Diagnostic Console &amp; Logs</string>
     <string name="console_subtitle">Raw command outputs for device verification &amp; GitHub issues</string>
     <string name="console_btn_copy">Copy Report</string>
+    <string name="console_btn_share">Share Report</string>
     <string name="console_btn_issues">Open GitHub Issues</string>
     <string name="console_btn_clear">Clear</string>
     <string name="console_copied_toast">Diagnostic report copied to clipboard!</string>

@@ -310,6 +310,7 @@
     <string name="console_title">Console Diagnostica &amp; Log</string>
     <string name="console_subtitle">Comandi ed esiti grezzi per verifica dispositivi e issue GitHub</string>
     <string name="console_btn_copy">Copia Report</string>
+    <string name="console_btn_share">Condividi Report</string>
     <string name="console_btn_issues">Apri Issues GitHub</string>
     <string name="console_btn_clear">Cancella</string>
     <string name="console_copied_toast">Report diagnostico copiato negli appunti!</string>
