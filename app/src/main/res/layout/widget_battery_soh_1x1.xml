@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_soh_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@drawable/widget_background"
+    android:padding="6dp">
+
+    <!-- Battery Heart Icon -->
+    <ImageView
+        android:id="@+id/widget_soh_icon"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:src="@drawable/ic_widget_heart_battery"
+        android:tint="#00E5FF"
+        android:contentDescription="@string/card_health_title" />
+
+    <!-- SOH Percentage Value -->
+    <TextView
+        android:id="@+id/widget_soh_val"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="--%"
+        android:textColor="#00E5FF"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:singleLine="true"
+        android:gravity="center"
+        android:layout_marginTop="2dp" />
+
+    <!-- SOH Label -->
+    <TextView
+        android:id="@+id/widget_soh_lbl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/widget_soh_label"
+        android:textColor="#94A3B8"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        android:singleLine="true"
+        android:gravity="center" />
+</LinearLayout>

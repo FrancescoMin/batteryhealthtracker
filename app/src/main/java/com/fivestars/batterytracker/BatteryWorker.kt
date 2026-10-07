@@ -32,6 +32,10 @@ class BatteryWorker(
             // Mostra la notifica di sistema per il campionamento automatico
             NotificationHelper.showSamplingNotification(context, isManual = false, snapshot)
 
+            // Aggiorna i widget della home screen
+            BatteryWidgetProvider.updateAllWidgets(context)
+            BatterySohWidgetProvider.updateAllWidgets(context)
+
             Result.success()
         } catch (e: Exception) {
             Log.e("BatteryWorker", "Errore durante il monitoraggio periodico della batteria", e)

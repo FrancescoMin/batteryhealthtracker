@@ -337,4 +337,17 @@
     <string name="update_dialog_uptodate_desc">Ya estás utilizando la versión más reciente (v%s).</string>
     <string name="update_dialog_error_title">Fallo en la comprobación</string>
     <string name="update_dialog_error_desc">No se pudo conectar con GitHub. Comprueba tu conexión a internet e inténtalo de nuevo.</string>
+
+    <!-- Home Screen Widget -->
+    <string name="widget_name">Estado de Batería</string>
+    <string name="widget_description">SOH %, ciclos de carga, vataje en tiempo real y temperatura en la pantalla de inicio.</string>
+    <string name="widget_soh_label">SOH</string>
+    <string name="widget_cycles_label">Ciclos</string>
+    <string name="widget_wattage_label">Vatios</string>
+    <string name="widget_temp_label">Temp</string>
+    <string name="widget_charging">Cargando</string>
+    <string name="widget_discharging">Descargando</string>
+    <string name="widget_updated_format">Act. %s</string>
+    <string name="widget_soh_only_name">Salud Batería SOH</string>
+    <string name="widget_soh_only_description">Widget minimalista 1x1 con el estado de salud (SOH %) de la batería.</string>
 </resources>

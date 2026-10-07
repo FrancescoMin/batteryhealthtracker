@@ -337,4 +337,17 @@
     <string name="update_dialog_uptodate_desc">You are already running the latest version (v%s).</string>
     <string name="update_dialog_error_title">Update Check Failed</string>
     <string name="update_dialog_error_desc">Could not connect to GitHub. Please check your internet connection and try again.</string>
+
+    <!-- Home Screen Widget -->
+    <string name="widget_name">Battery Status</string>
+    <string name="widget_description">Live SOH %, charge cycles, real-time wattage, and cell temperature on your home screen.</string>
+    <string name="widget_soh_label">SOH</string>
+    <string name="widget_cycles_label">Cycles</string>
+    <string name="widget_wattage_label">Wattage</string>
+    <string name="widget_temp_label">Temp</string>
+    <string name="widget_charging">Charging</string>
+    <string name="widget_discharging">Discharging</string>
+    <string name="widget_updated_format">Updated %s</string>
+    <string name="widget_soh_only_name">Battery SOH</string>
+    <string name="widget_soh_only_description">Minimalist 1x1 widget showing your battery\'s State of Health %.</string>
 </resources>

@@ -231,6 +231,8 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
             } finally {
                 _isRefreshing.value = false
             }
+            BatteryWidgetProvider.updateAllWidgets(getApplication())
+            BatterySohWidgetProvider.updateAllWidgets(getApplication())
         }
     }
 
@@ -252,6 +254,10 @@ class BatteryViewModel(application: Application) : AndroidViewModel(application)
 
             // Mostra la notifica di sistema per il campionamento manuale
             NotificationHelper.showSamplingNotification(getApplication(), isManual = true, snapshot)
+
+            // Aggiorna i widget della home screen
+            BatteryWidgetProvider.updateAllWidgets(getApplication())
+            BatterySohWidgetProvider.updateAllWidgets(getApplication())
 
             _isRefreshing.value = false
         }

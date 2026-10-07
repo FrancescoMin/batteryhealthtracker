@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="50dp"
+    android:minHeight="50dp"
+    android:targetCellWidth="1"
+    android:targetCellHeight="1"
+    android:minResizeWidth="40dp"
+    android:minResizeHeight="40dp"
+    android:maxResizeWidth="140dp"
+    android:maxResizeHeight="140dp"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="1800000"
+    android:initialLayout="@layout/widget_battery_soh_1x1"
+    android:previewLayout="@layout/widget_battery_soh_1x1"
+    android:description="@string/widget_soh_only_description"
+    android:widgetCategory="home_screen" />

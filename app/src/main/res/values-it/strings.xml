@@ -337,4 +337,17 @@
     <string name="update_dialog_uptodate_desc">Stai già utilizzando la versione più recente (v%s).</string>
     <string name="update_dialog_error_title">Verifica non riuscita</string>
     <string name="update_dialog_error_desc">Impossibile connettersi a GitHub. Verifica la connessione internet e riprova.</string>
+
+    <!-- Home Screen Widget -->
+    <string name="widget_name">Stato Batteria</string>
+    <string name="widget_description">SOH %, cicli di ricarica, wattaggio live e temperatura cella sulla schermata home.</string>
+    <string name="widget_soh_label">SOH</string>
+    <string name="widget_cycles_label">Cicli</string>
+    <string name="widget_wattage_label">Watt</string>
+    <string name="widget_temp_label">Temp</string>
+    <string name="widget_charging">In carica</string>
+    <string name="widget_discharging">In scarica</string>
+    <string name="widget_updated_format">Agg. %s</string>
+    <string name="widget_soh_only_name">Salute Batteria SOH</string>
+    <string name="widget_soh_only_description">Widget minimalista 1x1 con la salute (SOH %) della batteria.</string>
 </resources>

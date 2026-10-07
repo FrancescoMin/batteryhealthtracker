@@ -15,8 +15,18 @@ class BatteryChargeReceiver : BroadcastReceiver() {
     private val tag = "BatteryChargeReceiver"
 
     override fun onReceive(context: Context, intent: Intent?) {
-        if (intent?.action == Intent.ACTION_POWER_DISCONNECTED) {
+        val action = intent?.action
+        if (action == Intent.ACTION_POWER_CONNECTED) {
+            Log.d(tag, "Cavo di ricarica collegato. Aggiornamento widget stato batteria...")
+            BatteryWidgetProvider.updateAllWidgets(context)
+            BatterySohWidgetProvider.updateAllWidgets(context)
+            return
+        }
+
+        if (action == Intent.ACTION_POWER_DISCONNECTED) {
             Log.d(tag, "Cavo di ricarica scollegato. Verifica livello batteria per auto-campionamento...")
+            BatteryWidgetProvider.updateAllWidgets(context)
+            BatterySohWidgetProvider.updateAllWidgets(context)
 
             // Leggi il livello attuale della batteria
             val batteryStatus: Intent? = IntentFilter(Intent.ACTION_BATTERY_CHANGED).let { filter ->
@@ -56,6 +66,10 @@ class BatteryChargeReceiver : BroadcastReceiver() {
                             isFullChargeTrigger = true
                         )
                         Log.d(tag, "Auto-campionamento completato e salvato con successo.")
+
+                        // Aggiorna nuovamente i widget con il nuovo record nel DB
+                        BatteryWidgetProvider.updateAllWidgets(context)
+                        BatterySohWidgetProvider.updateAllWidgets(context)
                     } catch (e: Exception) {
                         Log.e(tag, "Errore durante l'auto-campionamento a fine ricarica", e)
                     } finally {
