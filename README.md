@@ -2,10 +2,10 @@
   <img src="docs/logo.png" width="96" height="96" alt="Battery Health Tracker Logo" />
 </p>
 
-<h1 align="center">Battery Health Tracker (O+ - Oppo - Realme Edition)</h1>
+<h1 align="center">Battery Health Tracker (O+ - Oppo - Realme - Samsung Edition)</h1>
 
 <p align="center">
-  <b>Advanced hardware-level battery health, BMS telemetry, and degradation tracker for Oppo, OnePlus, and Realme devices. Powered by Shizuku.</b>
+  <b>Advanced hardware-level battery health, BMS telemetry, and degradation tracker for Oppo, OnePlus, and Realme devices. Currently also expanding to Samsung. Powered by Shizuku.</b>
 </p>
 
 <p align="center">
