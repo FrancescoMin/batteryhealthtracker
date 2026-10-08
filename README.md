@@ -145,7 +145,7 @@ The app clearly indicates how SOH is sourced on your device:
 
 ## 🔮 Upcoming Features (Next Milestones)
 
-The following improvements and capabilities are planned for upcoming releases (**v2.0**):
+The following improvements and capabilities are planned for upcoming releases (**v1.10**):
 
 - **TBA**
 
