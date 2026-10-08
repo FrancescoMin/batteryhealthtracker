@@ -147,8 +147,6 @@ The app clearly indicates how SOH is sourced on your device:
 
 The following improvements and capabilities are planned for upcoming releases (**v2.0**):
 
-- **📈 Real-time Discharge & Recharge Graph Canvas:** Historical live charging sessions visual curve with current tapering analysis.
-- **🔋 Dual-Cell Balance Voltage Alarm:** Push alerts when cell delta voltage ($\Delta\text{ mV}$) exceeds normal series thresholds during ultra-fast charging.
 - **TBA**
 
 ---
