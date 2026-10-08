@@ -180,6 +180,7 @@
     <string name="lang_en">English (Inglese)</string>
     <string name="lang_es">Español (Spagnolo)</string>
     <string name="lang_fr">Français (Francese)</string>
+    <string name="lang_de">Deutsch (Tedesco)</string>
 
     <!-- Capacity Dialog -->
     <string name="dialog_capacity_title">Capacità Nominale di Progetto</string>

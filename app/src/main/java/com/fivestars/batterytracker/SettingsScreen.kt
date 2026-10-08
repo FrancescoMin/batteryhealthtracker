@@ -92,9 +92,9 @@ fun SettingsScreen(
     val appVersionName = remember(context) {
         try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            pInfo.versionName ?: "1.6"
+            pInfo.versionName ?: "1.9"
         } catch (_: Exception) {
-            "1.6"
+            "1.9"
         }
     }
 
@@ -615,6 +615,7 @@ fun SettingsScreen(
                     "en" -> stringResource(R.string.lang_en)
                     "es" -> stringResource(R.string.lang_es)
                     "fr" -> stringResource(R.string.lang_fr)
+                    "de" -> stringResource(R.string.lang_de)
                     else -> stringResource(R.string.lang_system_default)
                 }
 
@@ -1049,7 +1050,8 @@ fun LanguageDialog(
         "it" to stringResource(R.string.lang_it),
         "en" to stringResource(R.string.lang_en),
         "es" to stringResource(R.string.lang_es),
-        "fr" to stringResource(R.string.lang_fr)
+        "fr" to stringResource(R.string.lang_fr),
+        "de" to stringResource(R.string.lang_de)
     )
 
     AppAlertDialog(

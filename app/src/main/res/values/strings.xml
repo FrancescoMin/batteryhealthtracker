@@ -180,6 +180,7 @@
     <string name="lang_en">English</string>
     <string name="lang_es">Español (Spanish)</string>
     <string name="lang_fr">Français (French)</string>
+    <string name="lang_de">Deutsch (German)</string>
 
     <!-- Capacity Dialog -->
     <string name="dialog_capacity_title">Rated Design Capacity</string>

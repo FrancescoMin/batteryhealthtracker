@@ -1,0 +1,355 @@
+<resources>
+    <string name="app_name">Battery Health Tracker</string>
+
+    <!-- General -->
+    <string name="yes">Ja</string>
+    <string name="no">Nein</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="save">Speichern</string>
+    <string name="delete">Löschen</string>
+    <string name="restore">Wiederherstellen</string>
+    <string name="clear">Leeren</string>
+    <string name="not_available">N/V</string>
+
+    <!-- Navigation & Top Bar -->
+    <string name="title_dashboard">Battery Health Tracker</string>
+    <string name="title_trash">Papierkorb</string>
+    <string name="title_settings">Einstellungen</string>
+    <string name="back">Zurück</string>
+    <string name="action_trash">Papierkorb</string>
+    <string name="action_export_csv">CSV exportieren</string>
+    <string name="action_import_csv">CSV importieren</string>
+    <string name="action_refresh">Aktualisieren</string>
+    <string name="action_settings">Einstellungen</string>
+    <string name="action_select_all">Alle auswählen</string>
+    <string name="action_deselect_all">Auswahl aufheben</string>
+    <string name="action_cancel_selection">Auswahl abbrechen</string>
+    <string name="selection_count_single">1 ausgewählt</string>
+    <string name="selection_count_multi">%d ausgewählt</string>
+    <string name="save_reading_fab">Snapshot speichern</string>
+    <string name="snapshot_saved_snackbar">Snapshot in Datenbank gespeichert!</string>
+    <string name="csv_export_success">Verlauf erfolgreich als CSV exportiert!</string>
+    <string name="csv_export_error">Fehler beim Exportieren der CSV-Datei.</string>
+    <string name="csv_import_success_title">Wiederherstellung abgeschlossen</string>
+    <string name="csv_import_success_msg">%1$d Messungen erfolgreich in die Datenbank importiert.</string>
+    <string name="csv_import_duplicates_msg">%1$d bereits vorhandene Duplikate übersprungen.</string>
+    <string name="csv_import_all_duplicates">Alle %1$d Einträge in der Datei waren bereits in der Datenbank vorhanden. Keine Duplikate hinzugefügt.</string>
+    <string name="csv_import_error_title">Importfehler</string>
+    <string name="csv_import_error_msg">Fehler beim Importieren der Daten aus der ausgewählten CSV-Datei.</string>
+    <string name="csv_import_empty_msg">Keine gültigen Batteriedaten in der ausgewählten CSV-Datei gefunden.</string>
+    <string name="csv_import_success_snackbar">%1$d Messungen erfolgreich importiert!</string>
+    <string name="csv_import_success_snackbar_with_duplicates">%1$d importiert (%2$d Duplikate übersprungen).</string>
+
+    <!-- Shizuku Banner -->
+    <string name="shizuku_connected_title">Shizuku verbunden</string>
+    <string name="shizuku_connected_desc">Direktes Auslesen des Oppo/ColorOS-BMS-Chips aktiv.</string>
+    <string name="shizuku_req_title">Shizuku-Berechtigung erforderlich</string>
+    <string name="shizuku_req_desc">Shizuku läuft. Autorisiere die App, um den echten Akkuzustand und genaue Zyklen auszulesen.</string>
+    <string name="shizuku_auth_btn">Jetzt autorisieren</string>
+    <string name="shizuku_fallback_title">Standardmodus (BatteryManager)</string>
+    <string name="shizuku_fallback_desc">Starte Shizuku über Wireless Debugging für präzises Auslesen der Oppo-Hardware.</string>
+
+    <!-- Dashboard Cards -->
+    <string name="dashboard_section_title">Aktueller Akkustatus</string>
+    <string name="card_reading_telemetry">Lese Daten…</string>
+    <string name="card_health_title">Akkuzustand</string>
+    <string name="card_health_sub">Berechneter SOH</string>
+    <string name="card_health_sub_bms">BMS-Hardware / OS</string>
+    <string name="card_health_sub_bm">Nicht verfügbar via API</string>
+    <string name="card_cycles_title">Ladezyklen</string>
+    <string name="card_cycles_sub">Abgeschlossen</string>
+    <string name="card_cycles_sub_bm">Nicht verfügbar via API</string>
+    <string name="card_capacity_title">Restkapazität</string>
+    <string name="card_capacity_sub_design">von %d mAh</string>
+    <string name="card_capacity_sub_design_estimated">von %d mAh (geschätzt)</string>
+    <string name="card_capacity_sub_fcc">Max. Kapazität (FCC)</string>
+    <string name="card_capacity_sub_bm">Echtzeit-Coulomb-Zähler</string>
+    <string name="card_capacity_sub_bm_with_design">Echtzeit-Coulomb (Design: %d mAh)</string>
+    <string name="card_level_title">Aktueller Stand</string>
+    <string name="card_level_sub">Vorhandene Ladung</string>
+    <string name="data_source_prefix">Datenquelle: </string>
+
+    <!-- Next Schedule -->
+    <string name="schedule_next">Nächster automatischer Snapshot: %s</string>
+    <string name="schedule_periodic_24h">Automatischer WorkManager-Snapshot alle 24 Stunden aktiv.</string>
+    <string name="schedule_periodic_active">Geplanter automatischer Snapshot aktiv.</string>
+    <string name="schedule_disabled">Periodischer automatischer Snapshot deaktiviert.</string>
+
+    <!-- Hardware Diagnostics -->
+    <string name="diag_hardware_title">Hardware-Diagnose</string>
+    <string name="diag_badge_oppo_auth">Oppo Auth</string>
+    <string name="diag_badge_1_cell">1 Zelle</string>
+    <string name="diag_badge_2_cells">2 Zellen</string>
+    <string name="diag_standby">Standby</string>
+    <string name="diag_discharging">Entladen</string>
+    <string name="diag_standard_charging">Standardladung</string>
+    <string name="diag_tile_circuit_volt">ZELLENSPANNUNG</string>
+    <string name="diag_tile_circuit_volt_sub_dual">Δ %d mV (Ausgeglichen)</string>
+    <string name="diag_tile_circuit_volt_sub_single">Momentanspannung</string>
+    <string name="diag_tile_qmax">QMAX-KAPAZITÄT</string>
+    <string name="diag_tile_qmax_sub">Niederlast-Kapazität</string>
+    <string name="diag_tile_rm">CHEMISCHE RESTLADUNG (RM)</string>
+    <string name="diag_tile_rm_sub">Aktuelle Ladung (mAh)</string>
+    <string name="diag_tile_cutoff">UV-ABSCHALTSCHWELLE</string>
+    <string name="diag_tile_cutoff_sub">Schutzabschaltung</string>
+    <string name="diag_production_info">Herstellung: %1$s  •  Erstnutzung: %2$s</string>
+    <string name="diag_age_info">Effektives Bauteilalter: %s</string>
+    <string name="diag_age_years_months">%1$d Jahre und %2$d Monate</string>
+    <string name="diag_age_months">%d Monate</string>
+    <string name="diag_raw_silicon_carbon_title">Roh-Silizium-Kohlenstoff</string>
+    <string name="diag_raw_silicon_carbon_sub_active">Unkompensierter SOH und FCC</string>
+    <string name="diag_raw_silicon_carbon_sub_locked">Thermischer Koeff. vom Kernel geschützt</string>
+    <string name="diag_root_required">Root-Berechtigung erforderlich</string>
+
+    <!-- Health Trend & Projection -->
+    <string name="trend_card_title">Trend &amp; Zustandsprognose</string>
+    <string name="trend_projection_text">Geschätzte Lebensdauer: ~%1$d verbleibende Zyklen bis 80%% (geschätzt gesamt: ~%2$d Zyklen, aktuell: %3$s).</string>
+    <string name="trend_empty_prompt">Speichere mindestens 2 Snapshots im Verlauf, um die Kurve des Akkuzustands zu sehen.</string>
+    <string name="trend_stat_initial">Anfang</string>
+    <string name="trend_stat_current">Aktuell</string>
+    <string name="trend_stat_change">Änderung</string>
+    <string name="trend_touch_hint">Diagramm berühren oder ziehen, um Snapshots zu prüfen</string>
+
+    <!-- History List -->
+    <string name="history_title">Messungsverlauf (%d)</string>
+    <string name="history_tap_to_select">Eintrag zum Auswählen antippen</string>
+    <string name="history_hold_to_select">Gedrückt halten zum Auswählen</string>
+    <string name="history_empty_title">Keine Snapshots gespeichert</string>
+    <string name="history_empty_desc">Tippe auf \'Snapshot speichern\', um die erste Messung zu sichern.</string>
+    <string name="history_item_cycles">Zyklen: %s</string>
+    <string name="history_item_capacity">Kapazität: %s</string>
+    <string name="history_item_source">Quelle: %s</string>
+
+    <!-- Deletion Dialogs -->
+    <string name="dialog_delete_single_title">Snapshot löschen</string>
+    <string name="dialog_delete_multi_title">%d Snapshots löschen</string>
+    <string name="dialog_delete_single_msg">Möchtest du diesen Snapshot wirklich in den Papierkorb verschieben?</string>
+    <string name="dialog_delete_multi_msg">Möchtest du %d Snapshots wirklich in den Papierkorb verschieben?</string>
+    <string name="snackbar_deleted_single">Snapshot in Papierkorb verschoben</string>
+    <string name="snackbar_deleted_multi">%d Snapshots in Papierkorb verschoben</string>
+
+    <!-- Trash Screen -->
+    <string name="trash_empty_btn">Papierkorb leeren</string>
+    <string name="trash_empty_dialog_title">Papierkorb leeren</string>
+    <string name="trash_empty_dialog_msg">Möchtest du wirklich alle Snapshots im Papierkorb endgültig löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.</string>
+    <string name="trash_empty_dialog_confirm">Leeren</string>
+    <string name="trash_empty_state_title">Papierkorb ist leer</string>
+    <string name="trash_empty_state_desc">Aus dem Verlauf gelöschte Snapshots werden hier angezeigt.</string>
+    <string name="trash_badge_in_trash">Im Papierkorb</string>
+    <string name="trash_action_delete_perm">Löschen</string>
+    <string name="trash_action_restore">Wiederherstellen</string>
+    <string name="trash_snackbar_cleared">Papierkorb geleert.</string>
+    <string name="trash_snackbar_restored">Snapshot im Verlauf wiederhergestellt!</string>
+    <string name="trash_snackbar_deleted_perm">Snapshot endgültig gelöscht.</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_section_battery_config">Akkukonfiguration</string>
+    <string name="settings_rated_capacity_title">Akku-Nennkapazität</string>
+    <string name="settings_mode_auto">Modus: Automatische Erkennung (BMS/Sysfs)</string>
+    <string name="settings_mode_custom">Modus: Eigener Wert / Voreinstellung</string>
+
+    <!-- Automatic Sampling Settings -->
+    <string name="settings_section_sampling">Automatische Abtastung</string>
+    <string name="settings_sampling_title">Periodische Messung</string>
+    <string name="settings_sampling_desc_active">Alle %1$s um %2$s</string>
+    <string name="settings_sampling_desc_disabled">Deaktiviert (keine geplante Hintergrundmessung)</string>
+    <string name="settings_sampling_interval_title">Abtastfrequenz</string>
+    <string name="settings_sampling_time_title">Geplante Uhrzeit</string>
+    <string name="settings_sampling_time_hint">Wähle eine passende Uhrzeit, um Benachrichtigungen beim Schlafen zu vermeiden</string>
+    <string name="dialog_sampling_interval_title">Abtastfrequenz</string>
+    <string name="sampling_interval_24h">24 Stunden (1 Tag) • Empfohlen</string>
+    <string name="sampling_interval_48h">2 Tage (48 Stunden)</string>
+    <string name="sampling_interval_168h">7 Tage (1 Woche)</string>
+    <string name="sampling_interval_24h_short">24 Stunden</string>
+    <string name="sampling_interval_48h_short">2 Tage</string>
+    <string name="sampling_interval_168h_short">7 Tage</string>
+    <string name="dialog_sampling_time_title">Geplante Uhrzeit</string>
+
+    <string name="settings_section_language">App-Sprache</string>
+    <string name="settings_language_title">Sprache</string>
+    <string name="settings_section_hardware_info">Hardware- &amp; Ökosystem-Info</string>
+    <string name="settings_detected_device">Erkanntes Gerät</string>
+    <string name="settings_bms_driver">BMS-Sysfs-Treiber</string>
+    <string name="settings_shizuku_status">Shizuku-Status</string>
+    <string name="settings_shizuku_connected">Verbunden (Systemrechte aktiv)</string>
+    <string name="settings_shizuku_waiting">Verfügbar (Warte auf Autorisierung)</string>
+    <string name="settings_shizuku_not_running">Inaktiv (BatteryManager-Fallback aktiv)</string>
+    <string name="settings_app_version">App-Version</string>
+    <string name="lang_system_default">Systemstandard</string>
+    <string name="lang_it">Italiano (Italienisch)</string>
+    <string name="lang_en">English (Englisch)</string>
+    <string name="lang_es">Español (Spanisch)</string>
+    <string name="lang_fr">Français (Französisch)</string>
+    <string name="lang_de">Deutsch</string>
+
+    <!-- Capacity Dialog -->
+    <string name="dialog_capacity_title">Nenn-Designkapazität</string>
+    <string name="dialog_capacity_subtitle">Nennwert in mAh (IEC 61960) eingeben oder Gerätemodell auswählen:</string>
+    <string name="dialog_capacity_manual_label">Kapazität in mAh (z. B. 5840)</string>
+    <string name="dialog_capacity_search_hint">Modell oder Codenamen suchen…</string>
+    <string name="dialog_capacity_popular_presets">Beliebte Profile (Alphabetisch):</string>
+    <string name="brand_all">Alle</string>
+    <string name="brand_oppo">Oppo</string>
+    <string name="brand_oneplus">OnePlus</string>
+    <string name="brand_realme">Realme</string>
+    <string name="brand_samsung">Samsung</string>
+    <string name="btn_auto_detect">Auto-Erkennung</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_sampling_name">Akkuüberwachung</string>
+    <string name="notif_channel_sampling_desc">Benachrichtigungen für manuelle und automatische Akkuzustandsmessungen</string>
+    <string name="notif_channel_overheat_name">Akkutemperatur-Alarm</string>
+    <string name="notif_channel_overheat_desc">Sicherheitswarnungen bei Akkuüberhitzung während Schnellladung oder hoher Last</string>
+    <string name="notif_overheat_title">⚠️ Hohe Akkutemperatur: %s</string>
+    <string name="notif_overheat_text">Temperatur hat sicheren Schwellenwert (42 °C) überschritten. Schutzhülle entfernen oder SuperVOOC-Ladung vorübergehend trennen, um den Akku zu schonen.</string>
+    <string name="notif_sampling_manual_title">Manueller Snapshot abgeschlossen</string>
+    <string name="notif_sampling_auto_title">Automatischer Snapshot</string>
+    <string name="notif_sampling_full_title" formatted="false">100% Ladung abgeschlossen • Snapshot erstellt</string>
+    <string name="notif_sampling_manual_reason">Manuelle Messung über App-Taste gestartet</string>
+    <string name="notif_sampling_auto_reason">Geplante automatische periodische Messung</string>
+    <string name="notif_sampling_full_reason" formatted="false">Automatischer Snapshot beim Trennen des Ladekabels bei 100% erstellt</string>
+    <string name="notif_sampling_summary">Zustand: %1$s | Zyklen: %2$s | %3$s</string>
+    <string name="notif_sampling_expanded" formatted="false">%1$s.\n\n• Akkuzustand (SOH): %2$s\n• Ladezyklen: %3$s\n• Restkapazität: %4$s\n• Datenquelle: %5$s</string>
+
+    <!-- RM Info Dialog -->
+    <string name="dialog_rm_info_title">Chemische Restladung (RM)</string>
+    <string name="dialog_rm_info_desc" formatted="false">Warum gibt es zwei verschiedene Kapazitätswerte?\n\n• Chemische Restladung (RM): Dies ist die exakte Ladungsmenge (in mAh), die sich aktuell im Akku befindet. Sie ändert sich dynamisch bei Nutzung oder Laden des Telefons.\n\n• Restkapazität (FCC, obere Karte): Dies ist die Full Charge Capacity – die maximale Gesamtkapazität, die der Akku heute bei 100% halten kann (z. B. 5530 mAh von ursprünglich 5840 mAh Nennkapazität). Sie nimmt durch chemische Alterung über Monate und Jahre langsam ab.\n\nFormel:\nAktueller Stand % = (RM / FCC) × 100</string>
+    <string name="dialog_rm_info_close">Verstanden</string>
+
+    <!-- Additional Diagnostic Info Dialogs -->
+    <string name="dialog_voltage_info_title">Zellenspannung (mV)</string>
+    <string name="dialog_voltage_info_desc" formatted="false">Zeigt die momentane elektrische Spannung der Akkuzelle(n) in Millivolt (mV) an.\n\n• Typische Werte: Liegen zwischen ~3300 mV (nahezu leerer Akku) und ~4450 mV (vollständig geladen).\n\n• Dual-Cell-Architektur (z. B. Find X / serielle SuperVOOC): Zeigt separate Spannungen für Zelle 0 und Zelle 1 sowie die Zellendifferenz (Δ mV). Ein Wert nahe 0 mV bedeutet optimale Balance.\n\n• Single-Cell-Architektur (z. B. Reno 14): Zeigt die direkte Spannung der einzelnen verbauten Zelle an.</string>
+    <string name="dialog_qmax_info_title">Qmax-Kapazität (mAh)</string>
+    <string name="dialog_qmax_info_desc">Dies ist die intrinsische maximale chemische Kapazität der Zelle unter Nulllast-Bedingungen (ohne Innenwiderstand oder Spannungsabfall).\n\n• Warum höher als die Nennkapazität? Im normalen Betrieb verliert eine Batterie Energie durch Innenwiderstand (IR) und lastbedingte Spannungsabfälle. Qmax stellt die absolute theoretische Kapazität bei nahezu 0 Stromstärke dar.\n\n• Wofür wird sie genutzt? Die Oppo-BMS-Tankanzeige verwendet Qmax als primären Referenzanker, um den Akkuzustand (SOH) und die Gesamtkapazität (FCC) periodisch neu zu kalibrieren.</string>
+    <string name="dialog_cutoff_info_title">UV-Abschaltschwelle (mV)</string>
+    <string name="dialog_cutoff_info_desc" formatted="false">Gibt die im Oppo-BMS-Chip konfigurierte Sicherheits-Unterspannungsschwelle an (typischerweise ~3300 mV).\n\n• Zweck: Fällt eine Lithium-Ionen/Polymer-Zelle unter 2,5 V – 3,0 V, entstehen irreversible chemische Schäden (Auflösung der Kupferkollektoren und interne Kurzschlüsse).\n\n• Notabschaltung: Erreicht die Zellenspannung diese kritische Schwelle, erzwingt die Schutzschaltung ein sofortiges Herunterfahren des Geräts, um die Zelle zu schützen (Anzeige von 0% auf dem Bildschirm).</string>
+
+    <!-- Points 1, 2, 3 Advanced Precision Diagnostics -->
+    <string name="diag_tile_esr">Innenwiderstand (ESR)</string>
+    <string name="diag_tile_esr_sub">Dynamische DC-Impedanz</string>
+    <string name="diag_tile_esr_sub_light">Leichte Last • Normal</string>
+    <string name="diag_tile_esr_sub_heavy">Unter Last • Dynamisches DC</string>
+    <string name="diag_tile_esr_sub_charging">Laden • Dynamisches DC</string>
+    <string name="diag_sat_value_saturated">100% Gesättigt</string>
+    <string name="diag_sat_value_tapering">100% (CV-Phase)</string>
+    <string name="diag_tile_cell_bal">Zellenbalance</string>
+    <string name="diag_tile_cell_bal_sub_single">Einzell-Architektur (1S)</string>
+    <string name="diag_tile_cell_bal_sub_dual">Doppelzelle (Δ %d mV)</string>
+    <string name="refresh_hint_banner">Oben (oder hier) auf 🔄 tippen für neue Messung</string>
+    <string name="dialog_esr_info_title">Innenwiderstand / ESR (mΩ)</string>
+    <string name="dialog_esr_info_desc" formatted="false">Misst den dynamischen Echtzeit-Gleichstromwiderstand (DC-ESR) gegen den Stromfluss im Akkupaket.\n\n• Mess-Pipeline:\n1. Direkte Register des Hardware-BMS.\n2. Dynamische Sprungantwort (ΔV / ΔI) über aktive Stromimpulse.\n3. Kalibrierter OCV-Ruhespannung-Fallback mit Schutz vor Drift.\n\n• Referenzwerte:\n- Optimaler Zustand (Einzell-System 1S, z. B. Reno 13/14): 40 – 180 mΩ.\n- Optimaler Zustand (Zweizell-System 2S, z. B. Find X, GT 7 Pro): 100 – 350 mΩ.\n- Gealterte Zelle: &gt; 500 mΩ (1S) oder &gt; 800 mΩ (2S).\n\n• Entwarnungshinweis:\nDie dynamische DC-Impedanz schwankt natürlich mit Temperatur, CPU-Last und Ladezustand. Ein Akku ist erst dann degradiert, wenn der Widerstand unter hoher Last dauerhaft über den Grenzwerten bleibt und abrupte Spannungseinbrüche verursacht. Wenn Bildschirmzeit und Akkulaufzeit normal sind, ist der Akku gesund.</string>
+    <string name="dialog_cell_bal_info_title">Zellenbalance-Analyse</string>
+    <string name="dialog_cell_bal_info_desc" formatted="false">Überwacht den Gleichlauf der Zellenspannungen bei in Reihe geschalteten Akkusystemen.\n\n• Einzell-Architektur (z. B. Reno 14):\nDas Gerät verwendet eine einzelne Hochkapazitätszelle (1S). Ein Auseinanderdriften von Zellen ist physikalisch unmöglich – 100% gleichmäßige Alterung ohne Imbalance-Risiko.\n\n• Doppelzell-Architektur (z. B. Find X / 2S SuperVOOC):\nVerwendet zwei in Reihe geschaltete Zellen für ultraschnelles Laden (bis zu 10 V). Das BMS überwacht kontinuierlich den Spannungsunterschied (Δ mV) zwischen Zelle 0 und Zelle 1:\n- Δ &lt; 15 mV: Optimale Balance\n- Δ 15 – 40 mV: Normale Abweichung\n- Δ &gt; 40 mV: Ungleichgewicht (Zellendivergenz erkannt)\nEin starkes Ungleichgewicht verringert die Gesamtkapazität auf das Niveau der schwächsten Zelle.</string>
+    <string name="bms_sync_title">BMS-Kalibrierungs- &amp; Driftstatus</string>
+    <string name="bms_sync_status_synced">Synchronisiert (Hohe Präzision)</string>
+    <string name="bms_sync_status_good">Gut (~%d Zyklen seit 100%%)</string>
+    <string name="bms_sync_status_recal_rec">Rekalibrierung empfohlen (%d Zyklen ohne 100%%)</string>
+    <string name="bms_sync_action_guide">Kalibrier-Guide</string>
+    <string name="dialog_bms_sync_title">BMS-Coulomb-Zähler &amp; Drift</string>
+    <string name="dialog_bms_sync_desc" formatted="false">Wie verfolgt das BMS Ladestand und Kapazität?\n\n• Der Coulomb-Zähler:\nDas Batteriemanagementsystem (BMS) integriert kontinuierlich den ein- und ausfließenden Strom über die Zeit (Ampere × Stunden = mAh).\n\n• Drift-Akkumulation:\nBei Dutzenden Teilzyklen (z. B. 20% – 80%) summieren sich winzige Messfehler zur sogenannten \'BMS-Drift\'. Der Sensor verliert seine Referenzpunkte für chemischen Nullpunkt und Vollsättigung.\n\n• Rekalibrierung (BMS-Synchronisation):\n1. Gerät normal entladen bis ca. 5% – 10%.\n2. Unterbrechungsfrei auf 100% aufladen.\n3. Das Smartphone bei 100% für weitere 30–45 Minuten am Ladegerät belassen (Sättigungsphase), damit das BMS die Ruhespannungskurve (OCV) sperren und die Drift zurücksetzen kann.</string>
+    <string name="dialog_capacity_fluctuation_title">Warum schwankt die Kapazität (mAh)?</string>
+    <string name="dialog_capacity_fluctuation_desc" formatted="false">Kapazität (mAh) oder Gesundheits-% können zwischen Messungen leicht steigen. Die Gründe:\n\n• BMS-Rekalibrierung (keine Regeneration):\nLithiumzellen regenerieren sich physikalisch nicht. Nach einer 100%-Ladung und Ruhephase aktualisiert das BMS die OCV-Werte und korrigiert vorherige Messfehler.\n\n• Temperatur &amp; Ionenmobilität:\nBei 25 °C–30 °C bewegen sich Ionen schneller als bei Kälte (10 °C–18 °C). Eine warme Zelle hat einen geringeren Innenwiderstand und liefert etwas mehr nutzbare mAh.\n\n• Entladelast:\nGeringe Nutzung entnimmt vor Erreichen der Abschaltspannung mehr Energie als intensive Nutzung.\n\nKleine Schwankungen (±20–60 mAh) sind völlig normal: Sie spiegeln Temperatur und Sensor-Neukalibrierungen wider, keine Selbstreparatur des Akkus.</string>
+    <string name="dialog_capacity_bm_warning_title">Unkalibrierter Wert (BatteryManager)</string>
+    <string name="dialog_capacity_bm_warning_desc" formatted="false">Das rote Warnsymbol zeigt an, dass dieser Wert über Standard-Android-APIs (BATTERY_PROPERTY_CHARGE_COUNTER) ermittelt wird.\n\n• Momentanmessung:\nDieser Wert stellt den momentanen Coulomb-Zähler dar (die im Akku genau jetzt gespeicherte Ladung), NICHT die maximale Gesamtkapazität (FCC).\n\n• Für eine verlässliche Schätzung:\nUm eine genaue Schätzung der tatsächlichen Maximalkapazität über BatteryManager zu erhalten, warte ab, bis das Gerät während des Ladens 100% Sättigung erreicht (angeschlossen lassen, bis die Sättigungsphase endet). Erst bei 100% Sättigung spiegelt der Coulomb-Zähler die Gesamtkapazität wider!\n\n• Normale Schwankungen:\nBei niedrigeren Akkuständen (z. B. 40% oder 70%) spiegelt diese Zahl nur die aktuell gespeicherte Teilenergie wider und variiert mit Ladestand und Temperatur.</string>
+    <string name="dialog_capacity_estimated_title">Aus ASOC berechnete Kapazität</string>
+    <string name="dialog_capacity_estimated_desc" formatted="false">Auf Samsung-Geräten wird die Restkapazität in mAh nicht direkt vom System ausgegeben, sondern präzise durch Multiplikation des echten Hardware-Akkuzustands (ASOC) mit der zertifizierten Nennkapazität (IEC 61960) berechnet.</string>
+    <string name="dialog_health_info_title">Akkuzustand (SOH)</string>
+    <string name="dialog_health_bm_warning_title">Akkuzustand via Standard-API nicht verfügbar</string>
+    <string name="dialog_health_bm_warning_desc" formatted="false">Das rote Warnsymbol zeigt an, dass Standard-Android-APIs den chemischen State of Health (SOH) des Herstellers nicht bereitstellen.\n\n• Warum N/V angezeigt wird:\nAndroid bietet keine öffentliche API für den werkseitigen Akkuzustand, und manche Hersteller (wie OnePlus in indischen Builds) blenden diesen Wert in den Einstellungen aus. Um den echten Hardware-SOH und die volle Kapazität auszulesen, benötigt die App direkten BMS-Registerzugriff über Shizuku oder Root.\n\n• Alternative Schätzung über Sättigung:\nBietet dein Gerät keinen Zugriff auf Hardwareregister, kannst du eine verlässliche Schätzung erhalten, indem du das Smartphone bis zur 100%-Sättigung lädst: Zu diesem Zeitpunkt erfasst der Coulomb-Zähler die reale Spitzenkapazität.</string>
+    <string name="dialog_health_shizuku_desc" formatted="false">Der Akkuzustand spiegelt den echten chemischen State of Health (SOH) deines Akkus wider.\n\n• Gemessen vom BMS:\nWird direkt vom Hardware-Fuel-Gauge-Chip ermittelt, indem die aktuelle chemische Maximalkapazität (FCC) mit der werkseitigen Nennkapazität (IEC 61960) verglichen wird.\n\n• Haltbarkeit:\nModerne Hochleistungszellen behalten selbst nach 1.600 vollen Ladezyklen über 80% ihrer Kapazität.</string>
+    <string name="dialog_cycles_info_title">Ladezyklen</string>
+    <string name="dialog_cycles_bm_warning_title">Zyklen via Standard-API nicht verfügbar</string>
+    <string name="dialog_cycles_bm_warning_desc" formatted="false">Das rote Warnsymbol zeigt an, dass das Betriebssystem oder der Hersteller (wie Samsung) die echten Ladezyklen nicht über Standard-Android-APIs bereitstellt.\n\n• Warum 0 oder N/V angezeigt wird:\nViele Hersteller, insbesondere Samsung, beschränken den Zugriff auf den Zyklenzähler in öffentlichen APIs (geben fest 0 zurück) und speichern die echten Zyklen in geschützten Partitionen (EFS / Knox), auf die Drittanbieter-Apps keinen Zugriff haben.\n\n• Unterstützte Geräte:\nAuf Geräten mit unterstützten BMS-Knoten (z. B. Oppo/OnePlus via Shizuku) liest die App den exakten Zähler direkt aus. Auf Samsung-Geräten ohne zugängliche Hardware-Knoten kann der Zyklenstand nicht ermittelt werden.</string>
+    <string name="dialog_cycles_desc" formatted="false">Was ist ein Ladezyklus?\n\n• Definition:\nEin vollständiger Ladezyklus wird gezählt, wenn kumulativ 100% der Akkukapazität entladen und wieder aufgeladen wurden (z. B. zweimaliges Entladen von 100% auf 50% entspricht 1 vollen Zyklus).\n\n• Alterung:\nModerne Lithium-Ionen- und Silizium-Kohlenstoff-Zellen sind so ausgelegt, dass sie nach 800 bis 1.600 vollen Ladezyklen etwa 80% ihrer ursprünglichen Nennkapazität behalten.</string>
+    <string name="dialog_projection_info_title" formatted="false">Schätzung: Zyklen bis 80%</string>
+    <string name="dialog_projection_info_desc" formatted="false">Wie wird die Lebensdauerschätzung berechnet?\n\n• Echtzeit-BMS-Daten:\nDie Schätzung basiert auf den Gesamtzyklen und dem aktuellen Akkuzustand, die direkt vom BMS-Chip des Smartphones erfasst wurden (nicht auf Einträgen im Verlauf oder Papierkorb).\n\n• Mathematische Formel:\n1. Verschleißrate: Berechnet die durchschnittliche Anzahl an Zyklen pro 1% verlorenem Akkuzustand seit Neuzustand.\n2. Verbleibende Zyklen: Multipliziert diese Rate mit den verbleibenden Prozentpunkten bis zum Erreichen von 80% (branchenweiter Schwellenwert für Akkutausch).\n\nDie Schätzung spiegelt den realen chemischen Verschleiß seit der Erstinbetriebnahme wider.</string>
+
+    <!-- Points 4, 5, 6 Precision Diagnostics -->
+    <string name="diag_tile_saturation">Echte Voll-Ladung</string>
+    <string name="diag_tile_saturation_sub_saturated" formatted="false">100% Gesättigt (Vollständig)</string>
+    <string name="diag_tile_saturation_sub_tapering">CV-Phase (Sättigung läuft)</string>
+    <string name="diag_tile_saturation_sub_charging">Laden (Chip-SOC %d%%)</string>
+    <string name="diag_tile_saturation_sub_discharging">Entladen (Chip-SOC %d%%)</string>
+    <string name="diag_tile_saturation_sub_standby">Standby</string>
+    <string name="dialog_saturation_info_title" formatted="false">Echte Sättigung vs. 100%-Anzeige</string>
+    <string name="dialog_saturation_info_desc" formatted="false">Was bedeutet \"Echte Sättigung\" und wie unterscheidet sie sich von den 100% in Android?\n\n• Die 100%-Anzeige:\nSmartphone-Hersteller (einschließlich Oppo) programmieren Android so, dass \"100%\" angezeigt wird, sobald die Konstantstrom-Phase (CC) endet (~4,40 V). Zu diesem Zeitpunkt ist der Akku chemisch erst zu 88%–92% geladen.\n\n• Sättigungsphase (CV-Tapering):\nUm echte chemische Sättigung zu erreichen, geht der Akku in die Konstantspannungs-Phase (CV) über und nimmt für weitere 20–40 Minuten abnehmenden Strom auf (von 1500 mA bis unter 80 mA).\n\n• Direktes Auslesen des Fuel-Gauge-Chips (chip_soc):\nDiese App fragt das physische Register ab. Wenn \"Gesättigt\" gemeldet wird, ist die Zelle bei echten 100% (der optimale Zeitpunkt für maximale Akkulaufzeit und BMS-Rekalibrierung).\n\nFormel:\nEcht voll = Status FULL || (chip_soc ≥ 100 &amp;&amp; |I_now| ≤ 80mA)</string>
+
+    <string name="diag_tile_temp_comp">Kapazität bei 25 °C</string>
+    <string name="diag_tile_temp_comp_sub">IEC 61960 Standard</string>
+    <string name="dialog_temp_comp_info_title">Temperaturkompensation (IEC 61960)</string>
+    <string name="dialog_temp_comp_info_desc" formatted="false">Warum ist die auf 25 °C normierte Kapazität wichtig für Präzision?\n\n• Thermische Empfindlichkeit von Lithium:\nDie nutzbare Kapazität in Lithium-Ionen- und Silizium-Kohlenstoff-Zellen variiert direkt mit der Umgebungstemperatur. Bei Kälte (z. B. 15 °C) sinkt die Ionenmobilität und damit die messbare Kapazität; bei 30 °C–35 °C steigt sie an.\n\n• Internationaler Standard IEC 61960:\nUm den wahren Akkuzustand über die Zeit ohne jahreszeitliche Verzerrungen (Sommer vs. Winter) zu bewerten, wird die Kapazität mit dem thermischen Standardkoeffizienten (α ≈ 0,6%/°C) auf die Referenztemperatur von 25 °C normiert:\nC_25°C = C_fcc / [1 + 0,006 × (T_batt - 25°C)]\n\nDieser Wert spiegelt die reine molekulare Alterung der Zelle wider – frei von Temperatureinflüssen.</string>
+
+    <string name="diag_safety_title">BMS-Hardware-Integrität</string>
+    <string name="diag_safety_all_ok">Alle Schaltkreise OK (0 Fehler-Flags)</string>
+    <string name="diag_safety_fault_detected">Hardware-Warnung (%s)</string>
+    <string name="diag_safety_badge_safe">SICHER</string>
+    <string name="diag_safety_badge_warning">WARNUNG</string>
+    <string name="dialog_safety_info_title">BMS-Hardware-Schutzschaltungen</string>
+    <string name="dialog_safety_info_desc">Der Oppo-Lademanagement-Chip (BMS) überwacht kontinuierlich die physischen Hardware-Sicherheitsregister in Echtzeit:\n\n• Kurzschlussschutz (short_c_hw_status):\nPrüft die Strompfadintegrität zwischen Ladegerät, Schaltkreis und Zelle. Erkennt Mikro-Kurzschlüsse oder Isolationsanomalien.\n\n• Hardware-Thermoabschaltung (OTP - short_ic_otp_status):\nÜberhitzungsschutz. Hardwareseitige Stromabschaltung, falls das Silizium des Lademoduls kritische Temperaturgrenzen überschreitet.\n\n• Sub-Board-Sensoren (subboard_temp_err):\nÜberprüft Funktion und Messwerte der Temperatursensoren auf der unteren USB-C-Ladeplatine.\n\nEin Status \"Alle Schaltkreise OK\" bestätigt, dass Ladeelektronik und Akku keinerlei elektrische oder thermische Schäden aufweisen.</string>
+
+    <!-- App Theme -->
+    <string name="settings_section_theme">Design</string>
+    <string name="settings_theme_title">Erscheinungsbild</string>
+    <string name="theme_system">Systemstandard</string>
+    <string name="theme_system_desc">Folgt den Systemeinstellungen von Android</string>
+    <string name="theme_light">Helles Design</string>
+    <string name="theme_light_desc">Klassische helle Oberfläche</string>
+    <string name="theme_dark">Dunkles Design</string>
+    <string name="theme_dark_desc">Dunkle Farbtöne, schont die Augen</string>
+    <string name="theme_amoled">AMOLED Reines Schwarz</string>
+    <string name="theme_amoled_desc">Schaltet OLED-Pixel ab (#000000) für maximale Energieeinsparung</string>
+
+    <!-- Settings: Data & Backup -->
+    <string name="settings_section_backup">Daten &amp; Backup</string>
+    <string name="settings_backup_export_title">Backup exportieren (CSV)</string>
+    <string name="settings_backup_export_desc">Vollständigen Messungsverlauf in externer CSV-Datei speichern</string>
+    <string name="settings_backup_import_title">Backup importieren (CSV)</string>
+    <string name="settings_backup_import_desc">Messungen aus einer zuvor exportierten CSV-Datei wiederherstellen</string>
+
+    <!-- Diagnostic Console -->
+    <string name="action_diagnostic_console">Diagnose-Konsole</string>
+    <string name="console_title">Diagnose-Konsole &amp; Protokolle</string>
+    <string name="console_subtitle">Befehlsausgaben für Geräteprüfung &amp; GitHub-Issues</string>
+    <string name="console_btn_copy">Bericht kopieren</string>
+    <string name="console_btn_share">Bericht teilen</string>
+    <string name="console_btn_issues">GitHub-Issues öffnen</string>
+    <string name="console_btn_clear">Leeren</string>
+    <string name="console_copied_toast">Diagnosebericht in die Zwischenablage kopiert!</string>
+    <string name="console_empty_logs">Noch keine Befehle ausgeführt.\nTippe im Dashboard auf Aktualisieren, um Hardware-Abfragen zu starten.</string>
+    <string name="console_card_title">Hardware-Diagnose-Konsole</string>
+    <string name="console_card_desc">Kernel-Rohdaten einsehen &amp; Logs für GitHub teilen</string>
+    <string name="action_more_options">Weitere Optionen</string>
+
+    <!-- Usage Stats & Days since first boot -->
+    <string name="trend_days_since_first_boot">%1$d Tage seit Erstinbetriebnahme</string>
+    <string name="trend_usage_ratio">Verhältnis: %1$.2f Tage/Zyklus (%2$.2f Zyklen/Tag)</string>
+    <string name="dialog_usage_stats_title">Nutzungsstatistik seit Erstinbetriebnahme</string>
+    <string name="dialog_usage_stats_desc" formatted="false">Wie werden die Nutzungsstatistiken berechnet?\n\n• Tage seit Erstinbetriebnahme:\nDie tatsächliche Zeit, die seit dem ersten Einschalten und Einrichten des Geräts vergangen ist.\n\n• Nutzungsverhältnis (Tage pro Zyklus):\nVergleicht die aktiven Kalendertage mit den kumulierten Ladezyklen (Tage / Zyklen).\n\n• Gesunder Richtwert:\nEin Verhältnis über 1,0 Tag pro Zyklus (weniger als 1 vollständiger Ladezyklus pro Tag) deutet auf akkuschonende Nutzung hin und maximiert die langfristige Lebensdauer.</string>
+ 
+    <!-- Updates -->
+    <string name="settings_section_updates">Updates</string>
+    <string name="settings_check_updates_title">Nach Updates suchen</string>
+    <string name="settings_check_updates_desc">Aktuell: v%s • GitHub-Releases prüfen</string>
+    <string name="update_dialog_available_title">Update verfügbar (%s)</string>
+    <string name="update_dialog_available_subtitle">Eine neue Version ist auf GitHub verfügbar.</string>
+    <string name="update_dialog_current_vs_latest">Installiert: v%1$s  •  Neueste: %2$s</string>
+    <string name="update_dialog_changelog_label">Changelog &amp; Hinweise:</string>
+    <string name="update_dialog_btn_download">Herunterladen</string>
+    <string name="update_dialog_uptodate_title">App ist auf dem neuesten Stand</string>
+    <string name="update_dialog_uptodate_desc">Du verwendest bereits die neueste Version (v%s).</string>
+    <string name="update_dialog_error_title">Update-Prüfung fehlgeschlagen</string>
+    <string name="update_dialog_error_desc">Verbindung zu GitHub fehlgeschlagen. Bitte Internetverbindung prüfen und erneut versuchen.</string>
+
+    <!-- Home Screen Widget -->
+    <string name="widget_name">Akkustatus</string>
+    <string name="widget_description">Echtzeit-SOH-%, Ladezyklen, Wattzahl und Zellentemperatur direkt auf dem Startbildschirm.</string>
+    <string name="widget_soh_label">SOH</string>
+    <string name="widget_cycles_label">Zyklen</string>
+    <string name="widget_wattage_label">Leistung</string>
+    <string name="widget_temp_label">Temp.</string>
+    <string name="widget_charging">Laden</string>
+    <string name="widget_discharging">Entladen</string>
+    <string name="widget_updated_format">Aktualisiert %s</string>
+    <string name="widget_soh_only_name">Akku-SOH</string>
+    <string name="widget_soh_only_description">Kompaktes 1x1-Widget für den Akkuzustand (SOH %).</string>
+</resources>

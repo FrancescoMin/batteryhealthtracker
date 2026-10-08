@@ -67,9 +67,9 @@ object DiagnosticLogger {
                 val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
                 "v${pInfo.versionName} (${pInfo.longVersionCode})"
             } catch (_: Exception) {
-                "v1.8"
+                "v1.9"
             }
-        } else "v1.8"
+        } else "v1.9"
 
         sb.append("### 📱 Battery Health Tracker - Device Diagnostic Report\n\n")
         sb.append("#### ⚙️ Device Environment\n")

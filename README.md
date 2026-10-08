@@ -31,7 +31,7 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 
 > [!NOTE]
 > **🚀 Repository Development Status / Stato di Sviluppo della Repository:**  
-> The codebase in the `main` branch may be ahead of the latest tagged GitHub Release (`BatteryHealthTracker-v1.8.apk`). New features, hardware presets, and optimizations currently undergoing testing in the repository will be bundled and published in future release APKs.  
+> The codebase in the `main` branch may be ahead of the latest tagged GitHub Release (`BatteryHealthTracker-v1.9.apk`). New features, hardware presets, and optimizations currently undergoing testing in the repository will be bundled and published in future release APKs.  
 > *Il codice presente nella repository (`main`) potrebbe risultare più avanzato rispetto all'ultima release ufficiale scaricabile, poiché alcune nuove funzioni o migliorie sono ancora in fase di testing e confluiranno nelle release successive.*
 
 ---
@@ -107,9 +107,18 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 - **Full History Portability:** Restore snapshots exported from other devices or previous installations.
 - **Deduplication & Integrity:** Automatically skips duplicate timestamps while preserving notes and battery metrics.
 
-### 📱 Universal Device Presets & Samsung Galaxy Telemetry
+### 📱 Universal Device Presets & Advanced Samsung Telemetry
 - **OPlus & Samsung Coverage:** Built-in rated capacities (IEC 61960) for 40+ Oppo, Realme, and OnePlus models, plus extensive Samsung Galaxy presets (Galaxy S24, S23, S22, Z Fold/Flip, and A-series).
-- **Samsung EFS Telemetry:** Direct decoding of Samsung battery health nodes (`batt_capacity_max`, `batt_discharge_level`, cycle logs), plus platform `power_profile.xml` capacity derivation.
+- **Samsung EFS & ASOC Telemetry:** Decodes raw chemical degradation from Samsung EFS `batt_asoc` (Absolute State of Health) nodes, prioritizing true molecular cell aging over smoothed One UI system metrics.
+
+### 📊 Interactive Home Screen Widgets
+- **Battery Status Widget (3×2 / 4×2):** Real-time home screen monitoring showing live SOH %, hardware cycle count, dynamic wattage (+ / - W), and cell temperature.
+- **Minimalist SOH Gauge Widget (1×1):** Compact, glanceable circular gauge focusing purely on battery State of Health.
+- **Power Connection Auto-Refresh:** Automatically synchronizes and updates widget telemetry on charger plug and unplug events.
+
+### ⚡ Live Power Streaming & Dynamic Wattage Meter
+- **Real-Time Continuous Power Flow:** Live BMS voltage and current stream during active app usage.
+- **Visual Wattage Indicator:** Color-coded animated charging/discharging power indicators with dynamic positive/negative wattage calculation.
 
 ### 🔔 Smart Notifications & Thermal Protection
 - **Snapshot Receipts:** Confirmation cards for manual saves, scheduled background logs (`WorkManager`), and 100% charger unplug events.
@@ -121,7 +130,7 @@ This delivers accurate, real-time electrochemical diagnostic data: true State of
 
 ### 💻 Built-in Diagnostic Console
 - **Real-Time Shell Inspector:** Live log of every sysfs, dumpsys, and settings query with exit codes and fallback paths.
-- **1-Click Bug Reporting:** Instant Markdown generation ready to paste into GitHub Issues.
+- **1-Click Share & Bug Reporting:** Instant Markdown generation ready to share or paste into GitHub Issues, formatted cleanly with human-readable command labels.
 
 ### 🏷️ SOH Determination Hierarchy
 The app clearly indicates how SOH is sourced on your device:
@@ -130,18 +139,16 @@ The app clearly indicates how SOH is sourced on your device:
 3. **`Unavailable via API`:** Fallback indicator when running without Shizuku permissions.
 
 ### 🌐 Multilingual
-- Fully localized in **English**, **Italian (Italiano)**, **Spanish (Español)**, and **French (Français)**.
+- Fully localized in **English**, **Italian (Italiano)**, **Spanish (Español)**, **French (Français)**, and **German (Deutsch)**.
 
 ---
 
-## 🔮 Upcoming Features (Next Release)
+## 🔮 Upcoming Features (Next Milestones)
 
-The following improvements and capabilities are planned for upcoming releases (**v1.9**):
+The following improvements and capabilities are planned for upcoming releases (**v2.0**):
 
-- **📊 Interactive Home Screen Widget:** Glanceable battery health %, cycle count, and charging wattage on your home screen.
-- **🔬 Better Telemetry for Samsung:** Using ASOC for better telemetry of battery health on Samsung Devices.
-- **📈 Real-time Discharge and Recharge Graph:** Real-time monitoring of device charging and discharging, incorporating a minimalist graph.
-- **🇩🇪 German language added:** German language added, selectable in the settings or automatically if it's the system language.
+- **📈 Real-time Discharge & Recharge Graph Canvas:** Historical live charging sessions visual curve with current tapering analysis.
+- **🔋 Dual-Cell Balance Voltage Alarm:** Push alerts when cell delta voltage ($\Delta\text{ mV}$) exceeds normal series thresholds during ultra-fast charging.
 - **TBA**
 
 ---
@@ -246,7 +253,7 @@ flowchart TD
 2. **Shizuku:** Installed from [Google Play](https://play.google.com/store/apps/details?id=moe.shizuku.privileged.api) or [GitHub Releases](https://github.com/RikkaApps/Shizuku/releases) and running via **Wireless Debugging** or **Root**.
 
 ### App Setup
-1. Download and install `BatteryHealthTracker-v1.8.apk` from [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases).
+1. Download and install `BatteryHealthTracker-v1.9.apk` from [Releases](https://github.com/FrancescoMin/batteryhealthtracker/releases).
 2. Open the app and grant the **Notification Permission** (required for background snapshot receipts and > 42°C overheat alerts).
 3. Tap **"Authorize Shizuku"** and allow access when prompted.
 4. Telemetry, health metrics, and hardware registers will populate immediately!

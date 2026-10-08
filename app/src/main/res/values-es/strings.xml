@@ -180,6 +180,7 @@
     <string name="lang_en">English (Inglés)</string>
     <string name="lang_es">Español</string>
     <string name="lang_fr">Français (Francés)</string>
+    <string name="lang_de">Deutsch (Alemán)</string>
 
     <!-- Capacity Dialog -->
     <string name="dialog_capacity_title">Capacidad Nominal de Diseño</string>
