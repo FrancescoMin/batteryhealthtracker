@@ -151,55 +151,40 @@ The following improvements and capabilities are planned for upcoming releases (*
 
 ---
 
-## 📱 Verified Device Battery Database & Hardware Compatibility
+## 📱 Verified Hardware & OEM Compatibility Matrix
 
-> [!IMPORTANT]
-> **Compatibility, Community Testing & Diagnostic Logs:**
-> - 🟢 **Oppo Reno 14 (EU):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (all BMS telemetry, SOH, FCC, cycle counts, voltage, power, and safety registers read with complete accuracy).
-> - 🟢 **Oppo Reno 14 Pro (CPH2739 / Global / India):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (Dimensity 8450, 6200 / 6060 mAh Silicon-Carbon single-cell, hardware cycle count, authentic battery, verified via Issue #4).
-> - 🟢 **Realme GT 7T (EU / RMX5085):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (dynamic fuel-gauge SOH parsing, Qmax 6736 mAh, 259 cycles, dual-cell balance, ESR, production & first use dates).
-> - 🟢 **OnePlus 13 (PJZ110 / CPH2653 / CPH2655):** **100% Tested & Verified** working seamlessly via **Shizuku** without root (Snapdragon 8 Elite platform, OxygenOS/ColorOS 15 `oplus_mms` fuel-gauge telemetry, 6000 / 5840 mAh Silicon-Carbon dual-cell architecture, hardware cycle count, dynamic ESR & activation date).
-> - 🟡 **Other Devices (`🤝 Help wanted`):** Due to variations in regional firmware, SELinux enforcement (e.g. OnePlus Nord 5 requiring root for direct Qualcomm sysfs access), and vendor driver differences across ColorOS, OxygenOS, and Realme UI, **full hardware compatibility is not yet guaranteed for other models**.
->   - 📋 **1-Click Markdown Report:** Simply tap **"Copy Report"** in the console to copy your device environment and all raw kernel query outputs to your clipboard.
->   - 🐛 **Standardized Compatibility Form:** Open our dedicated [Device Compatibility Report Form](https://github.com/FrancescoMin/batteryhealthtracker/issues/new?template=device_compatibility.yml) to submit verified metrics with a structured checklist and paste your console logs.
->   - 📖 **Detailed Matrix & Testing Guide:** See [docs/device-compatibility.md](docs/device-compatibility.md) for in-depth testing procedures and architecture details.
->   - Sharing these logs allows us to map missing sysfs nodes, adapt SELinux fallbacks, and certify new devices for the entire community!
+### 📊 OEM Telemetry & Feature Matrix
 
-| Manufacturer | Model Series | Battery Architecture | Typical / Rated Capacity (mAh) | Compatibility Status | SoC |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Oppo** | **Reno 14 (EU)** | High-Density Single-Cell | 6000 / 5840 | ✅ **100% Verified (Shizuku)** | MediaTek |
-| **Realme** | **GT 7T (EU)** | Dual-Cell Serial | 7000 (2×3500) / 6850 (2×3425) | ✅ **100% Verified (Shizuku)** | MediaTek |
-| **OnePlus** | **OnePlus 13** | Silicon-Carbon Dual-Cell | 6000 / 5840 | ✅ **100% Verified (Shizuku)** | Snapdragon |
-| **OnePlus** | OnePlus 13R | Silicon-Carbon Dual-Cell | 6000 / 5840 | 🤝 Help wanted | Snapdragon |
-| **OnePlus** | OnePlus 15 | Serial Dual-Cell | 7300 (2×3650) / 7150 (2×3575) | 🤝 Help wanted | Snapdragon |
-| **OnePlus** | OnePlus 12 / 12R | Dual-Cell Serial | 5400–5500 / 5260–5360 | 🤝 Help wanted | Snapdragon |
-| **OnePlus** | OnePlus 11 / 10 Pro | Dual-Cell Serial | 5000 / 4880 | 🤝 Help wanted | Snapdragon |
-| **OnePlus** | Nord 5 (Global & India)* | High-Capacity Dual-Cell | 6800 / 6650 | ⚠️ Requires Root (SELinux) | Snapdragon |
-| **OnePlus** | Nord 5 (EU/UK)* | Dual-Cell Serial | 5200 / 5200 | 🤝 Help wanted | Snapdragon |
-| **OnePlus** | Nord 4 / CE 4 / CE 4 Lite | Dual-Cell Serial | 5500 / 5360 | 🤝 Help wanted | Snapdragon |
-| **OnePlus** | Nord 3 | Dual-Cell Serial | 5000 / 4880 | 🤝 Help wanted | MediaTek |
-| **OnePlus** | OnePlus Open | Dual-Cell Foldable | 4805 / 4680 | 🤝 Help wanted | Snapdragon |
-| **Realme** | GT 8 Pro | Dual-Cell Serial | 7000 (2×3500) / 6850 (2×3425) | 🤝 Help wanted | Snapdragon |
-| **Realme** | GT 7 Pro (Global/EU/CN) | Dual-Cell Serial | 6500 (2×3250) / 6310 (2×3155) | 🤝 Help wanted | Snapdragon |
-| **Realme** | GT 7 Pro (India) | Dual-Cell Serial | 5800 / 5660 | 🤝 Help wanted |  Snapdragon |
-| **Realme** | GT 7 | Dual-Cell Serial | 7000 (2×3500) / 6850 (2×3425) | 🤝 Help wanted | Mediatek |
-| **Realme** | GT 6 / GT 6T / GT 5 Pro | Dual-Cell Serial | 5400–5500 / 5260–5360 | 🤝 Help wanted | Snapdragon |
-| **Realme** | 14 Pro+ | Silicon-Carbon Single-Cell | 6000 / 5850 | 🤝 Help wanted | Snapdragon |
-| **Realme** | 13 Pro+ | High-Density Single-Cell | 5200 / 5050 | 🤝 Help wanted | Snapdragon |
-| **Realme** | 12 Pro+ | High-Density Single-Cell | 5000 / 4880 | 🤝 Help wanted | Snapdragon |
-| **Oppo** | Find X9 Ultra | High-Density Single-Cell | 7050 / 6890 | 🤝 Help wanted | MediaTek |
-| **Oppo** | Find X9 Pro | Silicon-Carbon Dual-Cell | 7500 / 7290 | 🤝 Help wanted | MediaTek |
-| **Oppo** | Find X9 | Silicon-Carbon Dual-Cell | 7025 / 6840 | 🤝 Help wanted | MediaTek |
-| **Oppo** | Find X8 / X8 Pro | Silicon-Carbon Dual-Cell | 5630–5910 (Typical) | 🤝 Help wanted | MediaTek |
-| **Oppo** | Find X7 / X7 Ultra | Dual-Cell Serial | 5000 / 4860–4880 | 🤝 Help wanted | MediaTek |
-| **Oppo** | Reno 16 (Global/EU) | High-Density Single-Cell | 6000 / 5820 | 🤝 Help wanted | Snapdragon |
-| **Oppo** | Reno 16 (China) | Silicon-Carbon | 6700 / 6490 | 🤝 Help wanted | MediaTek |
-| **Oppo** | Reno 15 / 15 Pro | High-Density Single-Cell | 6200–6500 / 6040–6335 | 🤝 Help wanted | MediaTek |
-| **Oppo** | **Reno 14 Pro** | High-Density Single-Cell | 6200 / 6060 | ✅ **100% Verified (Shizuku)** | MediaTek |
-| **Oppo** | Reno 13 | High-Density Single-Cell | 5600 / 5450 | 🤝 Help wanted | MediaTek |
-| **Oppo** | Reno 10 Pro / 11 Pro | Dual-Cell Serial | 4600 / 4440 | 🤝 Help wanted | MediaTek |
+| Diagnostic Feature | OPlus Ecosystem (OnePlus / OPPO / Realme) | Samsung Galaxy (Smartphones & Tablets) | Standard Android 14+ (AOSP / Pixel / Others) |
+| :--- | :---: | :---: | :---: |
+| **True SOH & Usable Capacity** | ✅ Dynamic BMS fuel-gauge & `Qmax` | ✅ EFS Calibration & Battery HAL | ⚠️ Android 14 HAL (if exposed by OEM) |
+| **Hardware Cycle Count** | ✅ Direct kernel sysfs (`battery_cc` / `cycle_count`) | ✅ Sec Battery sysfs & EFS | ✅ `BatteryManager.getIntProperty(7)` |
+| **Individual Dual-Cell Voltages** | ✅ Serial 2S SuperVOOC (`cell0`/`cell1`) | ⚠️ N/A or Asymmetric Dual EFS (Fold/Flip) | ❌ Unsupported by standard API |
+| **Internal Resistance (ESR)** | ✅ BMS registers + Dynamic $\Delta V / \Delta I$ | ✅ Dynamic $\Delta V / \Delta I$ step sampling | ⚠️ Basic approximation |
+| **Privilege Requirements** | Shizuku (UID 2000) *(requires permission toggle)* | Shizuku (UID 2000) *(works out-of-the-box)* | Shizuku / Standard HAL |
 
-*Manual rated capacity override is also supported in Settings for custom or unlisted models.*
+---
+
+### 🛡️ 100% Verified Devices (Tested on Hardware)
+
+The following devices have been physically tested and verified with full telemetry accuracy:
+
+| Manufacturer | Model Series | Codename | Battery Architecture | Typical / Rated (mAh) | Compatibility Status | Tested Platform |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Oppo** | **Reno 14 (EU)** | `CPH2737` | High-Density Single-Cell | 6000 / 5840 | ✅ **100% Verified** | MediaTek Dimensity 7300 |
+| **Oppo** | **Reno 14 Pro 5G** | `CPH2739` | High-Density Single-Cell | 6200 / 6060 | ✅ **100% Verified** | MediaTek Dimensity 8450 |
+| **Oppo** | **Reno 13 5G** | `CPH2689` | High-Density Single-Cell | 5600 / 5450 | ✅ **100% Verified** | MediaTek Dimensity 8350 |
+| **Realme** | **GT 7T (EU)** | `RMX5085` | Dual-Cell Serial (2S) | 7000 / 6850 | ✅ **100% Verified** | MediaTek Dimensity 8400 |
+| **OnePlus** | **OnePlus 13** | `PJZ110` / `CPH2653` | Silicon-Carbon Dual-Cell | 6000 / 5840 | ✅ **100% Verified** | Snapdragon 8 Elite |
+| **Samsung** | **Galaxy Tab S9** | `SM-X710` / `SM-X716B` | High-Capacity Single-Cell | 8400 / 8160 | ✅ **100% Verified** | Snapdragon 8 Gen 2 for Galaxy |
+| *OnePlus* | *Other Models (15, 13R, 12, Nord series...)* | *Various* | *Dual-Cell Serial* | *4800–7300 mAh* | 🤝 **Help wanted (Community Testing)** | *Snapdragon / MediaTek* |
+| *Oppo* | *Other Models (Find X9/X8, Reno 16/15...)* | *Various* | *Single / Dual-Cell* | *4600–7500 mAh* | 🤝 **Help wanted (Community Testing)** | *MediaTek / Snapdragon* |
+| *Realme* | *Other Models (GT 8/7, Pro series...)* | *Various* | *Single / Dual-Cell* | *5000–7000 mAh* | 🤝 **Help wanted (Community Testing)** | *Snapdragon / MediaTek* |
+| *Samsung* | *Other Models (Galaxy S24/S23, Fold/Flip, Tab...)* | *Various* | *Single / Asymmetric* | *3700–11200 mAh* | 🤝 **Help wanted (Community Testing)** | *Snapdragon / Exynos* |
+
+> 📖 **Looking for your specific model or complete capacity tables?**  
+> Check our exhaustive catalog of 40+ pre-configured devices: **[docs/device-compatibility.md](docs/device-compatibility.md)**  
+> *(Manual rated capacity override is also supported in Settings for custom or unlisted models).*
 
 > [!NOTE]
 > \* **OnePlus Nord 5 Root Requirement:** On the OnePlus Nord 5 (CPH2707 / Snapdragon 8s Gen 3), OxygenOS SELinux policies strictly isolate Qualcomm battery sysfs nodes from standard shell access (Shizuku). Direct hardware BMS readings on this model require **Root (`su`) permissions**.
