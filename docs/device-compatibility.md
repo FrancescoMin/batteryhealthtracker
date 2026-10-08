@@ -28,7 +28,7 @@ These devices have undergone end-to-end hardware testing. All core telemetry met
 
 | Manufacturer | Commercial Model | Codename / Board | SoC Family | Battery Architecture | Tested SOH Source | Cycle Source | Dual-Cell Balance | Compatibility Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Oppo** | **Reno 14 (EU)** | `CPH2737` / `OP5F02L1` | Dimensity 7300 | 1S Single-Cell (5840 mAh) | `normal_batt_soh` (95%) | `battery_cc` (321) | N/A (1S) | 🟢 **100% Verified (Shizuku)** |
+| **Oppo** | **Reno 14 (EU)** | `CPH2737` / `OP5F02L1` | Dimensity 8350 | 1S Single-Cell (5840 mAh) | `normal_batt_soh` (95%) | `battery_cc` (321) | N/A (1S) | 🟢 **100% Verified (Shizuku)** |
 | **Oppo** | **Reno 14 Pro (Global/IN)** | `CPH2739` / `OP5F05L1` | Dimensity 8450 | 1S Single-Cell (6060 mAh) | `normal_batt_soh` (100%) | `battery_cycle` (104) | N/A (1S) | 🟢 **100% Verified (Shizuku)** |
 | **Oppo** | **Reno 13 5G (Global/IN)** | `CPH2689` / `OP5E9EL1` | Dimensity 8350 | 1S Single-Cell (5450 mAh) | `normal_batt_soh` (100%) | `battery_cycle` (338) | N/A (1S) | 🟢 **100% Verified (Shizuku)** |
 | **Realme** | **GT 7T (EU)** | `RMX5085` / `RE6090L1` | Dimensity 8400 | 2S Dual-Cell (6850 mAh) | `battery_log_content` (99%) | `battery_cc` (259) | `bcc_parms` (Δ 1 mV) | 🟢 **100% Verified (Shizuku)** |
