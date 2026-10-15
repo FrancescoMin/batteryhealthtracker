@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1A102F"/>
+      <stop offset="50%" stop-color="#321A58"/>
+      <stop offset="100%" stop-color="#4A2882"/>
+    </linearGradient>
+
+    <!-- Radial Ambient Glow -->
+    <radialGradient id="ambientGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#A855F7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#A855F7" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Lightning Bolt Gradient -->
+    <linearGradient id="boltGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#4ADE80"/>
+    </linearGradient>
+
+    <!-- Battery Liquid Fill Gradient -->
+    <linearGradient id="fillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#10B981" stop-opacity="0.6"/>
+    </linearGradient>
+
+    <!-- Drop Shadow Filter -->
+    <filter id="tileShadow" x="-10%" y="-10%" width="125%" height="125%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.55"/>
+    </filter>
+
+    <!-- Bolt Neon Glow Filter -->
+    <filter id="boltGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Main Squircle Tile with Shadow -->
+  <rect x="30" y="30" width="452" height="452" rx="110" fill="url(#bgGrad)" filter="url(#tileShadow)"/>
+  
+  <!-- Subtle Ambient Glow -->
+  <circle cx="256" cy="256" r="160" fill="url(#ambientGlow)"/>
+
+  <!-- Border Highlight -->
+  <rect x="30" y="30" width="452" height="452" rx="110" fill="none" stroke="#D8B4FE" stroke-opacity="0.35" stroke-width="3.5"/>
+
+  <!-- Battery Group -->
+  <g transform="translate(0, 8)">
+    <!-- Battery Terminal Cap -->
+    <rect x="223" y="118" width="66" height="20" rx="8" fill="#F3E8FF"/>
+
+    <!-- Battery Body Outline -->
+    <rect x="176" y="134" width="160" height="240" rx="30" fill="none" stroke="#F3E8FF" stroke-width="9.5"/>
+
+    <!-- Chemical Charge Fill -->
+    <rect x="186" y="278" width="140" height="86" rx="20" fill="url(#fillGrad)"/>
+
+    <!-- ECG Health Pulse Line -->
+    <path d="M 186 285 L 218 285 L 227 276 L 235 292 L 243 285 L 269 285 L 277 270 L 285 296 L 293 285 L 326 285" 
+          fill="none" stroke="#A78BFA" stroke-width="4" stroke-opacity="0.8" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Glowing Electric Lightning Bolt -->
+    <polygon points="264,170 222,265 252,265 240,345 296,248 264,248" 
+             fill="url(#boltGrad)" filter="url(#boltGlow)"/>
+  </g>
+</svg>
