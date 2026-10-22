@@ -1,0 +1,114 @@
+STRICT PROPRIETARY & SOURCE-AVAILABLE LICENSE
+(ALL RIGHTS RESERVED)
+
+Copyright (c) 2025-2026 FrancescoMin (@FrancescoMin)
+All Rights Reserved.
+
+================================================================================
+IMPORTANT NOTICE - READ BEFORE USING, VIEWING, OR COMPILING THIS SOFTWARE:
+================================================================================
+
+This software, including its source code, documentation, algorithms, device
+preset databases, and compiled binaries (collectively, the "Software"), is the 
+exclusive intellectual property of FrancescoMin (the "Copyright Holder").
+
+By accessing, viewing, downloading, compiling, or executing the Software, you 
+agree to be bound by the terms and conditions of this License. If you do not 
+agree, you must immediately cease all access, delete all copies, and discontinue 
+any use of the Software.
+
+--------------------------------------------------------------------------------
+1. LIMITED GRANT OF PERMISSION (SOURCE-AVAILABLE FOR PERSONAL INSPECTION)
+--------------------------------------------------------------------------------
+
+The Copyright Holder hereby grants you a personal, non-exclusive, non-transferable,
+revocable, and strictly limited license to:
+  (a) View, read, and audit the source code solely for personal education, 
+      security evaluation, and transparency verification (e.g., auditing Shizuku 
+      IPC security and verifying that no malicious shell commands are executed);
+  (b) Compile and run the Software solely on your personal, physical Android 
+      devices for your own private, non-commercial use.
+
+No other rights or licenses of any kind, whether express, implied, or by 
+estoppel, are granted under this License.
+
+--------------------------------------------------------------------------------
+2. STRICT PROHIBITIONS & RESTRICTIONS
+--------------------------------------------------------------------------------
+
+You expressly agree that you shall NOT, directly or indirectly, under any 
+circumstances:
+
+  2.1. NO APP STORE PUBLICATION OR THIRD-PARTY DISTRIBUTION
+       You may NOT upload, publish, submit, host, list, or distribute the Software 
+       (or any compiled binary, APK, AAB, fork, or derivative work thereof) on 
+       ANY application store, marketplace, or distribution platform. This includes, 
+       without limitation:
+         - Google Play Store
+         - F-Droid or F-Droid third-party repositories
+         - Amazon Appstore
+         - Huawei AppGallery
+         - Xiaomi GetApps / Oppo App Market / Vivo V-Appstore
+         - APKMirror, APKPure, Uptodown, or similar file-sharing portals
+         - Any public package manager or alternative repository.
+
+  2.2. NO COMMERCIAL EXPLOITATION OR MONETIZATION
+       You may NOT use the Software (in whole or in part) for any commercial, 
+       for-profit, revenue-generating, or business purpose. This prohibition includes, 
+       without limitation:
+         - Selling, licensing, sub-licensing, renting, or leasing the Software;
+         - Incorporating advertising SDKs, trackers, or monetization frameworks;
+         - Charging fees, subscriptions, or donations for access, downloads, or features;
+         - Offering the Software as a paid service, SaaS, or bundled component;
+         - Using the Software for commercial battery testing, warranty verification, 
+           or refurbished device certification without a signed commercial agreement.
+
+  2.3. NO REBRANDING, FORKING FOR REDISTRIBUTION, OR DERIVATIVE WORKS
+       You may NOT create derivative works, public forks, or rebranded clones 
+       intended for public redistribution or commercial use. Extracting, adapting, 
+       or porting the proprietary telemetry algorithms (including, but not limited 
+       to: OPlus dynamic fuel-gauge stream decoding, Samsung EFS extraction 
+       heuristics, differential step ESR estimation formulas, and device preset 
+       specifications) into another software product is strictly forbidden.
+
+  2.4. NO REMOVAL OR ALTERATION OF PROPRIETARY NOTICES
+       You may NOT remove, alter, conceal, or obscure any copyright notices, 
+       digital signatures, trademarks, disclaimers, or attribution statements 
+       contained within the Software or its repository.
+
+--------------------------------------------------------------------------------
+3. INTELLECTUAL PROPERTY & OWNERSHIP
+--------------------------------------------------------------------------------
+
+The Copyright Holder retains full and complete ownership, title, copyright, 
+and all intellectual property rights in and to the Software and all copies 
+or portions thereof. This License is not a sale of the Software or any portion 
+of the intellectual property rights associated with it.
+
+--------------------------------------------------------------------------------
+4. TERMINATION & ENFORCEMENT
+--------------------------------------------------------------------------------
+
+This License and all permissions granted hereunder shall terminate automatically 
+and immediately without notice if you fail to comply with any provision of this 
+License. Upon termination, you must destroy all copies of the Software in your 
+possession or control.
+
+The Copyright Holder reserves all rights to enforce these terms through all 
+available legal remedies, including but not limited to Digital Millennium 
+Copyright Act (DMCA) takedown notices, Google Play Developer Enforcement 
+actions, and statutory damages for willful copyright infringement under 
+applicable international copyright treaties (including the Berne Convention) 
+and national copyright laws.
+
+--------------------------------------------------------------------------------
+5. DISCLAIMER OF WARRANTY
+--------------------------------------------------------------------------------
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. IN NO EVENT 
+SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, LOSS OF DATA, 
+BATTERY DEGRADATION, HARDWARE FAULTS, OR OTHER LIABILITY, WHETHER IN AN ACTION 
+OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH 
+THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
